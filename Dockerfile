@@ -24,9 +24,6 @@ RUN cd backend && npx prisma generate
 # Build le projet
 RUN npm run build
 
-# Créer la base de données et appliquer les migrations
-RUN cd backend && npx prisma db push
-
 # Nettoyer les devDependencies après build
 RUN npm prune --production
 
@@ -37,5 +34,9 @@ EXPOSE 5000
 ENV NODE_ENV=production
 ENV PORT=5000
 
+# Copier et rendre exécutable le script de démarrage
+COPY start.sh ./
+RUN chmod +x start.sh
+
 # Commande de démarrage
-CMD ["npm", "start"]
+CMD ["./start.sh"]
