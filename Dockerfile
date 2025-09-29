@@ -24,6 +24,9 @@ RUN cd backend && npx prisma generate
 # Build le projet
 RUN npm run build
 
+# Créer la base de données et appliquer les migrations
+RUN cd backend && npx prisma db push
+
 # Nettoyer les devDependencies après build
 RUN npm prune --production
 
