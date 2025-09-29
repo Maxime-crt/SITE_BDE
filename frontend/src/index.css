@@ -1,0 +1,275 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222.2 84% 4.9%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222.2 84% 4.9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    /* Discord-like grays */
+    --background: 220 13% 18%;        /* #2f3349 - Gris principal Discord */
+    --foreground: 220 15% 92%;        /* #eaeaeb - Texte principal */
+    --card: 220 13% 21%;              /* #36393f - Cards/conteneurs */
+    --card-foreground: 220 15% 92%;   /* #eaeaeb - Texte des cards */
+    --popover: 220 13% 16%;           /* #2c2f33 - Popover plus sombre */
+    --popover-foreground: 220 15% 92%; /* #eaeaeb - Texte popover */
+    --primary: 217.2 91.2% 59.8%;     /* Bleu principal inchangé */
+    --primary-foreground: 220 15% 92%; /* Texte sur bleu */
+    --secondary: 220 13% 25%;         /* #40444b - Secondaire */
+    --secondary-foreground: 220 15% 85%; /* #d4d4d5 - Texte secondaire */
+    --muted: 220 13% 25%;             /* #40444b - Éléments discrets */
+    --muted-foreground: 220 9% 64%;   /* #8e9297 - Texte discret */
+    --accent: 220 13% 28%;            /* #484c52 - Accent hover */
+    --accent-foreground: 220 15% 92%; /* #eaeaeb - Texte accent */
+    --destructive: 0 84% 60%;         /* Rouge plus vif */
+    --destructive-foreground: 220 15% 98%; /* Texte sur rouge */
+    --border: 220 13% 30%;            /* #4a4e54 - Bordures */
+    --input: 220 13% 25%;             /* #40444b - Inputs */
+    --ring: 217.2 91.2% 59.8%;       /* Ring bleu */
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+@layer components {
+  /* Override des couleurs pour la compatibilité dark mode */
+  .bg-gray-50 {
+    @apply bg-muted/30;
+  }
+  .bg-gray-100 {
+    @apply bg-muted/50;
+  }
+  .bg-white {
+    @apply bg-card;
+  }
+  .text-gray-900 {
+    @apply text-foreground;
+  }
+  .text-gray-700 {
+    @apply text-card-foreground;
+  }
+  .text-gray-600 {
+    @apply text-muted-foreground;
+  }
+  .border-gray-200 {
+    @apply border-border;
+  }
+  .border-gray-300 {
+    @apply border-border;
+  }
+
+  /* Couleurs de status adaptées */
+  .bg-blue-50 {
+    @apply bg-primary/10;
+  }
+  .bg-blue-100 {
+    @apply bg-primary/20;
+  }
+  .text-blue-800 {
+    @apply text-primary;
+  }
+  .text-blue-600 {
+    @apply text-primary;
+  }
+  .border-blue-200 {
+    @apply border-primary/30;
+  }
+
+  .bg-green-50 {
+    @apply bg-green-500/10;
+  }
+  .bg-green-100 {
+    @apply bg-green-500/20;
+  }
+  .text-green-800 {
+    color: rgb(22 163 74); /* green-600 en light */
+  }
+  .dark .text-green-800 {
+    color: rgb(74 222 128); /* green-400 en dark */
+  }
+  .text-green-600 {
+    color: rgb(22 163 74); /* green-600 en light */
+  }
+  .dark .text-green-600 {
+    color: rgb(74 222 128); /* green-400 en dark */
+  }
+  .border-green-200 {
+    @apply border-green-500/30;
+  }
+
+  .bg-yellow-50 {
+    @apply bg-yellow-500/10;
+  }
+  .bg-yellow-100 {
+    @apply bg-yellow-500/20;
+  }
+  .text-yellow-800 {
+    color: rgb(202 138 4); /* yellow-600 en light */
+  }
+  .dark .text-yellow-800 {
+    color: rgb(250 204 21); /* yellow-400 en dark */
+  }
+  .border-yellow-200 {
+    @apply border-yellow-500/30;
+  }
+
+  .bg-red-50 {
+    @apply bg-red-500/10;
+  }
+  .bg-red-100 {
+    @apply bg-red-500/20;
+  }
+  .text-red-800 {
+    color: rgb(220 38 38); /* red-600 en light */
+  }
+  .dark .text-red-800 {
+    color: rgb(248 113 113); /* red-400 en dark */
+  }
+  .border-red-200 {
+    @apply border-red-500/30;
+  }
+
+  .bg-orange-50 {
+    @apply bg-orange-500/10;
+  }
+  .border-orange-200 {
+    @apply border-orange-500/30;
+  }
+  .text-orange-800 {
+    color: rgb(234 88 12); /* orange-600 en light */
+  }
+  .dark .text-orange-800 {
+    color: rgb(251 146 60); /* orange-400 en dark */
+  }
+
+  /* Boutons adaptés au dark mode */
+  .btn-primary {
+    @apply bg-primary hover:bg-primary/90 text-primary-foreground font-medium rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-colors;
+  }
+  .btn-secondary {
+    @apply bg-secondary hover:bg-secondary/80 text-secondary-foreground font-medium rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-offset-2 transition-colors;
+  }
+  .btn-destructive {
+    @apply bg-destructive hover:bg-destructive/90 text-destructive-foreground font-medium rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-destructive focus:ring-offset-2 transition-colors;
+  }
+
+  /* Remplacements spécifiques pour les couleurs hardcodées */
+  .bg-blue-600 {
+    @apply bg-primary;
+  }
+  .bg-blue-700 {
+    @apply bg-primary/90;
+  }
+  .hover\:bg-blue-700:hover {
+    @apply hover:bg-primary/90;
+  }
+  .focus\:ring-blue-500:focus {
+    @apply focus:ring-primary;
+  }
+
+  .bg-green-600 {
+    background-color: rgb(22 163 74); /* green-600 en light */
+  }
+  .dark .bg-green-600 {
+    background-color: rgb(34 197 94); /* green-500 en dark */
+  }
+  .bg-green-700 {
+    background-color: rgb(21 128 61); /* green-700 en light */
+  }
+  .dark .bg-green-700 {
+    background-color: rgb(22 163 74); /* green-600 en dark */
+  }
+  .hover\:bg-green-700:hover {
+    background-color: rgb(21 128 61); /* green-700 en light */
+  }
+  .dark .hover\:bg-green-700:hover {
+    background-color: rgb(22 163 74); /* green-600 en dark */
+  }
+
+  .bg-gray-600 {
+    @apply bg-secondary;
+  }
+  .bg-gray-700 {
+    @apply bg-secondary/80;
+  }
+  .hover\:bg-gray-700:hover {
+    @apply hover:bg-secondary/80;
+  }
+
+  .bg-red-600 {
+    @apply bg-destructive;
+  }
+  .bg-red-700 {
+    @apply bg-destructive/90;
+  }
+  .hover\:bg-red-700:hover {
+    @apply hover:bg-destructive/90;
+  }
+
+  .bg-orange-500 {
+    background-color: rgb(249 115 22); /* orange-500 en light */
+  }
+  .dark .bg-orange-500 {
+    background-color: rgb(251 146 60); /* orange-400 en dark */
+  }
+
+  /* Styles personnalisés pour la scrollbar du chat */
+  .chat-scrollbar::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .chat-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .chat-scrollbar::-webkit-scrollbar-thumb {
+    background-color: rgb(156 163 175 / 0.5);
+    border-radius: 9999px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+
+  .chat-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: rgb(156 163 175 / 0.7);
+  }
+
+  .dark .chat-scrollbar::-webkit-scrollbar-thumb {
+    background-color: rgb(107 114 128 / 0.5);
+  }
+
+  .dark .chat-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: rgb(107 114 128 / 0.7);
+  }
+}

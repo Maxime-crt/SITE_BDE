@@ -1,0 +1,124 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String   @id @default(cuid())
+  email       String   @unique
+  firstName   String
+  lastName    String
+  phone       String
+  password    String
+  rating      Float?
+  ratingCount Int      @default(0)
+  isActive    Boolean  @default(true)
+  isAdmin     Boolean  @default(false)
+  isOnline    Boolean  @default(false)
+  lastLoginAt DateTime?
+  lastActivityAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  createdRides Ride[] @relation("RideCreator")
+  joinedRides  RideParticipant[]
+  ratings      Rating[]
+  messages     RideMessage[]
+
+  @@map("users")
+}
+
+model Event {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  location    String
+  type        String   @default("CB") // CB, Mini CB, Afterwork, Autre
+  customType  String?  // Pour le type "Autre"
+  startDate   DateTime
+  endDate     DateTime
+  publishedAt DateTime? // Date de publication (null = brouillon)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  rides Ride[]
+
+  @@map("events")
+}
+
+model Ride {
+  id              String    @id @default(cuid())
+  eventId         String
+  creatorId       String
+  destination     String
+  description     String?
+  departureTime   DateTime
+  maxParticipants Int       @default(4)
+  cost            Float?
+  transportType   String    @default("DRIVE") // DRIVE or UBER
+  status          String @default("OPEN") // RideStatus: OPEN, FULL, IN_PROGRESS, COMPLETED, CANCELLED
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  event        Event @relation(fields: [eventId], references: [id])
+  creator      User  @relation("RideCreator", fields: [creatorId], references: [id])
+  participants RideParticipant[]
+  messages     RideMessage[]
+
+  @@map("rides")
+}
+
+model RideParticipant {
+  id           String @id @default(cuid())
+  rideId       String
+  userId       String
+  status       String @default("PENDING") // ParticipantStatus: PENDING, CONFIRMED, CANCELLED
+  hasReimbursed Boolean @default(false)
+  joinedAt     DateTime @default(now())
+
+  ride Ride @relation(fields: [rideId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([rideId, userId])
+  @@map("ride_participants")
+}
+
+model Rating {
+  id       String @id @default(cuid())
+  ratedId  String
+  raterId  String
+  rideId   String
+  rating   Int
+  comment  String?
+  createdAt DateTime @default(now())
+
+  rated User @relation(fields: [ratedId], references: [id])
+
+  @@unique([ratedId, raterId, rideId])
+  @@map("ratings")
+}
+
+model RideMessage {
+  id              String   @id @default(cuid())
+  rideId          String
+  userId          String
+  message         String
+  isEdited        Boolean  @default(false)
+  replyToId       String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  ride      Ride         @relation(fields: [rideId], references: [id])
+  user      User         @relation(fields: [userId], references: [id])
+  replyTo   RideMessage? @relation("MessageReply", fields: [replyToId], references: [id])
+  replies   RideMessage[] @relation("MessageReply")
+
+  @@map("ride_messages")
+}
+
+
