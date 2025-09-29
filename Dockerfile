@@ -34,9 +34,5 @@ EXPOSE 5000
 ENV NODE_ENV=production
 ENV PORT=5000
 
-# Copier et rendre exécutable le script de démarrage
-COPY start.sh ./
-RUN chmod +x start.sh
-
 # Commande de démarrage
-CMD ["./start.sh"]
+CMD ["npm", "start"]

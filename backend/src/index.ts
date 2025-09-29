@@ -12,6 +12,7 @@ import rideRoutes from './routes/rides';
 import userRoutes from './routes/users';
 import messageRoutes from './routes/messages';
 import { sessionManager } from './services/sessionManager';
+import { runMigrations } from './utils/migrate';
 
 dotenv.config();
 
@@ -96,12 +97,27 @@ io.on('connection', (socket) => {
   });
 });
 
-server.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT} - Prisma updated`);
+// Fonction de démarrage asynchrone
+async function startServer() {
+  try {
+    // Exécuter les migrations en premier
+    await runMigrations();
 
-  // Démarrer le gestionnaire de sessions
-  sessionManager.start();
-});
+    // Démarrer le serveur
+    server.listen(PORT, () => {
+      console.log(`🚀 Server running on port ${PORT} - Database ready`);
+
+      // Démarrer le gestionnaire de sessions
+      sessionManager.start();
+    });
+  } catch (error) {
+    console.error('❌ Failed to start server:', error);
+    process.exit(1);
+  }
+}
+
+// Démarrer le serveur
+startServer();
 
 // Gérer l'arrêt propre du serveur
 process.on('SIGINT', () => {
