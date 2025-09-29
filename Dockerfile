@@ -9,8 +9,8 @@ COPY package*.json ./
 COPY backend/package*.json ./backend/
 COPY frontend/package*.json ./frontend/
 
-# Installer les dépendances
-RUN npm ci --only=production
+# Installer toutes les dépendances (dev + prod pour le build)
+RUN npm ci
 
 # Copier le code source
 COPY . .
