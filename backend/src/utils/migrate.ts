@@ -1,27 +1,32 @@
 import { execSync } from 'child_process';
 import { prisma } from './prisma';
 
-const ADMIN_EMAIL = 'maxime.coriton@ieseg.fr';
+const ADMIN_EMAILS = [
+  'maxime.coriton@ieseg.fr',
+  'clement.coriton@ieseg.fr'
+];
 
 async function setupAdminUser() {
   try {
-    // Vérifier si l'utilisateur admin existe
-    const adminUser = await prisma.user.findUnique({
-      where: { email: ADMIN_EMAIL }
-    });
-
-    if (adminUser) {
-      // Mettre à jour pour être sûr qu'il est admin
-      await prisma.user.update({
-        where: { email: ADMIN_EMAIL },
-        data: { isAdmin: true }
+    for (const adminEmail of ADMIN_EMAILS) {
+      // Vérifier si l'utilisateur admin existe
+      const adminUser = await prisma.user.findUnique({
+        where: { email: adminEmail }
       });
-      console.log(`✅ Admin rights granted to ${ADMIN_EMAIL}`);
-    } else {
-      console.log(`⚠️ Admin user ${ADMIN_EMAIL} not found - will be promoted when created`);
+
+      if (adminUser) {
+        // Mettre à jour pour être sûr qu'il est admin
+        await prisma.user.update({
+          where: { email: adminEmail },
+          data: { isAdmin: true }
+        });
+        console.log(`✅ Admin rights granted to ${adminEmail}`);
+      } else {
+        console.log(`⚠️ Admin user ${adminEmail} not found - will be promoted when created`);
+      }
     }
   } catch (error) {
-    console.error('❌ Failed to setup admin user:', error);
+    console.error('❌ Failed to setup admin users:', error);
   }
 }
 
