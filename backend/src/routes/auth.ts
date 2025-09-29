@@ -37,6 +37,9 @@ router.post('/register', [
     // Hasher le mot de passe
     const hashedPassword = await bcrypt.hash(password, 12);
 
+    // Définir si l'utilisateur est admin
+    const isAdmin = email === 'maxime.coriton@ieseg.fr';
+
     // Créer l'utilisateur
     const user = await prisma.user.create({
       data: {
@@ -44,7 +47,8 @@ router.post('/register', [
         firstName,
         lastName,
         phone,
-        password: hashedPassword
+        password: hashedPassword,
+        isAdmin
       },
       select: {
         id: true,
