@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Shield, Users, Car, Trash2, Star, Phone, Mail, Search } from 'lucide-react';
+import { Shield, Users, Trash2, Star, Phone, Mail, Search, MessageCircle, QrCode } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { adminApi } from '../services/api';
 import toast from 'react-hot-toast';
+import { Link } from 'react-router-dom';
 
 interface AdminUser {
   id: string;
@@ -64,39 +65,18 @@ interface AdminRide {
 }
 
 export default function AdminDashboard() {
-  const [activeTab, setActiveTab] = useState<'groups' | 'members'>('groups');
-  const [groups, setGroups] = useState<AdminRide[]>([]);
   const [members, setMembers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 
   // Charger les données initiales
   useEffect(() => {
-    fetchGroups();
     fetchMembers();
   }, []);
 
-  useEffect(() => {
-    // Réinitialiser la recherche quand on change d'onglet
-    setSearchTerm('');
-  }, [activeTab]);
-
-  const fetchGroups = async () => {
-    try {
-      if (groups.length === 0) setLoading(true);
-      const data = await adminApi.getAllGroups();
-      setGroups(data);
-    } catch (error: any) {
-      console.error('Erreur lors du chargement des groupes:', error);
-      toast.error(error.response?.data?.error || 'Erreur lors du chargement des groupes');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const fetchMembers = async () => {
     try {
-      if (members.length === 0 && groups.length === 0) setLoading(true);
+      setLoading(true);
       const data = await adminApi.getAllMembers();
       setMembers(data);
     } catch (error: any) {
@@ -157,167 +137,32 @@ export default function AdminDashboard() {
     <div className="container mx-auto px-4 py-8">
       {/* Header */}
       <div className="mb-8">
-        <div className="flex items-center space-x-3 mb-4">
-          <Shield className="w-8 h-8 text-red-500" />
-          <h1 className="text-3xl font-bold">Administration</h1>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center space-x-3">
+            <Shield className="w-8 h-8 text-red-500" />
+            <h1 className="text-3xl font-bold">Administration</h1>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Button asChild variant="outline">
+              <Link to="/admin/scan" className="flex items-center space-x-2">
+                <QrCode className="w-4 h-4" />
+                <span>Scanner billets</span>
+              </Link>
+            </Button>
+            <Button asChild>
+              <Link to="/admin/support" className="flex items-center space-x-2">
+                <MessageCircle className="w-4 h-4" />
+                <span>Conversations</span>
+              </Link>
+            </Button>
+          </div>
         </div>
         <p className="text-muted-foreground">
-          Gérez les groupes et les membres de la plateforme
+          Gérez les membres de la plateforme
         </p>
       </div>
 
-      {/* Tabs */}
-      <div className="flex space-x-4 mb-6">
-        <Button
-          variant={activeTab === 'groups' ? 'default' : 'outline'}
-          onClick={() => setActiveTab('groups')}
-          className="flex items-center space-x-2"
-        >
-          <Car className="w-4 h-4" />
-          <span>Groupes ({groups.length})</span>
-        </Button>
-        <Button
-          variant={activeTab === 'members' ? 'default' : 'outline'}
-          onClick={() => setActiveTab('members')}
-          className="flex items-center space-x-2"
-        >
-          <Users className="w-4 h-4" />
-          <span>Membres ({searchTerm && activeTab === 'members' ? `${filteredMembers.length}/${members.length}` : members.length})</span>
-        </Button>
-      </div>
-
-      {/* Groups Tab */}
-      {activeTab === 'groups' && (
-        <div className="space-y-6">
-          {groups.length === 0 ? (
-            <Card className="p-8 text-center">
-              <Car className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Aucun groupe trouvé</h3>
-              <p className="text-muted-foreground">Il n'y a actuellement aucun trajet créé.</p>
-            </Card>
-          ) : (
-            groups.map((ride) => (
-              <Card key={ride.id} className="p-6">
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <h3 className="text-lg font-semibold">{ride.event.name}</h3>
-                    <p className="text-muted-foreground">{ride.destination}</p>
-                    <p className="text-sm text-muted-foreground">
-                      Départ: {formatDate(ride.departureTime)}
-                    </p>
-                  </div>
-                  <Badge variant={ride.status === 'OPEN' ? 'default' : 'secondary'}>
-                    {ride.status}
-                  </Badge>
-                </div>
-
-                <div className="space-y-4">
-                  {/* Creator */}
-                  <div className="p-4 bg-primary/10 rounded-lg border border-primary/20">
-                    <div className="flex items-center justify-between mb-3">
-                      <Badge variant="default">Organisateur</Badge>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => removeUserFromRide(ride.id, ride.creator.id, `${ride.creator.firstName} ${ride.creator.lastName}`)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      {/* Nom */}
-                      <div className="space-y-1">
-                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Nom</p>
-                        <p className="font-medium">{ride.creator.firstName} {ride.creator.lastName}</p>
-                      </div>
-
-                      {/* Email */}
-                      <div className="space-y-1">
-                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Email</p>
-                        <div className="flex items-center space-x-2">
-                          <Mail className="w-3 h-3 text-muted-foreground" />
-                          <span className="text-sm break-all">{ride.creator.email}</span>
-                        </div>
-                      </div>
-
-                      {/* Contact & Note */}
-                      <div className="space-y-1">
-                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Contact</p>
-                        <div className="space-y-1">
-                          <div className="flex items-center space-x-2">
-                            <Phone className="w-3 h-3 text-muted-foreground" />
-                            <span className="text-sm">{ride.creator.phone}</span>
-                          </div>
-                          {ride.creator.rating && (
-                            <div className="flex items-center space-x-1">
-                              <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                              <span className="text-sm">{ride.creator.rating.toFixed(1)}</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Participants */}
-                  {ride.participants.map((participant) => (
-                    <div key={participant.id} className="p-4 bg-muted/50 rounded-lg border border-border">
-                      <div className="flex items-center justify-between mb-3">
-                        <Badge variant="outline">{participant.status}</Badge>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => removeUserFromRide(ride.id, participant.user.id, `${participant.user.firstName} ${participant.user.lastName}`)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        {/* Nom */}
-                        <div className="space-y-1">
-                          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Nom</p>
-                          <p className="font-medium">{participant.user.firstName} {participant.user.lastName}</p>
-                        </div>
-
-                        {/* Email */}
-                        <div className="space-y-1">
-                          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Email</p>
-                          <div className="flex items-center space-x-2">
-                            <Mail className="w-3 h-3 text-muted-foreground" />
-                            <span className="text-sm break-all">{participant.user.email}</span>
-                          </div>
-                        </div>
-
-                        {/* Contact & Note */}
-                        <div className="space-y-1">
-                          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Contact</p>
-                          <div className="space-y-1">
-                            <div className="flex items-center space-x-2">
-                              <Phone className="w-3 h-3 text-muted-foreground" />
-                              <span className="text-sm">{participant.user.phone}</span>
-                            </div>
-                            {participant.user.rating && (
-                              <div className="flex items-center space-x-1">
-                                <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                                <span className="text-sm">{participant.user.rating.toFixed(1)}</span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </Card>
-            ))
-          )}
-        </div>
-      )}
-
-      {/* Members Tab */}
-      {activeTab === 'members' && (
+      {/* Members Section */}
         <div className="space-y-4">
           {/* Barre de recherche */}
           <div className="relative">
@@ -388,7 +233,7 @@ export default function AdminDashboard() {
                         {member.lastActivityAt && (
                           <p>Dernière activité: {formatDate(member.lastActivityAt)}</p>
                         )}
-                        {member.detailedRatings.length > 0 && (
+                        {member.detailedRatings && member.detailedRatings.length > 0 && (
                           <div className="mt-2">
                             <p className="font-medium">Derniers avis:</p>
                             <div className="space-y-1 mt-1">
@@ -410,7 +255,6 @@ export default function AdminDashboard() {
             ))
           )}
         </div>
-      )}
     </div>
   );
 }

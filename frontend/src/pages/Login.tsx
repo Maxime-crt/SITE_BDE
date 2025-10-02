@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Eye, EyeOff, Car, Loader2 } from 'lucide-react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Eye, EyeOff, Calendar, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -15,6 +15,10 @@ export default function Login({ onLogin }: LoginProps) {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const from = (location.state as any)?.from || '/dashboard';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,35 +30,44 @@ export default function Login({ onLogin }: LoginProps) {
 
     setLoading(true);
     try {
-      await onLogin(email, password);
-      toast.success('Connexion réussie !');
+      const response = await onLogin(email, password);
+      toast.success(`Salut, ${response.user.firstName} 👋`, {
+        position: 'top-center',
+        duration: 2500,
+      });
+      navigate(from, { replace: true });
     } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Erreur de connexion');
+      // Vérifier si l'email nécessite une vérification
+      if (error.response?.data?.requiresVerification) {
+        navigate('/verify-email', { state: { email: error.response.data.email } });
+      } else {
+        toast.error(error.response?.data?.error || 'Erreur de connexion');
+      }
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-md space-y-8">
         {/* Logo et titre */}
         <div className="text-center space-y-4">
-          <div className="mx-auto w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
-            <Car className="w-10 h-10 text-white" />
+          <div className="mx-auto w-20 h-20 bg-primary rounded-2xl flex items-center justify-center shadow-lg">
+            <Calendar className="w-10 h-10 text-primary-foreground" />
           </div>
           <div className="space-y-2">
-            <h1 className="text-3xl font-bold tracking-tight text-gray-900">
+            <h1 className="text-3xl font-bold tracking-tight">
               Bienvenue
             </h1>
             <p className="text-muted-foreground">
-              Connectez-vous à votre compte BDE Covoiturage
+              Connectez-vous pour réserver vos billets
             </p>
           </div>
         </div>
 
         {/* Carte de connexion */}
-        <Card className="shadow-2xl border-0 bg-white/80 backdrop-blur">
+        <Card className="shadow-lg">
           <CardHeader className="space-y-1 pb-4">
             <CardTitle className="text-2xl font-semibold text-center">
               Connexion

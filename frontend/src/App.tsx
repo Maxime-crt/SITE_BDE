@@ -4,12 +4,18 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import VerifyEmail from './pages/VerifyEmail';
 import Dashboard from './pages/Dashboard';
 import EventDetail from './pages/EventDetail';
-import CreateRide from './pages/CreateRide';
 import CreateEvent from './pages/CreateEvent';
 import Profile from './pages/Profile';
 import AdminDashboard from './pages/AdminDashboard';
+import AdminSupport from './pages/AdminSupport';
+import ScanTicket from './pages/ScanTicket';
+import MyTickets from './pages/MyTickets';
+import PurchaseTicket from './pages/PurchaseTicket';
+import RateEvent from './pages/RateEvent';
+import Support from './pages/Support';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import { authApi } from './services/api';
@@ -96,69 +102,119 @@ function AppContent() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground transition-colors">
-      {user && <Navbar user={user} onLogout={logout} />}
+    <div className="min-h-screen bg-background text-foreground transition-colors flex flex-col">
+      <Navbar user={user} onLogout={logout} />
 
-      <Routes>
-        <Route
-          path="/login"
-          element={
-            user ? <Navigate to="/dashboard" /> : <Login onLogin={login} />
-          }
-        />
-        <Route
-          path="/register"
-          element={
-            user ? <Navigate to="/dashboard" /> : <Register onRegister={register} />
-          }
-        />
-        <Route
-          path="/dashboard"
-          element={
-            user ? <Dashboard /> : <Navigate to="/login" />
-          }
-        />
-        <Route
-          path="/events/:id"
-          element={
-            user ? <EventDetail user={user} /> : <Navigate to="/login" />
-          }
-        />
-        <Route
-          path="/events/:id/create-ride"
-          element={
-            user ? <CreateRide user={user} /> : <Navigate to="/login" />
-          }
-        />
-        <Route
-          path="/create-event"
-          element={
-            user ? (
-              user.isAdmin ? <CreateEvent /> : <Navigate to="/dashboard" />
-            ) : <Navigate to="/login" />
-          }
-        />
-        <Route
-          path="/admin"
-          element={
-            user ? (
-              user.isAdmin ? <AdminDashboard /> : <Navigate to="/dashboard" />
-            ) : <Navigate to="/login" />
-          }
-        />
-        <Route
-          path="/profile"
-          element={
-            user ? <Profile user={user} /> : <Navigate to="/login" />
-          }
-        />
-        <Route
-          path="/"
-          element={<Navigate to={user ? "/dashboard" : "/login"} />}
-        />
-      </Routes>
+      <main className="flex-1">
+        <Routes>
+          <Route
+            path="/login"
+            element={
+              user ? <Navigate to="/dashboard" /> : <Login onLogin={login} />
+            }
+          />
+          <Route
+            path="/register"
+            element={
+              user ? <Navigate to="/dashboard" /> : <Register onRegister={register} />
+            }
+          />
+          <Route
+            path="/verify-email"
+            element={<VerifyEmail />}
+          />
+          <Route
+            path="/dashboard"
+            element={
+              user ? <Dashboard /> : <Navigate to="/login" />
+            }
+          />
+          <Route
+            path="/events/:id"
+            element={
+              user ? <EventDetail user={user} /> : <Navigate to="/login" />
+            }
+          />
+          <Route
+            path="/my-tickets"
+            element={
+              user ? <MyTickets /> : <Navigate to="/login" />
+            }
+          />
+          <Route
+            path="/purchase-ticket/:eventId"
+            element={
+              user ? <PurchaseTicket /> : <Navigate to="/login" />
+            }
+          />
+          <Route
+            path="/events/:eventId/rate"
+            element={
+              user ? <RateEvent /> : <Navigate to="/login" />
+            }
+          />
+          <Route
+            path="/support"
+            element={
+              user ? <Support user={user} /> : <Navigate to="/login" />
+            }
+          />
+          <Route
+            path="/create-event"
+            element={
+              user ? (
+                user.isAdmin ? <CreateEvent /> : <Navigate to="/dashboard" />
+              ) : <Navigate to="/login" />
+            }
+          />
+          <Route
+            path="/events/:id/edit"
+            element={
+              user ? (
+                user.isAdmin ? <CreateEvent /> : <Navigate to="/dashboard" />
+              ) : <Navigate to="/login" />
+            }
+          />
+          <Route
+            path="/admin/support"
+            element={
+              user ? (
+                user.isAdmin ? <AdminSupport /> : <Navigate to="/dashboard" />
+              ) : <Navigate to="/login" />
+            }
+          />
+          <Route
+            path="/admin/scan"
+            element={
+              user ? (
+                user.isAdmin ? <ScanTicket /> : <Navigate to="/dashboard" />
+              ) : <Navigate to="/login" />
+            }
+          />
+          <Route
+            path="/admin"
+            element={
+              user ? (
+                user.isAdmin ? <AdminDashboard /> : <Navigate to="/dashboard" />
+              ) : <Navigate to="/login" />
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              user ? <Profile user={user} /> : <Navigate to="/login" />
+            }
+          />
+          <Route
+            path="/"
+            element={
+              user ? <Navigate to="/dashboard" /> : <Navigate to="/login" />
+            }
+          />
+        </Routes>
+      </main>
 
-      {user && <Footer />}
+      <Footer />
 
       <Toaster position="top-right" />
     </div>

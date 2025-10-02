@@ -2,8 +2,7 @@ import { execSync } from 'child_process';
 import { prisma } from './prisma';
 
 const ADMIN_EMAILS = [
-  'maxime.coriton@ieseg.fr',
-  'clement.coriton@ieseg.fr'
+  'maxime.coriton@ieseg.fr'
 ];
 
 async function setupAdminUser() {

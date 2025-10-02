@@ -49,6 +49,16 @@ export const authApi = {
     return response.data;
   },
 
+  verifyEmail: async (email: string, code: string): Promise<AuthResponse> => {
+    const response = await api.post('/auth/verify-email', { email, code });
+    return response.data;
+  },
+
+  resendVerificationCode: async (email: string): Promise<{ message: string }> => {
+    const response = await api.post('/auth/resend-verification', { email });
+    return response.data;
+  },
+
   getProfile: async (): Promise<{ user: User }> => {
     const response = await api.get('/auth/me');
     return response.data;
@@ -84,6 +94,8 @@ export const eventsApi = {
     customType?: string;
     startDate: string;
     endDate: string;
+    capacity: number;
+    ticketPrice: number;
     publishedAt?: string;
   }): Promise<Event> => {
     const response = await api.post('/events', data);
@@ -98,9 +110,16 @@ export const eventsApi = {
     customType?: string;
     startDate: string;
     endDate: string;
+    capacity?: number;
+    ticketPrice?: number;
     publishedAt?: string | null;
   }): Promise<Event> => {
     const response = await api.put(`/events/${id}`, data);
+    return response.data;
+  },
+
+  getTicketsAvailable: async (eventId: string): Promise<{ capacity: number; sold: number; available: number }> => {
+    const response = await api.get(`/events/${eventId}/tickets-available`);
     return response.data;
   },
 
@@ -110,102 +129,98 @@ export const eventsApi = {
   },
 };
 
-export const ridesApi = {
-  getByEvent: async (eventId: string): Promise<Ride[]> => {
-    const response = await api.get(`/events/${eventId}/rides`);
+export const ticketsApi = {
+  createPaymentIntent: async (eventId: string): Promise<{ clientSecret?: string; amount?: number; success?: boolean; isFree?: boolean; ticket?: any }> => {
+    const response = await api.post('/tickets/create-payment-intent', { eventId });
     return response.data;
   },
 
-  getById: async (id: string): Promise<Ride> => {
-    const response = await api.get(`/rides/${id}`);
+  confirmPayment: async (paymentIntentId: string, eventId: string): Promise<{ ticket: any }> => {
+    const response = await api.post('/tickets/confirm-payment', { paymentIntentId, eventId });
     return response.data;
   },
 
+  getMyTickets: async (): Promise<any[]> => {
+    const response = await api.get('/tickets/my-tickets');
+    return response.data;
+  },
+
+  getTicket: async (ticketId: string): Promise<any> => {
+    const response = await api.get(`/tickets/${ticketId}`);
+    return response.data;
+  },
+
+  cancelTicket: async (ticketId: string): Promise<{ success: boolean; message: string }> => {
+    const response = await api.post(`/tickets/${ticketId}/cancel`);
+    return response.data;
+  },
+
+  scanTicket: async (ticketId: string): Promise<{ success: boolean; ticket: any }> => {
+    const response = await api.post(`/tickets/${ticketId}/scan`);
+    return response.data;
+  },
+
+  scanQRCode: async (qrCodeData: string): Promise<{ success: boolean; ticket: any }> => {
+    const response = await api.post('/tickets/scan-qr', { qrCodeData });
+    return response.data;
+  },
+};
+
+export const eventRatingsApi = {
   create: async (data: {
     eventId: string;
-    destination: string;
-    description?: string;
-    departureTime: string;
-    maxParticipants: number;
-    cost?: number;
-    transportType: 'DRIVE' | 'UBER';
-  }): Promise<Ride> => {
-    const response = await api.post('/rides', data);
-    return response.data;
-  },
-
-  join: async (rideId: string) => {
-    const response = await api.post(`/rides/${rideId}/join`);
-    return response.data;
-  },
-
-  confirm: async (rideId: string) => {
-    const response = await api.patch(`/rides/${rideId}/confirm`);
-    return response.data;
-  },
-
-  setCost: async (rideId: string, cost: number) => {
-    const response = await api.patch(`/rides/${rideId}/cost`, { cost });
-    return response.data;
-  },
-
-  markReimbursed: async (rideId: string) => {
-    const response = await api.patch(`/rides/${rideId}/reimburse`);
-    return response.data;
-  },
-
-  update: async (rideId: string, data: {
-    destination: string;
-    description?: string;
-    departureTime: string;
-    maxParticipants: number;
-    cost?: number;
-    transportType?: 'DRIVE' | 'UBER';
-  }): Promise<Ride> => {
-    const response = await api.put(`/rides/${rideId}`, data);
-    return response.data;
-  },
-
-  delete: async (rideId: string) => {
-    const response = await api.delete(`/rides/${rideId}`);
-    return response.data;
-  },
-
-  getMyRides: async () => {
-    const response = await api.get('/rides/my-rides');
-    return response.data;
-  },
-
-  manageParticipant: async (rideId: string, participantId: string, action: 'accept' | 'reject') => {
-    const response = await api.patch(`/rides/${rideId}/participants/${participantId}`, { action });
-    return response.data;
-  },
-
-  leave: async (rideId: string) => {
-    const response = await api.delete(`/rides/${rideId}/leave`);
-    return response.data;
-  },
-};
-
-export const usersApi = {
-  rate: async (userId: string, data: {
-    rideId: string;
     rating: number;
     comment?: string;
-  }) => {
-    const response = await api.post(`/users/${userId}/rate`, data);
+  }): Promise<any> => {
+    const response = await api.post('/event-ratings', data);
     return response.data;
   },
 
-  getRides: async (userId: string) => {
-    const response = await api.get(`/users/${userId}/rides`);
+  getByEvent: async (eventId: string): Promise<any[]> => {
+    const response = await api.get(`/event-ratings/${eventId}`);
+    return response.data;
+  },
+
+  getMyRating: async (eventId: string): Promise<any> => {
+    const response = await api.get(`/event-ratings/${eventId}/my-rating`);
+    return response.data;
+  },
+
+  delete: async (eventId: string): Promise<{ message: string }> => {
+    const response = await api.delete(`/event-ratings/${eventId}`);
     return response.data;
   },
 };
 
+export const supportApi = {
+  getMessages: async (): Promise<any[]> => {
+    const response = await api.get('/support/messages');
+    return response.data;
+  },
+
+  sendMessage: async (data: {
+    message: string;
+    replyToId?: string;
+  }): Promise<any> => {
+    const response = await api.post('/support/messages', data);
+    return response.data;
+  },
+
+  updateMessage: async (messageId: string, message: string): Promise<any> => {
+    const response = await api.put(`/support/messages/${messageId}`, { message });
+    return response.data;
+  },
+
+  deleteMessage: async (messageId: string): Promise<{ message: string }> => {
+    const response = await api.delete(`/support/messages/${messageId}`);
+    return response.data;
+  },
+};
+
+
 export const adminApi = {
-  getAllGroups: async () => {
-    const response = await api.get('/events/admin/all-groups');
+  getAllTickets: async () => {
+    const response = await api.get('/events/admin/all-tickets');
     return response.data;
   },
 
@@ -214,13 +229,27 @@ export const adminApi = {
     return response.data;
   },
 
-  removeUserFromRide: async (rideId: string, userId: string) => {
-    const response = await api.delete(`/rides/admin/${rideId}/participants/${userId}`);
+  getConnectionStats: async () => {
+    const response = await api.get('/events/admin/connection-stats');
     return response.data;
   },
 
-  getConnectionStats: async () => {
-    const response = await api.get('/events/admin/connection-stats');
+  getAllConversations: async () => {
+    const response = await api.get('/support/admin/all-conversations');
+    return response.data;
+  },
+
+  getUserMessages: async (userId: string) => {
+    const response = await api.get(`/support/admin/user/${userId}/messages`);
+    return response.data;
+  },
+
+  replyToUser: async (data: {
+    userId: string;
+    message: string;
+    replyToId?: string;
+  }) => {
+    const response = await api.post('/support/admin/reply', data);
     return response.data;
   },
 };

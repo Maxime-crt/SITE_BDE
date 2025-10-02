@@ -8,7 +8,7 @@ export default function Footer() {
           {/* Logo/Titre */}
           <div className="text-center">
             <h3 className="text-xl font-bold mb-2">BDE IESEG</h3>
-            <p className="text-primary-foreground/80 text-sm">Plateforme de covoiturage étudiante</p>
+            <p className="text-primary-foreground/80 text-sm">Plateforme de billetterie des événements BDE</p>
           </div>
 
           {/* Réseaux sociaux */}

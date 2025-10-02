@@ -8,9 +8,10 @@ import { Server } from 'socket.io';
 
 import authRoutes from './routes/auth';
 import eventRoutes from './routes/events';
-import rideRoutes from './routes/rides';
+import ticketRoutes from './routes/tickets';
+import eventRatingRoutes from './routes/eventRatings';
+import supportRoutes from './routes/support';
 import userRoutes from './routes/users';
-import messageRoutes from './routes/messages';
 import { sessionManager } from './services/sessionManager';
 import { runMigrations } from './utils/migrate';
 
@@ -58,12 +59,13 @@ if (!isDevelopment) {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/events', eventRoutes);
-app.use('/api/rides', rideRoutes);
+app.use('/api/tickets', ticketRoutes);
+app.use('/api/event-ratings', eventRatingRoutes);
+app.use('/api/support', supportRoutes);
 app.use('/api/users', userRoutes);
-app.use('/api/messages', messageRoutes);
 
 app.get('/api/health', (req, res) => {
-  res.json({ message: 'BDE Covoiturage API is running!' });
+  res.json({ message: 'BDE Billetterie API is running!' });
 });
 
 // Catch-all pour servir le frontend React (SPA)
@@ -76,20 +78,20 @@ if (!isDevelopment) {
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
 
-  socket.on('join-ride-chat', (rideId) => {
-    console.log(`User ${socket.id} joined ride chat: ${rideId}`);
-    socket.join(`ride-${rideId}`);
+  socket.on('join-support-chat', (userId) => {
+    console.log(`User ${socket.id} joined support chat: ${userId}`);
+    socket.join(`support-${userId}`);
   });
 
-  socket.on('leave-ride-chat', (rideId) => {
-    console.log(`User ${socket.id} left ride chat: ${rideId}`);
-    socket.leave(`ride-${rideId}`);
+  socket.on('leave-support-chat', (userId) => {
+    console.log(`User ${socket.id} left support chat: ${userId}`);
+    socket.leave(`support-${userId}`);
   });
 
-  socket.on('ride-message', (data) => {
-    console.log('Broadcasting message to ride:', data.rideId);
-    // Diffuser le message à tous les autres utilisateurs du chat
-    socket.to(`ride-${data.rideId}`).emit('ride-message', data);
+  socket.on('support-message', (data) => {
+    console.log('Broadcasting message to support:', data.userId);
+    // Diffuser le message à tous les autres utilisateurs du chat (admin et utilisateur)
+    socket.to(`support-${data.userId}`).emit('support-message', data);
   });
 
   socket.on('disconnect', () => {

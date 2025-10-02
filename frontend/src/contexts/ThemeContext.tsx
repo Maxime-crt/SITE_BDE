@@ -40,10 +40,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // Mettre à jour le thème résolu quand le thème ou la préférence système change
+  // Mettre à jour le thème résolu quand le thème change
   useEffect(() => {
-    // Sur les pages d'authentification, on garde le thème système mais pas le dark mode
-    const newResolvedTheme = isAuthPage ? 'light' : resolveTheme(theme);
+    const newResolvedTheme = resolveTheme(theme);
     setResolvedTheme(newResolvedTheme);
 
     // Appliquer la classe au document
@@ -55,14 +54,14 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     if (metaThemeColor) {
       metaThemeColor.setAttribute('content', newResolvedTheme === 'dark' ? '#2f3349' : '#ffffff');
     }
-  }, [theme, isAuthPage]);
+  }, [theme]);
 
   // Écouter les changements de préférence système
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
 
     const handleChange = () => {
-      if (theme === 'system' && !isAuthPage) {
+      if (theme === 'system') {
         const newResolvedTheme = getSystemTheme();
         setResolvedTheme(newResolvedTheme);
         document.documentElement.classList.remove('light', 'dark');
@@ -72,7 +71,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
     mediaQuery.addListener(handleChange);
     return () => mediaQuery.removeListener(handleChange);
-  }, [theme, isAuthPage]);
+  }, [theme]);
 
   const handleSetTheme = (newTheme: Theme) => {
     setTheme(newTheme);

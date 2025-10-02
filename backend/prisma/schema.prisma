@@ -9,26 +9,26 @@ datasource db {
 }
 
 model User {
-  id          String   @id @default(cuid())
-  email       String   @unique
-  firstName   String
-  lastName    String
-  phone       String
-  password    String
-  rating      Float?
-  ratingCount Int      @default(0)
-  isActive    Boolean  @default(true)
-  isAdmin     Boolean  @default(false)
-  isOnline    Boolean  @default(false)
-  lastLoginAt DateTime?
-  lastActivityAt DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id               String   @id @default(cuid())
+  email            String   @unique
+  firstName        String
+  lastName         String
+  phone            String
+  password         String
+  isActive         Boolean  @default(true)
+  isAdmin          Boolean  @default(false)
+  isOnline         Boolean  @default(false)
+  emailVerified    Boolean  @default(false)
+  verificationCode String?
+  codeExpiresAt    DateTime?
+  lastLoginAt      DateTime?
+  lastActivityAt   DateTime?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
-  createdRides Ride[] @relation("RideCreator")
-  joinedRides  RideParticipant[]
-  ratings      Rating[]
-  messages     RideMessage[]
+  tickets        Ticket[]
+  eventRatings   EventRating[]
+  supportMessages SupportMessage[]
 
   @@map("users")
 }
@@ -44,82 +44,69 @@ model Event {
   endDate     DateTime
   publishedAt DateTime? // Date de publication (null = brouillon)
   isActive    Boolean  @default(true)
+  capacity    Int      @default(100) // Nombre total de places
+  ticketPrice Float    @default(0) // Prix du billet (peut être 0 pour gratuit)
+  rating      Float?
+  ratingCount Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  rides Ride[]
+  tickets Ticket[]
+  ratings EventRating[]
 
   @@map("events")
 }
 
-model Ride {
-  id              String    @id @default(cuid())
+model Ticket {
+  id              String   @id @default(cuid())
   eventId         String
-  creatorId       String
-  destination     String
-  description     String?
-  departureTime   DateTime
-  maxParticipants Int       @default(4)
-  cost            Float?
-  transportType   String    @default("DRIVE") // DRIVE or UBER
-  status          String @default("OPEN") // RideStatus: OPEN, FULL, IN_PROGRESS, COMPLETED, CANCELLED
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  userId          String
+  qrCode          String   @unique // Texte unique du QR code (ex: TICKET-xxx)
+  qrCodeImage     String   @default("") // Image base64 du QR code
+  status          String   @default("VALID") // VALID, USED, CANCELLED, REFUNDED
+  purchasePrice   Float    // Prix payé (fixé au moment de l'achat)
+  stripePaymentId String?  // ID du paiement Stripe
+  purchasedAt     DateTime @default(now())
+  usedAt          DateTime? // Quand le billet a été scanné
 
-  event        Event @relation(fields: [eventId], references: [id])
-  creator      User  @relation("RideCreator", fields: [creatorId], references: [id])
-  participants RideParticipant[]
-  messages     RideMessage[]
+  event Event @relation(fields: [eventId], references: [id])
+  user  User  @relation(fields: [userId], references: [id])
 
-  @@map("rides")
+  @@map("tickets")
 }
 
-model RideParticipant {
-  id           String @id @default(cuid())
-  rideId       String
-  userId       String
-  status       String @default("PENDING") // ParticipantStatus: PENDING, CONFIRMED, CANCELLED
-  hasReimbursed Boolean @default(false)
-  joinedAt     DateTime @default(now())
-
-  ride Ride @relation(fields: [rideId], references: [id])
-  user User @relation(fields: [userId], references: [id])
-
-  @@unique([rideId, userId])
-  @@map("ride_participants")
-}
-
-model Rating {
-  id       String @id @default(cuid())
-  ratedId  String
-  raterId  String
-  rideId   String
-  rating   Int
-  comment  String?
+model EventRating {
+  id        String   @id @default(cuid())
+  eventId   String
+  userId    String
+  rating    Int      // Note de 1 à 5
+  comment   String?
   createdAt DateTime @default(now())
 
-  rated User @relation(fields: [ratedId], references: [id])
+  event Event @relation(fields: [eventId], references: [id])
+  user  User  @relation(fields: [userId], references: [id])
 
-  @@unique([ratedId, raterId, rideId])
-  @@map("ratings")
+  @@unique([eventId, userId])
+  @@map("event_ratings")
 }
 
-model RideMessage {
-  id              String   @id @default(cuid())
-  rideId          String
-  userId          String
-  message         String
-  isEdited        Boolean  @default(false)
-  replyToId       String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+model SupportMessage {
+  id        String   @id @default(cuid())
+  userId    String
+  message   String
+  isEdited  Boolean  @default(false)
+  editCount Int      @default(0) // Nombre de modifications (max 2)
+  replyToId String?
+  isFromBDE Boolean  @default(false) // true si le message vient du BDE
+  isRead    Boolean  @default(false) // true si le message a été lu par le destinataire
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  ride      Ride         @relation(fields: [rideId], references: [id])
-  user      User         @relation(fields: [userId], references: [id])
-  replyTo   RideMessage? @relation("MessageReply", fields: [replyToId], references: [id])
-  replies   RideMessage[] @relation("MessageReply")
+  user    User             @relation(fields: [userId], references: [id])
+  replyTo SupportMessage?  @relation("MessageReply", fields: [replyToId], references: [id])
+  replies SupportMessage[] @relation("MessageReply")
 
-  @@map("ride_messages")
+  @@map("support_messages")
 }
 
 

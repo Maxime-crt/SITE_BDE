@@ -4,8 +4,6 @@ export interface User {
   firstName: string;
   lastName: string;
   phone: string;
-  rating: number | null;
-  ratingCount: number;
   isAdmin?: boolean;
 }
 
@@ -18,37 +16,56 @@ export interface Event {
   customType?: string;
   startDate: string;
   endDate: string;
+  capacity: number;
+  ticketPrice: number;
+  rating?: number;
+  ratingCount: number;
   publishedAt?: string;
-  rides?: Ride[];
+  tickets?: Ticket[];
+  ratings?: EventRating[];
 }
 
-export interface Ride {
+export interface Ticket {
   id: string;
   eventId: string;
-  creatorId: string;
-  destination: string;
-  departureTime: string;
-  maxParticipants: number;
-  cost?: number;
-  transportType: 'DRIVE' | 'UBER';
-  status: RideStatus;
-  creator: User;
-  participants: RideParticipant[];
-  event?: Event;
-}
-
-export interface RideParticipant {
-  id: string;
-  rideId: string;
   userId: string;
-  status: ParticipantStatus;
-  hasReimbursed: boolean;
-  joinedAt: string;
-  user: User;
+  qrCode: string;
+  status: TicketStatus;
+  purchasePrice: number;
+  stripePaymentId?: string;
+  purchasedAt: string;
+  usedAt?: string;
+  event?: Event;
+  user?: User;
 }
 
-export type RideStatus = 'OPEN' | 'FULL' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
-export type ParticipantStatus = 'PENDING' | 'CONFIRMED' | 'CANCELLED';
+export interface EventRating {
+  id: string;
+  eventId: string;
+  userId: string;
+  rating: number;
+  comment?: string;
+  createdAt: string;
+  event?: Event;
+  user?: User;
+}
+
+export interface SupportMessage {
+  id: string;
+  userId: string;
+  message: string;
+  isEdited: boolean;
+  replyToId?: string;
+  isFromBDE: boolean;
+  isRead: boolean;
+  createdAt: string;
+  updatedAt: string;
+  user?: User;
+  replyTo?: SupportMessage;
+  replies?: SupportMessage[];
+}
+
+export type TicketStatus = 'VALID' | 'USED' | 'CANCELLED' | 'REFUNDED';
 
 export interface AuthResponse {
   message: string;

@@ -39,16 +39,9 @@ router.get('/', async (req: express.Request, res: express.Response) => {
       where: whereClause,
       orderBy: { startDate: 'asc' },
       include: {
-        rides: {
-          include: {
-            creator: {
-              select: { firstName: true, lastName: true, rating: true }
-            },
-            participants: {
-              where: { status: 'CONFIRMED' },
-              select: { status: true }
-            }
-          }
+        tickets: {
+          where: { status: { in: ['VALID', 'USED'] } },
+          select: { id: true }
         }
       }
     });
@@ -66,7 +59,9 @@ router.post('/', authenticateToken, requireAdmin, [
   body('location').trim().isLength({ min: 3 }).withMessage('Lieu requis'),
   body('type').trim().isLength({ min: 1 }).withMessage('Type requis'),
   body('startDate').isISO8601().withMessage('Date de début valide requise'),
-  body('endDate').isISO8601().withMessage('Date de fin valide requise')
+  body('endDate').isISO8601().withMessage('Date de fin valide requise'),
+  body('capacity').isInt({ min: 1 }).withMessage('Capacité requise (min 1)'),
+  body('ticketPrice').isFloat({ min: 0 }).withMessage('Prix du billet requis (min 0)')
 ], async (req: AuthRequest, res: express.Response) => {
   try {
     const errors = validationResult(req);
@@ -74,7 +69,7 @@ router.post('/', authenticateToken, requireAdmin, [
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { name, description, location, type, customType, startDate, endDate, publishedAt } = req.body;
+    const { name, description, location, type, customType, startDate, endDate, publishedAt, capacity, ticketPrice } = req.body;
 
     const event = await prisma.event.create({
       data: {
@@ -85,7 +80,9 @@ router.post('/', authenticateToken, requireAdmin, [
         customType: type === 'Autre' ? customType : null,
         startDate: new Date(startDate),
         endDate: new Date(endDate),
-        publishedAt: publishedAt ? new Date(publishedAt) : null
+        publishedAt: publishedAt ? new Date(publishedAt) : null,
+        capacity: parseInt(capacity),
+        ticketPrice: parseFloat(ticketPrice)
       }
     });
 
@@ -104,20 +101,17 @@ router.get('/:id', async (req: express.Request, res: express.Response) => {
     const event = await prisma.event.findUnique({
       where: { id },
       include: {
-        rides: {
-          where: { status: { in: ['OPEN', 'FULL'] } },
+        tickets: {
+          where: { status: { in: ['VALID', 'USED'] } },
+          select: { id: true, userId: true }
+        },
+        ratings: {
           include: {
-            creator: {
-              select: { id: true, firstName: true, lastName: true, rating: true, phone: true }
-            },
-            participants: {
-              include: {
-                user: {
-                  select: { id: true, firstName: true, lastName: true, rating: true, phone: true }
-                }
-              }
+            user: {
+              select: { firstName: true, lastName: true }
             }
-          }
+          },
+          orderBy: { createdAt: 'desc' }
         }
       }
     });
@@ -133,68 +127,60 @@ router.get('/:id', async (req: express.Request, res: express.Response) => {
   }
 });
 
-// Récupérer les trajets d'un événement
-router.get('/:id/rides', async (req: express.Request, res: express.Response) => {
+// Récupérer les billets disponibles pour un événement
+router.get('/:id/tickets-available', async (req: express.Request, res: express.Response) => {
   try {
     const { id } = req.params;
 
-    const rides = await prisma.ride.findMany({
-      where: {
-        eventId: id,
-        status: { in: ['OPEN', 'FULL'] }
-      },
+    const event = await prisma.event.findUnique({
+      where: { id },
       include: {
-        creator: {
-          select: { id: true, firstName: true, lastName: true, rating: true, phone: true }
-        },
-        participants: {
-          include: {
-            user: {
-              select: { id: true, firstName: true, lastName: true, rating: true, phone: true }
-            }
-          }
+        tickets: {
+          where: { status: { in: ['VALID', 'USED'] } }
         }
-      },
-      orderBy: { departureTime: 'asc' }
+      }
     });
 
-    res.json(rides);
+    if (!event) {
+      return res.status(404).json({ error: 'Événement non trouvé' });
+    }
+
+    const availableTickets = event.capacity - event.tickets.length;
+
+    res.json({
+      capacity: event.capacity,
+      sold: event.tickets.length,
+      available: availableTickets
+    });
   } catch (error) {
-    console.error('Erreur récupération trajets:', error);
+    console.error('Erreur récupération disponibilité:', error);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
 
-// Admin: Voir tous les groupes formés (sans demande d'accès)
-router.get('/admin/all-groups', authenticateToken, requireAdmin, async (req: AuthRequest, res: express.Response) => {
+// Admin: Voir tous les billets vendus
+router.get('/admin/all-tickets', authenticateToken, requireAdmin, async (req: AuthRequest, res: express.Response) => {
   try {
-    const rides = await prisma.ride.findMany({
+    const tickets = await prisma.ticket.findMany({
       include: {
         event: {
           select: { id: true, name: true, location: true, startDate: true }
         },
-        creator: {
-          select: { id: true, firstName: true, lastName: true, email: true, rating: true, phone: true }
-        },
-        participants: {
-          include: {
-            user: {
-              select: { id: true, firstName: true, lastName: true, email: true, rating: true, phone: true }
-            }
-          }
+        user: {
+          select: { id: true, firstName: true, lastName: true, email: true, phone: true }
         }
       },
-      orderBy: { departureTime: 'desc' }
+      orderBy: { purchasedAt: 'desc' }
     });
 
-    res.json(rides);
+    res.json(tickets);
   } catch (error) {
-    console.error('Erreur récupération groupes admin:', error);
+    console.error('Erreur récupération billets admin:', error);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
 
-// Admin: Voir les profils de tous les membres avec leurs notes
+// Admin: Voir les profils de tous les membres
 router.get('/admin/members', authenticateToken, requireAdmin, async (req: AuthRequest, res: express.Response) => {
   try {
     const users = await prisma.user.findMany({
@@ -204,8 +190,6 @@ router.get('/admin/members', authenticateToken, requireAdmin, async (req: AuthRe
         lastName: true,
         email: true,
         phone: true,
-        rating: true,
-        ratingCount: true,
         isActive: true,
         isOnline: true,
         lastLoginAt: true,
@@ -215,27 +199,7 @@ router.get('/admin/members', authenticateToken, requireAdmin, async (req: AuthRe
       orderBy: { createdAt: 'desc' }
     });
 
-    // Récupérer les notes détaillées pour chaque utilisateur
-    const usersWithDetailedRatings = await Promise.all(
-      users.map(async (user) => {
-        const ratings = await prisma.rating.findMany({
-          where: { ratedId: user.id },
-          include: {
-            rated: {
-              select: { firstName: true, lastName: true }
-            }
-          },
-          orderBy: { createdAt: 'desc' }
-        });
-
-        return {
-          ...user,
-          detailedRatings: ratings
-        };
-      })
-    );
-
-    res.json(usersWithDetailedRatings);
+    res.json(users);
   } catch (error) {
     console.error('Erreur récupération membres admin:', error);
     res.status(500).json({ error: 'Erreur serveur' });
@@ -257,12 +221,17 @@ router.put('/:id', authenticateToken, requireAdmin, [
     }
 
     const { id } = req.params;
-    const { name, description, location, type, customType, startDate, endDate, publishedAt } = req.body;
+    const { name, description, location, type, customType, startDate, endDate, publishedAt, capacity, ticketPrice } = req.body;
 
     // Vérifier que l'événement existe
     const existingEvent = await prisma.event.findUnique({ where: { id } });
     if (!existingEvent) {
       return res.status(404).json({ error: 'Événement non trouvé' });
+    }
+
+    // Si l'événement est déjà publié, ne pas autoriser la modification du prix
+    if (existingEvent.publishedAt && ticketPrice !== undefined && ticketPrice !== existingEvent.ticketPrice) {
+      return res.status(400).json({ error: 'Impossible de modifier le prix d\'un événement déjà publié' });
     }
 
     // Gestion de publishedAt
@@ -288,7 +257,9 @@ router.put('/:id', authenticateToken, requireAdmin, [
         customType: type === 'Autre' ? customType : null,
         startDate: new Date(startDate),
         endDate: new Date(endDate),
-        publishedAt: newPublishedAt
+        publishedAt: newPublishedAt,
+        capacity: capacity !== undefined ? parseInt(capacity) : existingEvent.capacity,
+        ticketPrice: ticketPrice !== undefined ? parseFloat(ticketPrice) : existingEvent.ticketPrice
       }
     });
 
@@ -305,10 +276,13 @@ router.delete('/:id', authenticateToken, requireAdmin, async (req: AuthRequest, 
     const { id } = req.params;
     console.log('Tentative de suppression de l\'événement avec ID:', id);
 
-    // Vérifier que l'événement existe (sans filtre de publication pour la suppression)
+    // Vérifier que l'événement existe
     const existingEvent = await prisma.event.findUnique({
       where: { id },
-      include: { rides: { include: { participants: true } } }
+      include: {
+        tickets: true,
+        ratings: true
+      }
     });
 
     console.log('Événement trouvé:', existingEvent ? 'Oui' : 'Non');
@@ -319,22 +293,13 @@ router.delete('/:id', authenticateToken, requireAdmin, async (req: AuthRequest, 
 
     // Utiliser une transaction pour garantir la cohérence
     await prisma.$transaction(async (tx) => {
-      // Supprimer d'abord toutes les notes liées aux trajets
-      for (const ride of existingEvent.rides) {
-        await tx.rating.deleteMany({
-          where: { rideId: ride.id }
-        });
-      }
+      // Supprimer toutes les notes de l'événement
+      await tx.eventRating.deleteMany({
+        where: { eventId: id }
+      });
 
-      // Supprimer tous les participants de tous les trajets
-      for (const ride of existingEvent.rides) {
-        await tx.rideParticipant.deleteMany({
-          where: { rideId: ride.id }
-        });
-      }
-
-      // Supprimer tous les trajets de l'événement
-      await tx.ride.deleteMany({
+      // Supprimer tous les billets de l'événement
+      await tx.ticket.deleteMany({
         where: { eventId: id }
       });
 
