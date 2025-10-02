@@ -12,6 +12,7 @@ import ticketRoutes from './routes/tickets';
 import eventRatingRoutes from './routes/eventRatings';
 import supportRoutes from './routes/support';
 import userRoutes from './routes/users';
+import addressRoutes from './routes/address';
 import { sessionManager } from './services/sessionManager';
 import { runMigrations } from './utils/migrate';
 
@@ -42,6 +43,7 @@ app.use(helmet({
       styleSrc: ["'self'", "'unsafe-inline'"],
       scriptSrc: ["'self'"],
       imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'", "https://api-adresse.data.gouv.fr"],
     },
   },
 }));
@@ -63,6 +65,7 @@ app.use('/api/tickets', ticketRoutes);
 app.use('/api/event-ratings', eventRatingRoutes);
 app.use('/api/support', supportRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/address', addressRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ message: 'BDE Billetterie API is running!' });

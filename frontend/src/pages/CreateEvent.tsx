@@ -79,7 +79,7 @@ export default function CreateEvent() {
     }
   }, [id, isEditMode, navigate]);
 
-  // Validation d'adresse avec l'API gouvernementale
+  // Validation d'adresse via le backend (évite les problèmes de CSP)
   const validateAddress = async (address: string) => {
     if (!address || address.length < 5) {
       setAddressValid(null);
@@ -89,8 +89,12 @@ export default function CreateEvent() {
 
     setAddressValidating(true);
     try {
+      const API_BASE_URL = import.meta.env.PROD
+        ? '/api'
+        : 'http://localhost:3001/api';
+
       const response = await fetch(
-        `https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(address)}&limit=5`
+        `${API_BASE_URL}/address/validate?q=${encodeURIComponent(address)}`
       );
       const data = await response.json();
 
