@@ -1,0 +1,51 @@
+services:
+  # Web Service (Backend + Frontend)
+  - type: web
+    name: site-bde-ieseg
+    runtime: docker
+    repo: https://github.com/Maxime-crt/SITE_BDE
+    region: frankfurt 
+    branch: main
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/health
+
+    envVars:
+      - key: NODE_ENV
+        value: production
+
+      - key: PORT
+        value: 5000
+
+      - key: DATABASE_URL
+        fromDatabase:
+          name: site-bde-postgres
+          property: connectionString
+
+      - key: JWT_SECRET
+        generateValue: true
+
+      - key: FRONTEND_URL
+        value: https://site-bde-ieseg.onrender.com # ⚠️ À mettre à jour après déploiement
+
+      - key: EMAIL_USER
+        sync: false # ⚠️ À configurer manuellement dans le dashboard
+
+      - key: EMAIL_PASSWORD
+        sync: false # ⚠️ À configurer manuellement dans le dashboard
+
+      - key: STRIPE_SECRET_KEY
+        sync: false # ⚠️ À configurer manuellement dans le dashboard
+
+      - key: STRIPE_PUBLISHABLE_KEY
+        value: pk_test_51SDOuBRx7VI8caT2nPBZBxe4lQKGXyKJJEJIJY7OQ7b7vLDdxJKOT4DWnfFpIGrwKLLy1nDhMUlLVpXDEHTdpJGO00SHi74Swi
+
+    # Auto-déploiement sur chaque push
+    autoDeploy: true
+
+# PostgreSQL Database
+databases:
+  - name: site-bde-postgres
+    databaseName: site_bde
+    region: frankfurt # Même région que le web service
+    plan: free
+    postgresMajorVersion: 15
