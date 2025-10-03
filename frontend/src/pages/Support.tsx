@@ -240,8 +240,9 @@ export default function Support({ user }: SupportProps) {
                                 <textarea
                                   value={editedMessage}
                                   onChange={(e) => setEditedMessage(e.target.value)}
-                                  className="w-full min-h-[80px] px-3 py-2 text-sm bg-background text-foreground border-2 border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring resize-none"
+                                  className="w-full px-3 py-2 text-sm bg-background text-foreground border-2 border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring resize-none"
                                   autoFocus
+                                  rows={Math.max(2, editedMessage.split('\n').length)}
                                   onKeyDown={(e) => {
                                     if (e.key === 'Escape') {
                                       cancelEdit();
