@@ -25,7 +25,7 @@ const server = createServer(app);
 const isDevelopment = process.env.NODE_ENV !== 'production';
 const allowedOrigins = isDevelopment
   ? ["http://localhost:5173", "http://localhost:5174", "http://localhost:5175", "http://localhost:5176"]
-  : [process.env.FRONTEND_URL || "https://your-app.railway.app"];
+  : [process.env.FRONTEND_URL || "https://bde-ieseg.onrender.com"];
 
 const io = new Server(server, {
   cors: {

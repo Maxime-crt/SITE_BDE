@@ -101,7 +101,7 @@ Plateforme web moderne de billetterie pour le Bureau des Étudiants de l'IESEG p
 
 ### DevOps
 - **Docker** - Conteneurisation de l'application
-- **Railway** - Plateforme de déploiement
+- **Render** - Plateforme de déploiement
 - **Concurrently** - Exécution parallèle des scripts
 - **Nodemon** - Rechargement automatique en développement
 
@@ -177,7 +177,7 @@ SITE_BDE/
 │
 ├── package.json               # Configuration mono-repo
 ├── Dockerfile                 # Container racine
-├── railway.json               # Configuration Railway
+├── render.yaml                # Configuration Render
 └── README.md                  # Documentation (ce fichier)
 ```
 
@@ -646,27 +646,23 @@ docker run -p 3001:3001 \
   bde-ieseg
 ```
 
-### Avec Railway
+### Avec Render
 
-1. Fork/push le projet sur GitHub
-2. Créer un nouveau projet sur [Railway](https://railway.app)
-3. Connecter le repository GitHub
-4. Configurer les variables d'environnement dans Railway
-5. Railway détecte automatiquement le `Dockerfile` et déploie
+Voir le guide complet : [RENDER_DEPLOYMENT.md](RENDER_DEPLOYMENT.md)
 
-Variables à configurer dans Railway :
+**Déploiement rapide :**
+1. Push le projet sur GitHub
+2. Connecter le repository sur [Render](https://render.com)
+3. New → Blueprint
+4. Sélectionner le repo (Render lit automatiquement `render.yaml`)
+5. Configurer les variables secrètes dans le dashboard
+
+Variables à configurer manuellement dans Render :
 ```
-DATABASE_URL=file:./prod.db
-JWT_SECRET=...
-STRIPE_SECRET_KEY=...
-STRIPE_PUBLISHABLE_KEY=...
-EMAIL_HOST=smtp.gmail.com
-EMAIL_PORT=587
 EMAIL_USER=...
 EMAIL_PASSWORD=...
-EMAIL_FROM=...
-AUTO_ADMIN_EMAILS=...
-FRONTEND_URL=https://votre-app.railway.app
+STRIPE_SECRET_KEY=...
+FRONTEND_URL=https://site-bde-ieseg.onrender.com
 ```
 
 ### Migration de la base de données en production
