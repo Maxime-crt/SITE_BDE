@@ -54,11 +54,7 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// Servir les fichiers statiques du frontend en production
-if (!isDevelopment) {
-  app.use(express.static(path.join(__dirname, '../public')));
-}
-
+// Routes API
 app.use('/api/auth', authRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/tickets', ticketRoutes);
@@ -70,13 +66,6 @@ app.use('/api/address', addressRoutes);
 app.get('/api/health', (req, res) => {
   res.json({ message: 'BDE Billetterie API is running!' });
 });
-
-// Catch-all pour servir le frontend React (SPA)
-if (!isDevelopment) {
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../public/index.html'));
-  });
-}
 
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
