@@ -1,9 +1,10 @@
 import axios from 'axios';
 import type { User, Event, Ride, AuthResponse } from '../types';
 
-const API_BASE_URL = import.meta.env.PROD
-  ? '/api'  // En production, l'API est servie par le même domaine
-  : 'http://localhost:3001/api';  // En développement, API sur port 3001
+const API_BASE_URL = import.meta.env.VITE_API_URL ||
+  (import.meta.env.PROD
+    ? '/api'  // En production (si pas de VITE_API_URL)
+    : 'http://localhost:3001/api');  // En développement
 
 const api = axios.create({
   baseURL: API_BASE_URL,
