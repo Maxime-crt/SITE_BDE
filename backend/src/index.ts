@@ -108,8 +108,8 @@ async function startServer() {
     // Exécuter les migrations en premier
     await runMigrations();
 
-    // Démarrer le serveur
-    server.listen(PORT, () => {
+    // Démarrer le serveur (écouter sur 0.0.0.0 pour Railway)
+    server.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 Server running on port ${PORT} - Database ready`);
 
       // Démarrer le gestionnaire de sessions
