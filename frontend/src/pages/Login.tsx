@@ -22,9 +22,10 @@ export default function Login({ onLogin }: LoginProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation();
 
     if (!email || !password) {
-      toast.error('Veuillez remplir tous les champs');
+      toast.error('Veuillez remplir tous les champs', { duration: 2000 });
       return;
     }
 
@@ -39,9 +40,17 @@ export default function Login({ onLogin }: LoginProps) {
     } catch (error: any) {
       // Vérifier si l'email nécessite une vérification
       if (error.response?.data?.requiresVerification) {
-        navigate('/verify-email', { state: { email: error.response.data.email } });
+        const userEmail = error.response.data.email;
+
+        // Sauvegarder l'email en attente de vérification
+        localStorage.setItem('pendingVerificationEmail', userEmail);
+
+        // Redirection immédiate
+        navigate('/verify-email', { state: { email: userEmail }, replace: true });
       } else {
-        toast.error(error.response?.data?.error || 'Erreur de connexion');
+        toast.error(error.response?.data?.error || 'Erreur de connexion', {
+          duration: 2000
+        });
       }
     } finally {
       setLoading(false);

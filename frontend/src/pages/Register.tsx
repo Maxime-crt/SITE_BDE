@@ -4,18 +4,9 @@ import { Eye, EyeOff } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Input } from '../components/ui/input';
 import { Button } from '../components/ui/button';
+import { authApi } from '../services/api';
 
-interface RegisterProps {
-  onRegister: (data: {
-    email: string;
-    firstName: string;
-    lastName: string;
-    phone: string;
-    password: string;
-  }) => Promise<any>;
-}
-
-export default function Register({ onRegister }: RegisterProps) {
+export default function Register() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
@@ -54,24 +45,33 @@ export default function Register({ onRegister }: RegisterProps) {
       return;
     }
 
-    if (!formData.email.endsWith('@ieseg.fr')) {
-      toast.error('Veuillez utiliser votre email IESEG (@ieseg.fr)');
+    const emailLower = formData.email.toLowerCase();
+    if (!emailLower.endsWith('@ieseg.fr') && !emailLower.endsWith('@gmail.com')) {
+      toast.error('Veuillez utiliser votre email IESEG (@ieseg.fr) ou Gmail (@gmail.com)');
       return;
     }
 
     setLoading(true);
     try {
-      const { confirmPassword, ...registerData } = formData;
-      const response = await onRegister(registerData);
+      const { confirmPassword: _confirmPassword, ...registerData } = formData;
+      const response = await authApi.register(registerData);
 
       // Vérifier si l'email nécessite une vérification
       if (response.requiresVerification) {
+        // Sauvegarder l'email en attente de vérification dans localStorage
+        localStorage.setItem('pendingVerificationEmail', formData.email);
         navigate('/verify-email', { state: { email: formData.email } });
       } else {
+        // Sauvegarder uniquement si pas de vérification requise
+        localStorage.setItem('token', response.token);
+        localStorage.setItem('user', JSON.stringify(response.user));
         toast.success('Inscription réussie !');
+        window.location.href = '/dashboard';
       }
     } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Erreur lors de l\'inscription');
+      toast.error(error.response?.data?.error || 'Erreur lors de l\'inscription', {
+        duration: 2000
+      });
     } finally {
       setLoading(false);
     }

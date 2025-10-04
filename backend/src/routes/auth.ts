@@ -5,12 +5,17 @@ import { prisma } from '../utils/prisma';
 import { generateToken } from '../utils/jwt';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
 import { generateVerificationCode, sendVerificationEmail } from '../utils/email';
+import { ADMIN_EMAILS } from '../config/admins';
 
 const router = express.Router();
 
 // Inscription
 router.post('/register', [
-  body('email').isEmail().normalizeEmail().withMessage('Email valide requis'),
+  body('email')
+    .trim()
+    .toLowerCase()
+    .matches(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)
+    .withMessage('Email valide requis'),
   body('firstName').trim().isLength({ min: 2 }).withMessage('Prénom requis (min 2 caractères)'),
   body('lastName').trim().isLength({ min: 2 }).withMessage('Nom requis (min 2 caractères)'),
   body('phone').isMobilePhone('fr-FR').withMessage('Numéro de téléphone français valide requis'),
@@ -22,12 +27,28 @@ router.post('/register', [
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { email, firstName, lastName, phone, password } = req.body;
+    let { email, firstName, lastName, phone, password } = req.body;
 
-    // Vérifier si email IESEG
-    if (!email.endsWith('@ieseg.fr')) {
-      return res.status(400).json({ error: 'Email IESEG requis (@ieseg.fr)' });
+    console.log('📧 EMAIL REÇU:', JSON.stringify(email));
+    console.log('📧 Type:', typeof email);
+    console.log('📧 Longueur:', email?.length);
+    console.log('📧 Caractères:', email.split('').map((c: string, i: number) => `${i}:${c}(${c.charCodeAt(0)})`));
+
+    // Bloquer les adresses avec caractère "+" (aliasing)
+    if (email.includes('+')) {
+      return res.status(400).json({ error: 'Caractère "+" non autorisé dans l\'adresse email' });
     }
+
+    console.log('✅ Test @ieseg.fr:', email.endsWith('@ieseg.fr'));
+    console.log('✅ Test @gmail.com:', email.endsWith('@gmail.com'));
+
+    // Vérifier si email IESEG ou Gmail
+    if (!email.endsWith('@ieseg.fr') && !email.endsWith('@gmail.com')) {
+      console.log('❌ REJET EMAIL');
+      return res.status(400).json({ error: 'Email IESEG (@ieseg.fr) ou Gmail (@gmail.com) requis' });
+    }
+
+    console.log('✅ EMAIL ACCEPTÉ');
 
     // Vérifier si l'utilisateur existe déjà
     const existingUser = await prisma.user.findUnique({ where: { email } });
@@ -39,16 +60,11 @@ router.post('/register', [
     const hashedPassword = await bcrypt.hash(password, 12);
 
     // Définir si l'utilisateur est admin
-    const adminEmails = ['maxime.coriton@ieseg.fr'];
-    const isAdmin = adminEmails.includes(email);
+    const isAdmin = ADMIN_EMAILS.includes(email);
 
-    // Exception pour les comptes de test - pas besoin de vérification email
-    const testAccounts = ['maxime.coriton@ieseg.fr', 'maxime.coriton2@ieseg.fr'];
-    const isTestAccount = testAccounts.includes(email);
-
-    // Générer un code de vérification (sauf pour le compte test)
-    const verificationCode = isTestAccount ? null : generateVerificationCode();
-    const codeExpiresAt = isTestAccount ? null : new Date(Date.now() + 15 * 60 * 1000);
+    // Générer un code de vérification
+    const verificationCode = generateVerificationCode();
+    const codeExpiresAt = new Date(Date.now() + 15 * 60 * 1000);
 
     // Créer l'utilisateur
     const user = await prisma.user.create({
@@ -59,7 +75,7 @@ router.post('/register', [
         phone,
         password: hashedPassword,
         isAdmin,
-        emailVerified: isTestAccount, // Compte test déjà vérifié
+        emailVerified: false,
         verificationCode,
         codeExpiresAt
       },
@@ -74,23 +90,16 @@ router.post('/register', [
       }
     });
 
-    // Envoyer l'email de vérification (sauf pour le compte test)
-    if (!isTestAccount) {
-      try {
-        await sendVerificationEmail(email, firstName, verificationCode!);
-      } catch (emailError) {
-        console.error('Erreur lors de l\'envoi de l\'email:', emailError);
-        // On continue même si l'email n'a pas pu être envoyé
-      }
-    }
-
+    // Répondre immédiatement au client
     res.status(201).json({
-      message: isTestAccount
-        ? 'Compte créé avec succès.'
-        : 'Compte créé avec succès. Veuillez vérifier votre email pour le code de vérification.',
+      message: 'Compte créé avec succès. Veuillez vérifier votre email pour le code de vérification.',
       user,
-      requiresVerification: !isTestAccount,
-      token: isTestAccount ? generateToken(user.id) : undefined // Connexion automatique pour le compte test
+      requiresVerification: true
+    });
+
+    // Envoyer l'email de vérification en arrière-plan (sans bloquer la réponse)
+    sendVerificationEmail(email, firstName, verificationCode).catch((emailError) => {
+      console.error('Erreur lors de l\'envoi de l\'email:', emailError);
     });
   } catch (error) {
     console.error('Erreur inscription:', error);
@@ -100,7 +109,7 @@ router.post('/register', [
 
 // Connexion
 router.post('/login', [
-  body('email').isEmail().normalizeEmail(),
+  body('email').trim().toLowerCase().matches(/^[^\s@]+@[^\s@]+\.[^\s@]+$/).withMessage('Email valide requis'),
   body('password').exists()
 ], async (req: express.Request, res: express.Response) => {
   try {
@@ -113,7 +122,7 @@ router.post('/login', [
 
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) {
-      return res.status(401).json({ error: 'Email ou mot de passe incorrect' });
+      return res.status(404).json({ error: 'Aucun compte n\'existe avec cette adresse email' });
     }
 
     const isValidPassword = await bcrypt.compare(password, user.password);
@@ -173,7 +182,7 @@ router.get('/me', authenticateToken, async (req: AuthRequest, res: express.Respo
 
 // Vérification de l'email
 router.post('/verify-email', [
-  body('email').isEmail().normalizeEmail(),
+  body('email').trim().toLowerCase().matches(/^[^\s@]+@[^\s@]+\.[^\s@]+$/).withMessage('Email valide requis'),
   body('code').isLength({ min: 6, max: 6 })
 ], async (req: express.Request, res: express.Response) => {
   try {
@@ -240,7 +249,7 @@ router.post('/verify-email', [
 
 // Renvoyer le code de vérification
 router.post('/resend-verification', [
-  body('email').isEmail().normalizeEmail()
+  body('email').trim().toLowerCase().matches(/^[^\s@]+@[^\s@]+\.[^\s@]+$/).withMessage('Email valide requis')
 ], async (req: express.Request, res: express.Response) => {
   try {
     const errors = validationResult(req);
@@ -274,14 +283,13 @@ router.post('/resend-verification', [
       }
     });
 
-    // Envoyer l'email
-    try {
-      await sendVerificationEmail(email, user.firstName, verificationCode);
-      res.json({ message: 'Code de vérification renvoyé' });
-    } catch (emailError) {
+    // Répondre immédiatement au client
+    res.json({ message: 'Code de vérification renvoyé' });
+
+    // Envoyer l'email en arrière-plan
+    sendVerificationEmail(email, user.firstName, verificationCode).catch((emailError) => {
       console.error('Erreur lors de l\'envoi de l\'email:', emailError);
-      res.status(500).json({ error: 'Impossible d\'envoyer l\'email de vérification' });
-    }
+    });
   } catch (error) {
     console.error('Erreur renvoi code:', error);
     res.status(500).json({ error: 'Erreur serveur lors du renvoi du code' });

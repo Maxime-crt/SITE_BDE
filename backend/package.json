@@ -1,7 +1,7 @@
 {
-  "name": "bde-covoiturage-backend",
+  "name": "site-bde-backend",
   "version": "1.0.0",
-  "description": "Backend API pour app de covoiturage étudiant",
+  "description": "Backend API pour site BDE étudiant",
   "main": "dist/index.js",
   "scripts": {
     "dev": "nodemon src/index.ts",

@@ -63,9 +63,7 @@ function AppContent() {
     password: string;
   }) => {
     const response = await authApi.register(data);
-    localStorage.setItem('token', response.token);
-    localStorage.setItem('user', JSON.stringify(response.user));
-    setUser(response.user);
+    // Ne plus sauvegarder ici - géré dans Register.tsx selon requiresVerification
     return response;
   };
 
@@ -116,7 +114,7 @@ function AppContent() {
           <Route
             path="/register"
             element={
-              user ? <Navigate to="/dashboard" /> : <Register onRegister={register} />
+              user ? <Navigate to="/dashboard" /> : <Register />
             }
           />
           <Route
@@ -216,7 +214,15 @@ function AppContent() {
 
       <Footer />
 
-      <Toaster position="top-right" />
+      <Toaster
+        position="top-center"
+        toastOptions={{
+          duration: 2000,
+          style: {
+            maxWidth: '500px',
+          },
+        }}
+      />
     </div>
   );
 }

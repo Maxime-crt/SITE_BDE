@@ -12,7 +12,9 @@ export default function VerifyEmail() {
   const [code, setCode] = useState(['', '', '', '', '', '']);
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
-  const email = location.state?.email || '';
+
+  // Récupérer l'email depuis le state de navigation OU depuis localStorage
+  const email = location.state?.email || localStorage.getItem('pendingVerificationEmail') || '';
 
   useEffect(() => {
     if (!email) {
@@ -81,11 +83,16 @@ export default function VerifyEmail() {
       localStorage.setItem('token', response.token);
       localStorage.setItem('user', JSON.stringify(response.user));
 
+      // Supprimer l'email en attente de vérification
+      localStorage.removeItem('pendingVerificationEmail');
+
       toast.success('Email vérifié avec succès !');
-      navigate('/dashboard');
+
+      // Forcer un rechargement pour que App.tsx lise le localStorage
+      window.location.href = '/dashboard';
     } catch (error: any) {
-      console.error('Erreur vérification:', error);
-      toast.error(error.response?.data?.error || 'Code invalide ou expiré');
+      const errorMessage = error.response?.data?.error || 'Code invalide ou expiré';
+      toast.error(errorMessage, { duration: 2000 });
       setLoading(false);
     }
   };
@@ -99,8 +106,8 @@ export default function VerifyEmail() {
       setCode(['', '', '', '', '', '']);
       document.getElementById('code-0')?.focus();
     } catch (error: any) {
-      console.error('Erreur renvoi:', error);
-      toast.error(error.response?.data?.error || 'Erreur lors du renvoi du code');
+      const errorMessage = error.response?.data?.error || 'Erreur lors du renvoi du code';
+      toast.error(errorMessage, { duration: 3000 });
     } finally {
       setResending(false);
     }
@@ -191,7 +198,7 @@ export default function VerifyEmail() {
           {/* Informations */}
           <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
             <p className="text-sm text-blue-800 dark:text-blue-300">
-              <strong>💡 Astuce :</strong> Vérifiez vos spams si vous ne trouvez pas l'email. Le code expire dans 15 minutes.
+              <strong>💡 Astuce :</strong> Vérifiez vos <strong>spams/courrier indésirable</strong> si vous ne trouvez pas l'email. Le code expire dans 15 minutes.
             </p>
           </div>
         </CardContent>

@@ -71,6 +71,7 @@ export interface AuthResponse {
   message: string;
   user: User;
   token: string;
+  requiresVerification?: boolean;
 }
 
 export interface ApiError {

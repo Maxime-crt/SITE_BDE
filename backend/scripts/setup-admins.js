@@ -1,11 +1,7 @@
 const { PrismaClient } = require('@prisma/client');
+const { ADMIN_EMAILS } = require('../src/config/admins');
 
 const prisma = new PrismaClient();
-
-const ADMIN_EMAILS = [
-  'maxime.coriton@ieseg.fr',
-  'clement.coriton@ieseg.fr'
-];
 
 async function setupAdmins() {
   try {
