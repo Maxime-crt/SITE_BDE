@@ -109,8 +109,9 @@ async function startServer() {
     await runMigrations();
 
     // Démarrer le serveur (écouter sur 0.0.0.0 pour Railway)
-    server.listen(PORT, '0.0.0.0', () => {
-      console.log(`🚀 Server running on port ${PORT} - Database ready`);
+    const host = process.env.NODE_ENV === 'production' ? '0.0.0.0' : 'localhost';
+    server.listen(Number(PORT), host, () => {
+      console.log(`🚀 Server running on ${host}:${PORT} - Database ready`);
 
       // Démarrer le gestionnaire de sessions
       sessionManager.start();
