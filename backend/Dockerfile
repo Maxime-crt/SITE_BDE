@@ -8,7 +8,7 @@ COPY package*.json ./
 COPY prisma ./prisma/
 
 # Installer les dépendances
-RUN npm ci
+RUN npm install --production=false
 
 # Copier le reste du code
 COPY . .

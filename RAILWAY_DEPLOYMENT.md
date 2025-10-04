@@ -21,10 +21,10 @@
 ### 1. Créer un projet Railway
 
 1. Allez sur https://railway.app
-2. Cliquez sur **"Start a New Project"**
-3. Sélectionnez **"Deploy from GitHub repo"**
-4. Autorisez Railway à accéder à vos repos GitHub
-5. Sélectionnez le repo **SITE_BDE**
+2. Connectez-vous avec votre compte GitHub
+3. Cliquez sur **"New Project"**
+4. Sélectionnez **"Empty Project"** (on va ajouter les services un par un)
+5. Donnez un nom à votre projet (ex: "site-bde")
 
 ### 2. Ajouter la base de données PostgreSQL
 
