@@ -55,7 +55,7 @@ export default function Footer() {
             <p className="text-primary-foreground/80 text-sm">
               © {new Date().getFullYear()} BDE IESEG. Tous droits réservés.
             </p>
-            <p className="text-primary-foreground/60 text-xs">
+            <p className="text-primary-foreground/80 text-sm">
               Site étudiant indépendant non affilié à l'IESEG School of Management.
             </p>
           </div>
