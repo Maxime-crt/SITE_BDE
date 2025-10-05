@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { MapPin, Calendar, Users, ArrowRight, Car, Clock, Loader2, Edit, Trash2, Star, ChevronDown } from 'lucide-react';
+import { MapPin, Calendar, Users, ArrowRight, Clock, Loader2, Edit, Trash2, Star, ChevronDown } from 'lucide-react';
 import { eventsApi } from '../services/api';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
@@ -175,9 +175,6 @@ export default function Dashboard() {
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="text-center mb-12">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary rounded-2xl mb-6 shadow-lg">
-            <Car className="w-8 h-8 text-primary-foreground" />
-          </div>
           <h1 className="text-4xl font-bold tracking-tight mb-4">
             Événements BDE 🎉
           </h1>

@@ -50,10 +50,13 @@ export default function Footer() {
             </a>
           </div>
 
-          {/* Copyright */}
-          <div className="text-center pt-4 border-t border-primary-foreground/20 w-full max-w-md">
+          {/* Copyright et disclaimer */}
+          <div className="text-center pt-4 border-t border-primary-foreground/20 w-full max-w-md space-y-2">
             <p className="text-primary-foreground/80 text-sm">
               © {new Date().getFullYear()} BDE IESEG. Tous droits réservés.
+            </p>
+            <p className="text-primary-foreground/60 text-xs">
+              Site étudiant indépendant non affilié à l'IESEG School of Management.
             </p>
           </div>
         </div>
