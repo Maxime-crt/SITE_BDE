@@ -12,7 +12,7 @@ export function generateVerificationCode(): string {
 export async function sendVerificationEmail(email: string, firstName: string, code: string): Promise<void> {
   try {
     const { data, error } = await resend.emails.send({
-      from: 'BDE IESEG <onboarding@resend.dev>',
+      from: 'BDE IESEG <noreply@ieseg-events.fr>',
       to: email,
       subject: 'Vérification de votre compte BDE IESEG',
       html: `
