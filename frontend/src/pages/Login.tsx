@@ -162,12 +162,6 @@ export default function Login({ onLogin }: LoginProps) {
           </CardContent>
         </Card>
 
-        {/* Footer */}
-        <div className="text-center">
-          <p className="text-xs text-muted-foreground">
-            BDE IESEG - Plateforme de covoiturage étudiante
-          </p>
-        </div>
       </div>
     </div>
   );

@@ -19,35 +19,101 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [errors, setErrors] = useState({
+    phone: '',
+    password: '',
+    confirmPassword: ''
+  });
+  const [touched, setTouched] = useState({
+    phone: false,
+    password: false,
+    confirmPassword: false
+  });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+
     setFormData(prev => ({
       ...prev,
-      [e.target.name]: e.target.value
+      [name]: value
     }));
+
+    // Effacer l'erreur quand l'utilisateur tape (si le champ a déjà été touché)
+    if (touched[name as keyof typeof touched]) {
+      setErrors(prev => ({ ...prev, [name]: '' }));
+    }
+  };
+
+  const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+
+    setTouched(prev => ({ ...prev, [name]: true }));
+
+    // Validation au blur
+    if (name === 'phone') {
+      validatePhone(value);
+    } else if (name === 'password') {
+      validatePassword(value);
+    } else if (name === 'confirmPassword') {
+      validatePasswordMatch(formData.password, value);
+    }
+  };
+
+  const validatePhone = (phone: string) => {
+    // Format français : 10 chiffres, commence par 0
+    const phoneRegex = /^0[1-9](\d{2}){4}$/;
+    const cleanPhone = phone.replace(/\s/g, '');
+
+    if (phone && !phoneRegex.test(cleanPhone)) {
+      setErrors(prev => ({ ...prev, phone: 'Format invalide (ex: 0612345678)' }));
+      return false;
+    } else {
+      setErrors(prev => ({ ...prev, phone: '' }));
+      return true;
+    }
+  };
+
+  const validatePassword = (password: string) => {
+    if (password && password.length < 6) {
+      setErrors(prev => ({ ...prev, password: 'Minimum 6 caractères requis' }));
+      return false;
+    } else {
+      setErrors(prev => ({ ...prev, password: '' }));
+      return true;
+    }
+  };
+
+  const validatePasswordMatch = (password: string, confirmPassword: string) => {
+    if (confirmPassword && password !== confirmPassword) {
+      setErrors(prev => ({ ...prev, confirmPassword: 'Les mots de passe ne correspondent pas' }));
+      return false;
+    } else {
+      setErrors(prev => ({ ...prev, confirmPassword: '' }));
+      return true;
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!formData.email || !formData.firstName || !formData.lastName || !formData.phone || !formData.password) {
-      toast.error('Veuillez remplir tous les champs');
+      toast.error('Veuillez remplir tous les champs', { duration: 2000 });
       return;
     }
 
-    if (formData.password.length < 6) {
-      toast.error('Le mot de passe doit contenir au moins 6 caractères');
-      return;
-    }
+    // Valider tous les champs
+    const isPhoneValid = validatePhone(formData.phone);
+    const isPasswordValid = validatePassword(formData.password);
+    const isPasswordMatch = validatePasswordMatch(formData.password, formData.confirmPassword);
 
-    if (formData.password !== formData.confirmPassword) {
-      toast.error('Les mots de passe ne correspondent pas');
+    if (!isPhoneValid || !isPasswordValid || !isPasswordMatch) {
+      toast.error('Veuillez corriger les erreurs du formulaire', { duration: 2000 });
       return;
     }
 
     const emailLower = formData.email.toLowerCase();
     if (!emailLower.endsWith('@ieseg.fr') && !emailLower.endsWith('@gmail.com')) {
-      toast.error('Veuillez utiliser votre email IESEG (@ieseg.fr) ou Gmail (@gmail.com)');
+      toast.error('Veuillez utiliser votre email IESEG (@ieseg.fr) ou Gmail (@gmail.com)', { duration: 2000 });
       return;
     }
 
@@ -85,7 +151,7 @@ export default function Register() {
             Inscription
           </h2>
           <p className="mt-2 text-center text-sm text-muted-foreground">
-            Créez votre compte BDE Covoiturage
+            Créez votre compte BDE IESEG
           </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
@@ -150,8 +216,12 @@ export default function Register() {
                 placeholder="06 12 34 56 78"
                 value={formData.phone}
                 onChange={handleChange}
-                className="mt-1"
+                onBlur={handleBlur}
+                className={`mt-1 ${errors.phone ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
               />
+              {errors.phone && (
+                <p className="text-red-500 text-xs mt-1">{errors.phone}</p>
+              )}
             </div>
 
             <div>
@@ -167,7 +237,8 @@ export default function Register() {
                   placeholder="Minimum 6 caractères"
                   value={formData.password}
                   onChange={handleChange}
-                  className="pr-10"
+                  onBlur={handleBlur}
+                  className={`pr-10 ${errors.password ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
                 />
                 <Button
                   type="button"
@@ -183,6 +254,9 @@ export default function Register() {
                   )}
                 </Button>
               </div>
+              {errors.password && (
+                <p className="text-red-500 text-xs mt-1">{errors.password}</p>
+              )}
             </div>
 
             <div>
@@ -197,7 +271,8 @@ export default function Register() {
                   required
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  className="pr-10"
+                  onBlur={handleBlur}
+                  className={`pr-10 ${errors.confirmPassword ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
                 />
                 <Button
                   type="button"
@@ -213,6 +288,9 @@ export default function Register() {
                   )}
                 </Button>
               </div>
+              {errors.confirmPassword && (
+                <p className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p>
+              )}
             </div>
           </div>
 

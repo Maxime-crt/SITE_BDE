@@ -40,12 +40,11 @@ router.post('/register', [
     }
 
     console.log('✅ Test @ieseg.fr:', email.endsWith('@ieseg.fr'));
-    console.log('✅ Test @gmail.com:', email.endsWith('@gmail.com'));
 
-    // Vérifier si email IESEG ou Gmail
-    if (!email.endsWith('@ieseg.fr') && !email.endsWith('@gmail.com')) {
+    // Vérifier si email IESEG uniquement
+    if (!email.endsWith('@ieseg.fr')) {
       console.log('❌ REJET EMAIL');
-      return res.status(400).json({ error: 'Email IESEG (@ieseg.fr) ou Gmail (@gmail.com) requis' });
+      return res.status(400).json({ error: 'Seules les adresses email IESEG (@ieseg.fr) sont autorisées pour l\'inscription' });
     }
 
     console.log('✅ EMAIL ACCEPTÉ');
