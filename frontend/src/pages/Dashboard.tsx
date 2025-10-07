@@ -2,11 +2,12 @@ import { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { MapPin, Calendar, Users, ArrowRight, Clock, Loader2, Edit, Trash2, Star, ChevronDown } from 'lucide-react';
-import { eventsApi } from '../services/api';
+import { eventsApi, eventRatingsApi } from '../services/api';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import ConfirmDialog from '../components/ConfirmDialog';
+import StarRating from '../components/StarRating';
 import toast from 'react-hot-toast';
 import type { Event, User } from '../types';
 
@@ -19,6 +20,9 @@ export default function Dashboard() {
   const [sortBy, setSortBy] = useState<SortOption>('publication-desc');
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [activeTab, setActiveTab] = useState<'upcoming' | 'past'>('upcoming');
+  const [ratingEventId, setRatingEventId] = useState<string | null>(null);
+  const [userRating, setUserRating] = useState(0);
   const eventsPerPage = 6;
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -80,11 +84,49 @@ export default function Dashboard() {
     setEventToDelete(null);
   };
 
-  // Filtrage et tri des événements
-  const sortedEvents = useMemo(() => {
-    if (!events) return [];
+  const handleRatingSubmit = async (eventId: string, rating: number) => {
+    try {
+      await eventRatingsApi.create({ eventId, rating, comment: '' });
+      toast.success('Merci pour votre avis !', { duration: 2000 });
+      queryClient.invalidateQueries({ queryKey: ['events'] });
+    } catch (error: any) {
+      if (error.response?.status === 403) {
+        toast.error('Vous devez avoir un billet pour noter cet événement', { duration: 2000 });
+      } else {
+        toast.error(error.response?.data?.error || 'Erreur lors de la notation', { duration: 2000 });
+      }
+    }
+  };
 
-    let filtered = [...events];
+  // Séparation événements à venir / passés
+  const { upcomingEvents, pastEvents } = useMemo(() => {
+    if (!events) return { upcomingEvents: [], pastEvents: [] };
+
+    const now = new Date();
+    const upcoming: Event[] = [];
+    const past: Event[] = [];
+
+    events.forEach(event => {
+      const eventEnd = new Date(event.endDate);
+      if (eventEnd >= now) {
+        upcoming.push(event);
+      } else {
+        past.push(event);
+      }
+    });
+
+    // Trier les événements à venir par date de début (du plus proche au plus éloigné)
+    upcoming.sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
+
+    // Trier les événements passés par date de fin (du plus récent au plus ancien)
+    past.sort((a, b) => new Date(b.endDate).getTime() - new Date(a.endDate).getTime());
+
+    return { upcomingEvents: upcoming, pastEvents: past };
+  }, [events]);
+
+  // Filtrage et tri des événements selon l'onglet actif
+  const sortedEvents = useMemo(() => {
+    let filtered = activeTab === 'upcoming' ? [...upcomingEvents] : [...pastEvents];
 
     // Filtrage par recherche (titre, description, adresse)
     if (searchQuery.trim()) {
@@ -97,54 +139,50 @@ export default function Dashboard() {
       });
     }
 
-    // Tri
-    switch (sortBy) {
-      case 'publication-desc':
-        // Plus récent d'abord
-        filtered.sort((a, b) => {
-          const dateA = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
-          const dateB = b.publishedAt ? new Date(b.publishedAt).getTime() : 0;
-          return dateB - dateA;
-        });
-        break;
-      case 'publication-asc':
-        // Plus ancien d'abord
-        filtered.sort((a, b) => {
-          const dateA = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
-          const dateB = b.publishedAt ? new Date(b.publishedAt).getTime() : 0;
-          return dateA - dateB;
-        });
-        break;
-      case 'rating-desc':
-        // Mieux noté d'abord
-        filtered.sort((a, b) => {
-          const ratingA = a.rating || 0;
-          const ratingB = b.rating || 0;
-          return ratingB - ratingA;
-        });
-        break;
-      case 'status-published':
-        // Uniquement les publiés
-        filtered = filtered.filter(event => {
-          if (!event.publishedAt) return false;
-          return new Date(event.publishedAt) <= new Date();
-        });
-        break;
-      case 'status-draft':
-        // Uniquement les brouillons
-        filtered = filtered.filter(event => !event.publishedAt);
-        break;
-      case 'status-scheduled':
-        // Uniquement les programmés
-        filtered = filtered.filter(event => {
-          if (!event.publishedAt) return false;
-          return new Date(event.publishedAt) > new Date();
-        });
-        break;
+    // Tri pour les admins uniquement
+    if (user?.isAdmin) {
+      switch (sortBy) {
+        case 'publication-desc':
+          filtered.sort((a, b) => {
+            const dateA = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
+            const dateB = b.publishedAt ? new Date(b.publishedAt).getTime() : 0;
+            return dateB - dateA;
+          });
+          break;
+        case 'publication-asc':
+          filtered.sort((a, b) => {
+            const dateA = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
+            const dateB = b.publishedAt ? new Date(b.publishedAt).getTime() : 0;
+            return dateA - dateB;
+          });
+          break;
+        case 'rating-desc':
+          filtered.sort((a, b) => {
+            const ratingA = a.rating || 0;
+            const ratingB = b.rating || 0;
+            return ratingB - ratingA;
+          });
+          break;
+        case 'status-published':
+          filtered = filtered.filter(event => {
+            if (!event.publishedAt) return false;
+            return new Date(event.publishedAt) <= new Date();
+          });
+          break;
+        case 'status-draft':
+          filtered = filtered.filter(event => !event.publishedAt);
+          break;
+        case 'status-scheduled':
+          filtered = filtered.filter(event => {
+            if (!event.publishedAt) return false;
+            return new Date(event.publishedAt) > new Date();
+          });
+          break;
+      }
     }
 
     return filtered;
-  }, [events, sortBy, searchQuery]);
+  }, [upcomingEvents, pastEvents, activeTab, sortBy, searchQuery, user]);
 
   // Pagination
   const totalPages = Math.ceil(sortedEvents.length / eventsPerPage);
@@ -152,10 +190,10 @@ export default function Dashboard() {
   const indexOfFirstEvent = indexOfLastEvent - eventsPerPage;
   const currentEvents = sortedEvents.slice(indexOfFirstEvent, indexOfLastEvent);
 
-  // Reset to page 1 when filters change
+  // Reset to page 1 when filters or tab change
   useEffect(() => {
     setCurrentPage(1);
-  }, [sortBy, searchQuery]);
+  }, [sortBy, searchQuery, activeTab]);
 
   if (isLoading) {
     return (
@@ -222,8 +260,31 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Tri et compteur */}
+            {/* Onglets, Tri et compteur */}
             <div className="flex flex-col sm:flex-row gap-4 justify-between items-center">
+              {/* Onglets À venir / Passés */}
+              <div className="inline-flex rounded-lg border border-border bg-background p-1">
+                <button
+                  onClick={() => setActiveTab('upcoming')}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                    activeTab === 'upcoming'
+                      ? 'bg-primary text-primary-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  À venir ({upcomingEvents.length})
+                </button>
+                <button
+                  onClick={() => setActiveTab('past')}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                    activeTab === 'past'
+                      ? 'bg-primary text-primary-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  Passés ({pastEvents.length})
+                </button>
+              </div>
               <div className="flex items-center gap-3">
                 <label htmlFor="sort" className="text-sm font-medium">
                   Trier par:
@@ -248,14 +309,6 @@ export default function Dashboard() {
                   </select>
                   <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
                 </div>
-              </div>
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-muted rounded-lg">
-                <span className="text-sm font-semibold text-foreground">
-                  {sortedEvents.length}
-                </span>
-                <span className="text-sm text-muted-foreground">
-                  événement{sortedEvents.length > 1 ? 's' : ''}
-                </span>
               </div>
             </div>
           </div>
@@ -379,6 +432,41 @@ export default function Dashboard() {
                       </div>
                     )}
                   </div>
+
+                  {/* Système de notation pour les événements passés */}
+                  {activeTab === 'past' && (
+                    <>
+                      {event.userHasTicket ? (
+                        <div className="mt-4 p-3 bg-muted/50 rounded-lg border border-border">
+                          <div className="text-sm font-medium mb-2 text-center">Notez cet événement</div>
+                          <div className="flex justify-center">
+                            <StarRating
+                              rating={0}
+                              onRatingChange={(rating) => handleRatingSubmit(event.id, rating)}
+                              size="lg"
+                            />
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="mt-4 p-3 bg-muted/50 rounded-lg border border-border text-center">
+                          <div className="flex items-center justify-center gap-2">
+                            <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
+                            <span className="text-sm font-medium">
+                              {event.rating && event.ratingCount > 0
+                                ? `${event.rating.toFixed(1)}/5`
+                                : '-/5'
+                              }
+                            </span>
+                          </div>
+                          {event.ratingCount > 0 && (
+                            <p className="text-xs text-muted-foreground mt-1">
+                              ({event.ratingCount} avis)
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </>
+                  )}
 
                   <Button asChild className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg mt-4 flex-shrink-0">
                     <Link to={`/events/${event.id}`} className="flex items-center justify-center">

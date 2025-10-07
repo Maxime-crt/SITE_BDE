@@ -11,15 +11,17 @@ const router = express.Router();
 // Lister tous les événements actifs
 router.get('/', async (req: express.Request, res: express.Response) => {
   try {
-    // Déterminer si l'utilisateur est admin
+    // Déterminer si l'utilisateur est admin et récupérer son ID
     const token = req.headers.authorization?.replace('Bearer ', '');
     let isAdmin = false;
+    let userId: string | null = null;
 
     if (token) {
       try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key') as any;
         const user = await prisma.user.findUnique({ where: { id: decoded.userId } });
         isAdmin = user?.isAdmin || false;
+        userId = decoded.userId;
       } catch (error) {
         // Token invalide, continuer en tant qu'utilisateur non authentifié
       }
@@ -41,12 +43,18 @@ router.get('/', async (req: express.Request, res: express.Response) => {
       include: {
         tickets: {
           where: { status: { in: ['VALID', 'USED'] } },
-          select: { id: true }
+          select: { id: true, userId: true }
         }
       }
     });
 
-    res.json(events);
+    // Ajouter un flag userHasTicket pour chaque événement
+    const eventsWithUserTicket = events.map(event => ({
+      ...event,
+      userHasTicket: userId ? event.tickets.some(ticket => ticket.userId === userId) : false
+    }));
+
+    res.json(eventsWithUserTicket);
   } catch (error) {
     console.error('Erreur récupération événements:', error);
     res.status(500).json({ error: 'Erreur serveur' });

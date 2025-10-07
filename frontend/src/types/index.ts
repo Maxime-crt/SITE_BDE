@@ -21,6 +21,7 @@ export interface Event {
   rating?: number;
   ratingCount: number;
   publishedAt?: string;
+  userHasTicket?: boolean;
   tickets?: Ticket[];
   ratings?: EventRating[];
 }
