@@ -18,6 +18,8 @@ export default function Dashboard() {
   const [eventToDelete, setEventToDelete] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<SortOption>('publication-desc');
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const eventsPerPage = 6;
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -143,6 +145,17 @@ export default function Dashboard() {
 
     return filtered;
   }, [events, sortBy, searchQuery]);
+
+  // Pagination
+  const totalPages = Math.ceil(sortedEvents.length / eventsPerPage);
+  const indexOfLastEvent = currentPage * eventsPerPage;
+  const indexOfFirstEvent = indexOfLastEvent - eventsPerPage;
+  const currentEvents = sortedEvents.slice(indexOfFirstEvent, indexOfLastEvent);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [sortBy, searchQuery]);
 
   if (isLoading) {
     return (
@@ -273,8 +286,9 @@ export default function Dashboard() {
             </CardHeader>
           </Card>
         ) : (
+          <>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {sortedEvents.map((event: Event) => (
+            {currentEvents.map((event: Event) => (
               <Card
                 key={event.id}
                 className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-card border border-border shadow-md flex flex-col"
@@ -376,6 +390,32 @@ export default function Dashboard() {
               </Card>
             ))}
           </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex justify-center items-center gap-4 mt-8">
+              <Button
+                variant="outline"
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+              >
+                Précédent
+              </Button>
+
+              <span className="text-sm text-muted-foreground">
+                Page {currentPage} sur {totalPages}
+              </span>
+
+              <Button
+                variant="outline"
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+              >
+                Suivant
+              </Button>
+            </div>
+          )}
+          </>
         )}
       </div>
     </div>
