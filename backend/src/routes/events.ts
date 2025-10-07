@@ -190,6 +190,7 @@ router.get('/admin/members', authenticateToken, requireAdmin, async (req: AuthRe
         lastName: true,
         email: true,
         phone: true,
+        isAdmin: true,
         isActive: true,
         isOnline: true,
         lastLoginAt: true,

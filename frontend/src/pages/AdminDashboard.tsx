@@ -13,6 +13,7 @@ interface AdminUser {
   lastName: string;
   email: string;
   phone: string;
+  isAdmin: boolean;
   rating: number | null;
   ratingCount: number;
   isActive: boolean;
@@ -197,6 +198,12 @@ export default function AdminDashboard() {
                     <div className="flex items-center space-x-3 mb-2">
                       <h3 className="text-lg font-semibold">{member.firstName} {member.lastName}</h3>
                       <div className="flex items-center space-x-2">
+                        {member.isAdmin && (
+                          <Badge variant="default" className="bg-purple-600 hover:bg-purple-700">
+                            <Shield className="w-3 h-3 mr-1" />
+                            Admin
+                          </Badge>
+                        )}
                         <Badge variant={member.isOnline ? "default" : "secondary"}>
                           {member.isOnline ? "En ligne" : "Hors ligne"}
                         </Badge>
