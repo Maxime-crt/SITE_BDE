@@ -50,7 +50,7 @@ export default function AdminSupport() {
     if (selectedUser) {
       loadUserMessages(selectedUser.id).then(() => {
         // Recharger les conversations pour mettre à jour le badge "Nouveau"
-        loadConversations();
+        loadConversations(false);
       });
     }
   }, [selectedUser]);
@@ -63,16 +63,20 @@ export default function AdminSupport() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const loadConversations = async () => {
+  const loadConversations = async (showLoading = true) => {
     try {
-      setLoading(true);
+      if (showLoading) {
+        setLoading(true);
+      }
       const data = await adminApi.getAllConversations();
       setConversations(data);
     } catch (error: any) {
       console.error('Erreur lors du chargement des conversations:', error);
       toast.error('Erreur lors du chargement des conversations');
     } finally {
-      setLoading(false);
+      if (showLoading) {
+        setLoading(false);
+      }
     }
   };
 
@@ -90,18 +94,27 @@ export default function AdminSupport() {
     e.preventDefault();
     if (!newMessage.trim() || !selectedUser) return;
 
+    const messageToSend = newMessage.trim();
+    const currentUserId = selectedUser.id;
+
     try {
       setSending(true);
+      setNewMessage(''); // Vider immédiatement le champ
+
       await adminApi.replyToUser({
-        userId: selectedUser.id,
-        message: newMessage.trim()
+        userId: currentUserId,
+        message: messageToSend
       });
-      setNewMessage('');
-      await loadUserMessages(selectedUser.id);
-      await loadConversations();
+
+      // Recharger uniquement les messages de l'utilisateur actuel
+      await loadUserMessages(currentUserId);
+
+      // Mettre à jour les conversations en arrière-plan sans affecter le scroll
+      loadConversations(false);
     } catch (error: any) {
       console.error('Erreur lors de l\'envoi du message:', error);
       toast.error('Erreur lors de l\'envoi du message');
+      setNewMessage(messageToSend); // Restaurer le message en cas d'erreur
     } finally {
       setSending(false);
     }
