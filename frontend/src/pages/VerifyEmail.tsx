@@ -89,7 +89,7 @@ export default function VerifyEmail() {
       toast.success('Email vérifié avec succès !');
 
       // Forcer un rechargement pour que App.tsx lise le localStorage
-      window.location.href = '/dashboard';
+      window.location.href = '/';
     } catch (error: any) {
       const errorMessage = error.response?.data?.error || 'Code invalide ou expiré';
       toast.error(errorMessage, { duration: 2000 });

@@ -43,7 +43,7 @@ export default function Navbar({ user, onLogout }: NavbarProps) {
         <div className="flex h-16 items-center justify-between">
           {/* Logo et navigation principale */}
           <div className="flex items-center space-x-8">
-            <Link to="/dashboard" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
+            <Link to="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
               <div className="flex items-center justify-center w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg">
                 <Calendar className="w-5 h-5 text-white" />
               </div>

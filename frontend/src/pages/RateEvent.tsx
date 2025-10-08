@@ -92,7 +92,7 @@ export default function RateEvent() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold mb-4">Événement introuvable</h2>
-          <Link to="/dashboard" className="text-primary hover:underline">
+          <Link to="/" className="text-primary hover:underline">
             Retour au tableau de bord
           </Link>
         </div>

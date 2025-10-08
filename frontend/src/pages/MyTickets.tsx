@@ -103,7 +103,7 @@ export default function MyTickets() {
           {/* Header */}
           <div className="mb-8">
             <Link
-              to="/dashboard"
+              to="/"
               className="inline-flex items-center text-blue-600 hover:text-blue-500 mb-4"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -132,7 +132,7 @@ export default function MyTickets() {
                   Vous n'avez aucun billet pour le moment
                 </p>
                 <Link
-                  to="/dashboard"
+                  to="/"
                   className="inline-flex items-center px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
                 >
                   Découvrir les événements

@@ -70,7 +70,7 @@ export default function CreateEvent() {
           setAddressValid(true); // L'adresse est déjà validée
         } catch (error: any) {
           toast.error('Erreur lors du chargement de l\'événement');
-          navigate('/dashboard');
+          navigate('/');
         } finally {
           setInitialLoading(false);
         }
@@ -204,7 +204,7 @@ export default function CreateEvent() {
         await eventsApi.create(eventData);
         toast.success('Événement créé avec succès !');
       }
-      navigate('/dashboard');
+      navigate('/');
     } catch (error: any) {
       toast.error(error.response?.data?.error || `Erreur lors de ${isEditMode ? 'la modification' : 'la création'}`);
     } finally {
@@ -239,7 +239,7 @@ export default function CreateEvent() {
           {/* Header */}
           <div className="mb-8">
             <Link
-              to="/dashboard"
+              to="/"
               className="inline-flex items-center text-blue-600 hover:text-blue-500 mb-4"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />

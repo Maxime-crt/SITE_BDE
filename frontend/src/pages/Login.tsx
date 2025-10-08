@@ -18,7 +18,7 @@ export default function Login({ onLogin }: LoginProps) {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const from = (location.state as any)?.from || '/dashboard';
+  const from = (location.state as any)?.from || '/';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

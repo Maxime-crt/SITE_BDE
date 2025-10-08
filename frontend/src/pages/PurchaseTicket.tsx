@@ -124,7 +124,7 @@ export default function PurchaseTicket() {
             </CardDescription>
           </CardHeader>
           <CardContent className="text-center">
-            <Link to="/dashboard" className="text-primary hover:underline inline-flex items-center gap-2">
+            <Link to="/" className="text-primary hover:underline inline-flex items-center gap-2">
               <ArrowLeft className="w-4 h-4" />
               Retour au tableau de bord
             </Link>
@@ -137,7 +137,7 @@ export default function PurchaseTicket() {
   useEffect(() => {
     if (!clientSecret || !event) {
       toast.error('Informations de paiement manquantes');
-      navigate('/dashboard');
+      navigate('/');
     }
   }, [clientSecret, event, navigate]);
 

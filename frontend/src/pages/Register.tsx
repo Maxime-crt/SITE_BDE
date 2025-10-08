@@ -132,7 +132,7 @@ export default function Register() {
         localStorage.setItem('token', response.token);
         localStorage.setItem('user', JSON.stringify(response.user));
         toast.success('Inscription réussie !');
-        window.location.href = '/dashboard';
+        window.location.href = '/';
       }
     } catch (error: any) {
       toast.error(error.response?.data?.error || 'Erreur lors de l\'inscription', {

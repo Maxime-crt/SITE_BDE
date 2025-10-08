@@ -108,13 +108,13 @@ function AppContent() {
           <Route
             path="/login"
             element={
-              user ? <Navigate to="/dashboard" /> : <Login onLogin={login} />
+              user ? <Navigate to="/" /> : <Login onLogin={login} />
             }
           />
           <Route
             path="/register"
             element={
-              user ? <Navigate to="/dashboard" /> : <Register />
+              user ? <Navigate to="/" /> : <Register />
             }
           />
           <Route
@@ -122,7 +122,7 @@ function AppContent() {
             element={<VerifyEmail />}
           />
           <Route
-            path="/dashboard"
+            path="/"
             element={
               user ? <Dashboard /> : <Navigate to="/login" />
             }
@@ -161,7 +161,7 @@ function AppContent() {
             path="/create-event"
             element={
               user ? (
-                user.isAdmin ? <CreateEvent /> : <Navigate to="/dashboard" />
+                user.isAdmin ? <CreateEvent /> : <Navigate to="/" />
               ) : <Navigate to="/login" />
             }
           />
@@ -169,7 +169,7 @@ function AppContent() {
             path="/events/:id/edit"
             element={
               user ? (
-                user.isAdmin ? <CreateEvent /> : <Navigate to="/dashboard" />
+                user.isAdmin ? <CreateEvent /> : <Navigate to="/" />
               ) : <Navigate to="/login" />
             }
           />
@@ -177,7 +177,7 @@ function AppContent() {
             path="/admin/support"
             element={
               user ? (
-                user.isAdmin ? <AdminSupport /> : <Navigate to="/dashboard" />
+                user.isAdmin ? <AdminSupport /> : <Navigate to="/" />
               ) : <Navigate to="/login" />
             }
           />
@@ -185,7 +185,7 @@ function AppContent() {
             path="/admin/scan"
             element={
               user ? (
-                user.isAdmin ? <ScanTicket /> : <Navigate to="/dashboard" />
+                user.isAdmin ? <ScanTicket /> : <Navigate to="/" />
               ) : <Navigate to="/login" />
             }
           />
@@ -193,7 +193,7 @@ function AppContent() {
             path="/admin"
             element={
               user ? (
-                user.isAdmin ? <AdminDashboard /> : <Navigate to="/dashboard" />
+                user.isAdmin ? <AdminDashboard /> : <Navigate to="/" />
               ) : <Navigate to="/login" />
             }
           />
@@ -201,12 +201,6 @@ function AppContent() {
             path="/profile"
             element={
               user ? <Profile user={user} /> : <Navigate to="/login" />
-            }
-          />
-          <Route
-            path="/"
-            element={
-              user ? <Navigate to="/dashboard" /> : <Navigate to="/login" />
             }
           />
         </Routes>

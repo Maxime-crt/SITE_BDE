@@ -87,7 +87,7 @@ export default function EventDetail({ user }: EventDetailProps) {
     try {
       await eventsApi.delete(event.id);
       toast.success('Événement supprimé avec succès');
-      navigate('/dashboard');
+      navigate('/');
     } catch (error: any) {
       toast.error(error.response?.data?.error || 'Erreur lors de la suppression');
     }
@@ -133,7 +133,7 @@ export default function EventDetail({ user }: EventDetailProps) {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold mb-4">Événement introuvable</h2>
-          <Link to="/dashboard" className="text-primary hover:underline">
+          <Link to="/" className="text-primary hover:underline">
             Retour au tableau de bord
           </Link>
         </div>
@@ -152,7 +152,7 @@ export default function EventDetail({ user }: EventDetailProps) {
           {/* Header */}
           <div className="mb-8">
             <Link
-              to="/dashboard"
+              to="/"
               className="inline-flex items-center text-blue-600 hover:text-blue-500 mb-4"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
