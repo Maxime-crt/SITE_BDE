@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Ticket, Calendar, MapPin, ArrowLeft } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
@@ -32,6 +32,7 @@ export default function MyTickets() {
   const [loading, setLoading] = useState(true);
   const [selectedTicket, setSelectedTicket] = useState<TicketData | null>(null);
   const [brightness, setBrightness] = useState(false);
+  const [activeTab, setActiveTab] = useState<'upcoming' | 'past'>('upcoming');
 
   useEffect(() => {
     loadTickets();
@@ -85,6 +86,32 @@ export default function MyTickets() {
     return price === 0 ? 'Gratuit' : `${price.toFixed(2)} €`;
   };
 
+  // Séparer les billets par événements à venir et passés
+  const { upcomingTickets, pastTickets } = useMemo(() => {
+    const now = new Date();
+    const upcoming: TicketData[] = [];
+    const past: TicketData[] = [];
+
+    tickets.forEach(ticket => {
+      const eventEnd = new Date(ticket.event.endDate);
+      if (eventEnd >= now) {
+        upcoming.push(ticket);
+      } else {
+        past.push(ticket);
+      }
+    });
+
+    // Trier les billets à venir par date de début (du plus proche au plus éloigné)
+    upcoming.sort((a, b) => new Date(a.event.startDate).getTime() - new Date(b.event.startDate).getTime());
+
+    // Trier les billets passés par date de fin (du plus récent au plus ancien)
+    past.sort((a, b) => new Date(b.event.endDate).getTime() - new Date(a.event.endDate).getTime());
+
+    return { upcomingTickets: upcoming, pastTickets: past };
+  }, [tickets]);
+
+  const displayedTickets = activeTab === 'upcoming' ? upcomingTickets : pastTickets;
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -123,6 +150,34 @@ export default function MyTickets() {
             </div>
           </div>
 
+          {/* Tabs */}
+          {tickets.length > 0 && (
+            <div className="flex justify-center mb-6">
+              <div className="inline-flex rounded-lg border border-border bg-background p-1">
+                <button
+                  onClick={() => setActiveTab('upcoming')}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                    activeTab === 'upcoming'
+                      ? 'bg-primary text-primary-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  À venir ({upcomingTickets.length})
+                </button>
+                <button
+                  onClick={() => setActiveTab('past')}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                    activeTab === 'past'
+                      ? 'bg-primary text-primary-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  Passés ({pastTickets.length})
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Liste des billets */}
           {tickets.length === 0 ? (
             <Card className="shadow-lg">
@@ -139,9 +194,21 @@ export default function MyTickets() {
                 </Link>
               </CardContent>
             </Card>
+          ) : displayedTickets.length === 0 ? (
+            <Card className="shadow-lg">
+              <CardContent className="pt-6 text-center py-12">
+                <Ticket className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
+                <p className="text-lg text-muted-foreground">
+                  {activeTab === 'upcoming'
+                    ? 'Aucun billet pour les événements à venir'
+                    : 'Aucun billet pour les événements passés'
+                  }
+                </p>
+              </CardContent>
+            </Card>
           ) : (
             <div className="space-y-4">
-              {tickets.map((ticket) => (
+              {displayedTickets.map((ticket) => (
                 <Card
                   key={ticket.id}
                   className="shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
@@ -156,7 +223,10 @@ export default function MyTickets() {
                         <div className="space-y-2 text-sm text-muted-foreground">
                           <div className="flex items-center">
                             <Calendar className="w-4 h-4 mr-2" />
-                            {formatDate(ticket.event.startDate)}
+                            <div>
+                              <div>Début: {formatDate(ticket.event.startDate)}</div>
+                              <div>Fin: {formatDate(ticket.event.endDate)}</div>
+                            </div>
                           </div>
                           <div className="flex items-center">
                             <MapPin className="w-4 h-4 mr-2" />
