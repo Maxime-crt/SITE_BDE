@@ -138,27 +138,29 @@ export default function AdminDashboard() {
     <div className="container mx-auto px-4 py-8">
       {/* Header */}
       <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
           <div className="flex items-center space-x-3">
             <Shield className="w-8 h-8 text-red-500" />
-            <h1 className="text-3xl font-bold">Administration</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold">Administration</h1>
           </div>
-          <div className="flex items-center space-x-2">
-            <Button asChild variant="outline">
-              <Link to="/admin/scan" className="flex items-center space-x-2">
+          <div className="flex items-center gap-2">
+            <Button asChild variant="outline" className="flex-1 sm:flex-none">
+              <Link to="/admin/scan" className="flex items-center justify-center space-x-2">
                 <QrCode className="w-4 h-4" />
-                <span>Scanner billets</span>
+                <span className="hidden sm:inline">Scanner billets</span>
+                <span className="sm:hidden">Scanner</span>
               </Link>
             </Button>
-            <Button asChild>
-              <Link to="/admin/support" className="flex items-center space-x-2">
+            <Button asChild className="flex-1 sm:flex-none">
+              <Link to="/admin/support" className="flex items-center justify-center space-x-2">
                 <MessageCircle className="w-4 h-4" />
-                <span>Conversations</span>
+                <span className="hidden sm:inline">Conversations</span>
+                <span className="sm:hidden">Messages</span>
               </Link>
             </Button>
           </div>
         </div>
-        <p className="text-muted-foreground">
+        <p className="text-muted-foreground text-sm sm:text-base">
           Gérez les membres de la plateforme
         </p>
       </div>
