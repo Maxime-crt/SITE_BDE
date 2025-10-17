@@ -8,6 +8,7 @@ import { ArrowLeft, Loader2, Calendar, MapPin, Clock } from 'lucide-react';
 import { ticketsApi } from '../services/api';
 import toast from 'react-hot-toast';
 import type { Event } from '../types';
+import { handleApiErrorWithLog } from '../utils/errorHandler';
 
 // Initialiser Stripe uniquement si la clé est valide
 const stripeKey = import.meta.env.VITE_STRIPE_PUBLIC_KEY;
@@ -57,7 +58,9 @@ function CheckoutForm({ event, clientSecret }: CheckoutFormProps) {
           toast.success('Billet acheté avec succès !');
           navigate('/my-tickets');
         } catch (apiError: any) {
-          setErrorMessage(apiError.response?.data?.error || 'Erreur lors de la création du billet');
+          const errorMsg = apiError.response?.data?.error || 'Erreur lors de la création du billet';
+          setErrorMessage(errorMsg);
+          handleApiErrorWithLog(apiError, errorMsg, 'PurchaseTicket.handleSubmit');
           setProcessing(false);
         }
       }

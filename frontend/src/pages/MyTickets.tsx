@@ -4,6 +4,7 @@ import { Ticket, Calendar, MapPin, ArrowLeft } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { ticketsApi } from '../services/api';
 import toast from 'react-hot-toast';
+import { handleApiErrorWithLog } from '../utils/errorHandler';
 
 interface TicketData {
   id: string;
@@ -56,7 +57,7 @@ export default function MyTickets() {
       const data = await ticketsApi.getMyTickets();
       setTickets(data);
     } catch (error: any) {
-      toast.error('Erreur lors du chargement des billets');
+      handleApiErrorWithLog(error, 'Erreur lors du chargement des billets', 'MyTickets.loadTickets');
     } finally {
       setLoading(false);
     }

@@ -10,6 +10,7 @@ import ConfirmDialog from '../components/ConfirmDialog';
 import StarRating from '../components/StarRating';
 import toast from 'react-hot-toast';
 import type { Event, User } from '../types';
+import { handleApiErrorWithLog } from '../utils/errorHandler';
 
 type SortOption = 'publication-desc' | 'publication-asc' | 'rating-desc' | 'status-published' | 'status-draft' | 'status-scheduled';
 
@@ -72,7 +73,7 @@ export default function Dashboard() {
       toast.success('Événement supprimé avec succès !');
       queryClient.invalidateQueries({ queryKey: ['events'] });
     } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Erreur lors de la suppression');
+      handleApiErrorWithLog(error, 'Erreur lors de la suppression', 'Dashboard.confirmDeleteEvent');
     } finally {
       setDeleteConfirmOpen(false);
       setEventToDelete(null);

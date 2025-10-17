@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../co
 import { Button } from '../components/ui/button';
 import { ArrowLeft, Star } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { handleApiErrorWithLog } from '../utils/errorHandler';
 
 export default function RateEvent() {
   const { eventId } = useParams<{ eventId: string }>();
@@ -53,7 +54,7 @@ export default function RateEvent() {
       toast.success(existingRating ? 'Note modifiée avec succès !' : 'Merci pour votre avis !');
       navigate(`/events/${eventId}`);
     } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Erreur lors de l\'envoi de la note');
+      handleApiErrorWithLog(error, 'Erreur lors de l\'envoi de la note', 'RateEvent.handleSubmit');
     } finally {
       setSubmitting(false);
     }
@@ -70,7 +71,7 @@ export default function RateEvent() {
       toast.success('Note supprimée avec succès');
       navigate(`/events/${eventId}`);
     } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Erreur lors de la suppression');
+      handleApiErrorWithLog(error, 'Erreur lors de la suppression', 'RateEvent.handleDelete');
     } finally {
       setSubmitting(false);
     }

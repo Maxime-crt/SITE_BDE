@@ -6,6 +6,7 @@ import { Badge } from '../components/ui/badge';
 import { adminApi } from '../services/api';
 import toast from 'react-hot-toast';
 import { Link } from 'react-router-dom';
+import { handleApiErrorWithLog } from '../utils/errorHandler';
 
 interface SupportMessage {
   id: string;
@@ -72,7 +73,7 @@ export default function AdminSupport() {
       setConversations(data);
     } catch (error: any) {
       console.error('Erreur lors du chargement des conversations:', error);
-      toast.error('Erreur lors du chargement des conversations');
+      handleApiErrorWithLog(error, 'Erreur lors du chargement des conversations', 'AdminSupport.loadConversations');
     } finally {
       if (showLoading) {
         setLoading(false);
@@ -86,7 +87,7 @@ export default function AdminSupport() {
       setMessages(data);
     } catch (error: any) {
       console.error('Erreur lors du chargement des messages:', error);
-      toast.error('Erreur lors du chargement des messages');
+      handleApiErrorWithLog(error, 'Erreur lors du chargement des messages', 'AdminSupport.loadUserMessages');
     }
   };
 
@@ -113,7 +114,7 @@ export default function AdminSupport() {
       loadConversations(false);
     } catch (error: any) {
       console.error('Erreur lors de l\'envoi du message:', error);
-      toast.error('Erreur lors de l\'envoi du message');
+      handleApiErrorWithLog(error, 'Erreur lors de l\'envoi du message', 'AdminSupport.handleSendMessage');
       setNewMessage(messageToSend); // Restaurer le message en cas d'erreur
     } finally {
       setSending(false);

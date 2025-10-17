@@ -4,6 +4,7 @@ import { eventsApi, ticketsApi, eventRatingsApi } from '../services/api';
 import type { User, Event, EventRating } from '../types';
 import toast from 'react-hot-toast';
 import { useState } from 'react';
+import { handleApiErrorWithLog } from '../utils/errorHandler';
 import { Calendar, MapPin, Users, Euro, Star, ArrowLeft, Edit, Trash2, ExternalLink } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
@@ -75,7 +76,7 @@ export default function EventDetail({ user }: EventDetailProps) {
         });
       }
     } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Erreur lors de l\'achat du billet');
+      handleApiErrorWithLog(error, 'Erreur lors de l\'achat du billet', 'EventDetail.handlePurchaseTicket');
     } finally {
       setPurchasing(false);
     }
@@ -89,7 +90,7 @@ export default function EventDetail({ user }: EventDetailProps) {
       toast.success('Événement supprimé avec succès');
       navigate('/');
     } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Erreur lors de la suppression');
+      handleApiErrorWithLog(error, 'Erreur lors de la suppression', 'EventDetail.handleDeleteEvent');
     }
   };
 

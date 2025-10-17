@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
 import Login from './pages/Login';
@@ -18,34 +18,82 @@ import RateEvent from './pages/RateEvent';
 import Support from './pages/Support';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+import { ProtectedRoute } from './components/ProtectedRoute';
 import { authApi } from './services/api';
 import type { User } from './types';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { useAuthPageDetection } from './hooks/useAuthPageDetection';
+import { checkAuthGuard } from './utils/authGuard';
 
 const queryClient = new QueryClient();
+
+// Vérification AVANT le rendu de React
+const canRender = checkAuthGuard();
 
 function AppContent() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const location = useLocation();
 
   // Détecter les pages d'authentification
   useAuthPageDetection();
 
+  // Vérification initiale au chargement de l'app
+  useEffect(() => {
+    const initAuth = async () => {
+      const token = localStorage.getItem('token');
+      const savedUser = localStorage.getItem('user');
+
+      if (!token || !savedUser) {
+        setLoading(false);
+        return;
+      }
+
+      // Valider le token une seule fois au démarrage
+      try {
+        const response = await authApi.getCurrentUser();
+        setUser(response.user);
+        localStorage.setItem('user', JSON.stringify(response.user));
+      } catch (error) {
+        console.log('Token invalide ou expiré, nettoyage de la session');
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initAuth();
+  }, []);
+
+  // Vérifier à chaque changement de route si on a un token
   useEffect(() => {
     const token = localStorage.getItem('token');
     const savedUser = localStorage.getItem('user');
+    const publicPaths = ['/login', '/register', '/verify-email'];
+    const isPublicPath = publicPaths.includes(location.pathname);
 
-    if (token && savedUser) {
+    // Si pas de token et page protégée, rediriger immédiatement
+    if (!token && !isPublicPath) {
+      window.location.replace('/login');
+      return;
+    }
+
+    // Si on a un token, charger l'user depuis localStorage
+    if (token && savedUser && !user) {
       try {
         setUser(JSON.parse(savedUser));
-      } catch (error) {
-        localStorage.removeItem('token');
+      } catch (e) {
+        console.error('Erreur parsing user:', e);
         localStorage.removeItem('user');
+        localStorage.removeItem('token');
+        if (!isPublicPath) {
+          window.location.replace('/login');
+        }
       }
     }
-    setLoading(false);
-  }, []);
+  }, [location.pathname, user]);
 
   const login = async (email: string, password: string) => {
     const response = await authApi.login({ email, password });
@@ -124,83 +172,97 @@ function AppContent() {
           <Route
             path="/"
             element={
-              user ? <Dashboard /> : <Navigate to="/login" />
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
             }
           />
           <Route
             path="/events/:id"
             element={
-              user ? <EventDetail user={user} /> : <Navigate to="/login" />
+              <ProtectedRoute>
+                {user && <EventDetail user={user} />}
+              </ProtectedRoute>
             }
           />
           <Route
             path="/my-tickets"
             element={
-              user ? <MyTickets /> : <Navigate to="/login" />
+              <ProtectedRoute>
+                <MyTickets />
+              </ProtectedRoute>
             }
           />
           <Route
             path="/purchase-ticket/:eventId"
             element={
-              user ? <PurchaseTicket /> : <Navigate to="/login" />
+              <ProtectedRoute>
+                <PurchaseTicket />
+              </ProtectedRoute>
             }
           />
           <Route
             path="/events/:eventId/rate"
             element={
-              user ? <RateEvent /> : <Navigate to="/login" />
+              <ProtectedRoute>
+                <RateEvent />
+              </ProtectedRoute>
             }
           />
           <Route
             path="/support"
             element={
-              user ? <Support user={user} /> : <Navigate to="/login" />
+              <ProtectedRoute>
+                {user && <Support user={user} />}
+              </ProtectedRoute>
             }
           />
           <Route
             path="/create-event"
             element={
-              user ? (
-                user.isAdmin ? <CreateEvent /> : <Navigate to="/" />
-              ) : <Navigate to="/login" />
+              <ProtectedRoute>
+                {user && (user.isAdmin ? <CreateEvent /> : <Navigate to="/" />)}
+              </ProtectedRoute>
             }
           />
           <Route
             path="/events/:id/edit"
             element={
-              user ? (
-                user.isAdmin ? <CreateEvent /> : <Navigate to="/" />
-              ) : <Navigate to="/login" />
+              <ProtectedRoute>
+                {user && (user.isAdmin ? <CreateEvent /> : <Navigate to="/" />)}
+              </ProtectedRoute>
             }
           />
           <Route
             path="/admin/support"
             element={
-              user ? (
-                user.isAdmin ? <AdminSupport /> : <Navigate to="/" />
-              ) : <Navigate to="/login" />
+              <ProtectedRoute>
+                {user && (user.isAdmin ? <AdminSupport /> : <Navigate to="/" />)}
+              </ProtectedRoute>
             }
           />
           <Route
             path="/admin/scan"
             element={
-              user ? (
-                user.isAdmin ? <ScanTicket /> : <Navigate to="/" />
-              ) : <Navigate to="/login" />
+              <ProtectedRoute>
+                {user && (user.isAdmin ? <ScanTicket /> : <Navigate to="/" />)}
+              </ProtectedRoute>
             }
           />
           <Route
             path="/admin"
             element={
-              user ? (
-                user.isAdmin ? <AdminDashboard /> : <Navigate to="/" />
-              ) : <Navigate to="/login" />
+              <ProtectedRoute>
+                {user && (user.isAdmin ? <AdminDashboard /> : <Navigate to="/" />)}
+              </ProtectedRoute>
             }
           />
           <Route
             path="/profile"
             element={
-              user ? <Profile user={user} /> : <Navigate to="/login" />
+              <ProtectedRoute>
+                {user && <Profile user={user} />}
+              </ProtectedRoute>
             }
           />
         </Routes>
@@ -222,6 +284,15 @@ function AppContent() {
 }
 
 function App() {
+  // Si on ne peut pas rendre (redirection en cours), afficher un loader
+  if (!canRender) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
   return (
     <ThemeProvider>
       <QueryClientProvider client={queryClient}>

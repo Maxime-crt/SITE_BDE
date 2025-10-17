@@ -4,8 +4,9 @@ import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { adminApi } from '../services/api';
-import toast from 'react-hot-toast';
 import { Link } from 'react-router-dom';
+import { handleApiErrorWithLog } from '../utils/errorHandler';
+import toast from 'react-hot-toast';
 
 interface AdminUser {
   id: string;
@@ -81,8 +82,7 @@ export default function AdminDashboard() {
       const data = await adminApi.getAllMembers();
       setMembers(data);
     } catch (error: any) {
-      console.error('Erreur lors du chargement des membres:', error);
-      toast.error(error.response?.data?.error || 'Erreur lors du chargement des membres');
+      handleApiErrorWithLog(error, 'Erreur lors du chargement des membres', 'AdminDashboard.fetchMembers');
     } finally {
       setLoading(false);
     }
@@ -98,8 +98,7 @@ export default function AdminDashboard() {
       toast.success(`${userName} a été retiré du trajet`);
       fetchGroups(); // Refresh the data
     } catch (error: any) {
-      console.error('Erreur lors de la suppression:', error);
-      toast.error(error.response?.data?.error || 'Erreur lors de la suppression');
+      handleApiErrorWithLog(error, 'Erreur lors de la suppression', 'AdminDashboard.removeUserFromRide');
     }
   };
 

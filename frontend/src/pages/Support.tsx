@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../co
 import { Button } from '../components/ui/button';
 import { ArrowLeft, Send, MessageCircle, Edit2, X, AlertTriangle, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { handleApiErrorWithLog } from '../utils/errorHandler';
 
 interface SupportProps {
   user: User;
@@ -51,7 +52,7 @@ export default function Support({ user }: SupportProps) {
       setMessage('');
       queryClient.invalidateQueries({ queryKey: ['support-messages'] });
     } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Erreur lors de l\'envoi du message');
+      handleApiErrorWithLog(error, 'Erreur lors de l\'envoi du message', 'Support.handleSend');
     } finally {
       setSending(false);
     }
@@ -105,7 +106,7 @@ export default function Support({ user }: SupportProps) {
       setEditedMessage('');
       toast.success('Message modifié');
     } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Erreur lors de la modification');
+      handleApiErrorWithLog(error, 'Erreur lors de la modification', 'Support.performSave');
     }
   };
 
@@ -135,7 +136,7 @@ export default function Support({ user }: SupportProps) {
       queryClient.invalidateQueries({ queryKey: ['support-messages'] });
       toast.success('Message supprimé');
     } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Erreur lors de la suppression');
+      handleApiErrorWithLog(error, 'Erreur lors de la suppression', 'Support.confirmDelete');
     } finally {
       setShowDeleteDialog(false);
       setMessageToDelete(null);

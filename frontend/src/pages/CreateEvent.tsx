@@ -6,6 +6,7 @@ import { Input } from '../components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { eventsApi } from '../services/api';
 import toast from 'react-hot-toast';
+import { handleApiErrorWithLog } from '../utils/errorHandler';
 
 interface AddressSuggestion {
   label: string;
@@ -69,7 +70,7 @@ export default function CreateEvent() {
           });
           setAddressValid(true); // L'adresse est déjà validée
         } catch (error: any) {
-          toast.error('Erreur lors du chargement de l\'événement');
+          handleApiErrorWithLog(error, 'Erreur lors du chargement de l\'événement', 'CreateEvent.loadEvent');
           navigate('/');
         } finally {
           setInitialLoading(false);
@@ -206,7 +207,7 @@ export default function CreateEvent() {
       }
       navigate('/');
     } catch (error: any) {
-      toast.error(error.response?.data?.error || `Erreur lors de ${isEditMode ? 'la modification' : 'la création'}`);
+      handleApiErrorWithLog(error, `Erreur lors de ${isEditMode ? 'la modification' : 'la création'}`, 'CreateEvent.handleSubmit');
     } finally {
       setLoading(false);
     }

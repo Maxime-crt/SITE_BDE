@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { User, Event, Ride, AuthResponse } from '../types';
+import type { User, Event, AuthResponse } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL ||
   (import.meta.env.PROD
@@ -21,16 +21,36 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Variable pour éviter les redirections multiples
+let isRedirecting = false;
+
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     // Ne pas rediriger si l'erreur 401 vient de la tentative de login elle-même
     const isLoginRequest = error.config?.url?.includes('/auth/login');
+    const isRegisterRequest = error.config?.url?.includes('/auth/register');
+    const isVerifyRequest = error.config?.url?.includes('/auth/verify-email');
 
-    if (error.response?.status === 401 && !isLoginRequest) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
+    // Si on reçoit une erreur 401 ou 403 (sauf pour login/register/verify)
+    if ((error.response?.status === 401 || error.response?.status === 403) &&
+        !isLoginRequest && !isRegisterRequest && !isVerifyRequest) {
+
+      if (!isRedirecting) {
+        // Marquer qu'on est en train de rediriger
+        isRedirecting = true;
+
+        // Nettoyer le localStorage
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+
+        // Rediriger vers la page de login (sans toast) de manière synchrone
+        // Utiliser replace pour éviter que l'utilisateur revienne en arrière
+        window.location.replace('/login');
+      }
+
+      // Marquer l'erreur comme étant une erreur d'auth pour que les composants l'ignorent
+      error.isAuthError = true;
     }
     return Promise.reject(error);
   }

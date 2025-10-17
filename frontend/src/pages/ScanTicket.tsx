@@ -6,6 +6,7 @@ import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { ticketsApi } from '../services/api';
 import toast from 'react-hot-toast';
+import { handleApiErrorWithLog } from '../utils/errorHandler';
 
 interface ScannedTicket {
   id: string;
@@ -77,8 +78,9 @@ export default function ScanTicket() {
         toast.error('Billet annulé');
       } else {
         setScanResult('error');
-        setErrorMessage(error.response?.data?.error || 'Erreur lors du scan');
-        toast.error(errorMessage);
+        const errMsg = error.response?.data?.error || 'Erreur lors du scan';
+        setErrorMessage(errMsg);
+        handleApiErrorWithLog(error, errMsg, 'ScanTicket.handleScan');
       }
     }
 
