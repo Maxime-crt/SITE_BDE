@@ -12,7 +12,7 @@ import toast from 'react-hot-toast';
 import type { Event, User } from '../types';
 import { handleApiErrorWithLog } from '../utils/errorHandler';
 
-type SortOption = 'publication-desc' | 'publication-asc' | 'rating-desc' | 'status-published' | 'status-draft' | 'status-scheduled';
+type SortOption = 'publication-desc' | 'publication-asc' | 'rating-desc' | 'status-published' | 'status-draft' | 'status-scheduled' | 'time-upcoming' | 'time-ongoing' | 'time-finished';
 
 export default function Dashboard() {
   const [user, setUser] = useState<User | null>(null);
@@ -42,6 +42,59 @@ export default function Dashboard() {
     }
 
     return { status: 'Publié', variant: 'default' as const };
+  };
+
+  // Fonction pour obtenir le statut temporel d'un événement
+  const getEventTimeStatus = (event: Event) => {
+    const now = new Date();
+    const startDate = new Date(event.startDate);
+    const endDate = new Date(event.endDate);
+
+    if (now < startDate) {
+      return {
+        status: 'À venir',
+        variant: 'default' as const,
+        color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 border-blue-200 dark:border-blue-800'
+      };
+    }
+
+    if (now >= startDate && now <= endDate) {
+      return {
+        status: 'En cours',
+        variant: 'default' as const,
+        color: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 border-green-200 dark:border-green-800'
+      };
+    }
+
+    return {
+      status: 'Terminé',
+      variant: 'secondary' as const,
+      color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 border-purple-200 dark:border-purple-800'
+    };
+  };
+
+  // Fonction pour obtenir le temps écoulé depuis la publication
+  const getTimeAgo = (publishedAt: string | null): string | null => {
+    if (!publishedAt) return null;
+
+    const now = new Date();
+    const published = new Date(publishedAt);
+    const diffMs = now.getTime() - published.getTime();
+    const diffSeconds = Math.floor(diffMs / 1000);
+    const diffMinutes = Math.floor(diffSeconds / 60);
+    const diffHours = Math.floor(diffMinutes / 60);
+    const diffDays = Math.floor(diffHours / 24);
+    const diffWeeks = Math.floor(diffDays / 7);
+    const diffMonths = Math.floor(diffDays / 30);
+
+    if (diffSeconds < 60) return 'à l\'instant';
+    if (diffMinutes < 60) return `il y a ${diffMinutes} min`;
+    if (diffHours < 24) return `il y a ${diffHours}h`;
+    if (diffDays < 7) return `il y a ${diffDays}j`;
+    if (diffWeeks < 4) return `il y a ${diffWeeks} sem`;
+    if (diffMonths < 12) return `il y a ${diffMonths} mois`;
+
+    return `il y a ${Math.floor(diffMonths / 12)} an${Math.floor(diffMonths / 12) > 1 ? 's' : ''}`;
   };
 
   useEffect(() => {
@@ -104,12 +157,19 @@ export default function Dashboard() {
     if (!events) return { upcomingEvents: [], pastEvents: [] };
 
     const now = new Date();
+    // Garder les événements visibles 1 jour après leur fin (pour noter l'événement et finaliser les trajets)
+    const gracePeriodDays = 1;
+    const gracePeriodMs = gracePeriodDays * 24 * 60 * 60 * 1000;
+
     const upcoming: Event[] = [];
     const past: Event[] = [];
 
     events.forEach(event => {
       const eventEnd = new Date(event.endDate);
-      if (eventEnd >= now) {
+      const timeSinceEnd = now.getTime() - eventEnd.getTime();
+
+      // Événement à venir si pas encore fini, ou fini depuis moins de 7 jours
+      if (timeSinceEnd < gracePeriodMs) {
         upcoming.push(event);
       } else {
         past.push(event);
@@ -140,46 +200,72 @@ export default function Dashboard() {
       });
     }
 
-    // Tri pour les admins uniquement
-    if (user?.isAdmin) {
-      switch (sortBy) {
-        case 'publication-desc':
-          filtered.sort((a, b) => {
-            const dateA = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
-            const dateB = b.publishedAt ? new Date(b.publishedAt).getTime() : 0;
-            return dateB - dateA;
-          });
-          break;
-        case 'publication-asc':
-          filtered.sort((a, b) => {
-            const dateA = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
-            const dateB = b.publishedAt ? new Date(b.publishedAt).getTime() : 0;
-            return dateA - dateB;
-          });
-          break;
-        case 'rating-desc':
-          filtered.sort((a, b) => {
-            const ratingA = a.rating || 0;
-            const ratingB = b.rating || 0;
-            return ratingB - ratingA;
-          });
-          break;
-        case 'status-published':
+    // Tri et filtrage
+    switch (sortBy) {
+      case 'publication-desc':
+        filtered.sort((a, b) => {
+          const dateA = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
+          const dateB = b.publishedAt ? new Date(b.publishedAt).getTime() : 0;
+          return dateB - dateA;
+        });
+        break;
+      case 'publication-asc':
+        filtered.sort((a, b) => {
+          const dateA = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
+          const dateB = b.publishedAt ? new Date(b.publishedAt).getTime() : 0;
+          return dateA - dateB;
+        });
+        break;
+      case 'rating-desc':
+        filtered.sort((a, b) => {
+          const ratingA = a.rating || 0;
+          const ratingB = b.rating || 0;
+          return ratingB - ratingA;
+        });
+        break;
+      case 'time-upcoming':
+        filtered = filtered.filter(event => {
+          const now = new Date();
+          const startDate = new Date(event.startDate);
+          return now < startDate;
+        });
+        break;
+      case 'time-ongoing':
+        filtered = filtered.filter(event => {
+          const now = new Date();
+          const startDate = new Date(event.startDate);
+          const endDate = new Date(event.endDate);
+          return now >= startDate && now <= endDate;
+        });
+        break;
+      case 'time-finished':
+        filtered = filtered.filter(event => {
+          const now = new Date();
+          const endDate = new Date(event.endDate);
+          return now > endDate;
+        });
+        break;
+      case 'status-published':
+        if (user?.isAdmin) {
           filtered = filtered.filter(event => {
             if (!event.publishedAt) return false;
             return new Date(event.publishedAt) <= new Date();
           });
-          break;
-        case 'status-draft':
+        }
+        break;
+      case 'status-draft':
+        if (user?.isAdmin) {
           filtered = filtered.filter(event => !event.publishedAt);
-          break;
-        case 'status-scheduled':
+        }
+        break;
+      case 'status-scheduled':
+        if (user?.isAdmin) {
           filtered = filtered.filter(event => {
             if (!event.publishedAt) return false;
             return new Date(event.publishedAt) > new Date();
           });
-          break;
-      }
+        }
+        break;
     }
 
     return filtered;
@@ -300,6 +386,9 @@ export default function Dashboard() {
                     <option value="publication-desc">📅 Plus récents</option>
                     <option value="publication-asc">📅 Plus anciens</option>
                     <option value="rating-desc">⭐ Mieux notés</option>
+                    <option value="time-upcoming">🔵 À venir</option>
+                    <option value="time-ongoing">🟢 En cours</option>
+                    <option value="time-finished">🟣 Terminés</option>
                     {user?.isAdmin && (
                       <>
                         <option value="status-published">✅ Publiés</option>
@@ -345,59 +434,64 @@ export default function Dashboard() {
             {currentEvents.map((event: Event) => (
               <Card
                 key={event.id}
-                className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-card border border-border shadow-md flex flex-col"
+                className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-card border border-border shadow-md flex flex-col relative"
               >
-                <CardHeader className="pb-4 flex-shrink-0">
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <CardTitle className="text-xl line-clamp-1 group-hover:text-primary transition-colors">
-                          {event.name}
-                        </CardTitle>
-                        <Badge variant="outline" className="text-xs flex-shrink-0">
-                          {event.type === 'Autre' ? event.customType || 'Autre' : event.type}
+                {/* Badge de statut en haut à droite */}
+                <div className="absolute top-4 right-4 z-10">
+                  <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border shadow-sm ${getEventTimeStatus(event).color}`}>
+                    {getEventTimeStatus(event).status}
+                  </span>
+                </div>
+
+                <CardHeader className="pb-4 flex-shrink-0 pr-24">
+                  <div className="space-y-2">
+                    <CardTitle className="text-xl sm:text-2xl line-clamp-2 group-hover:text-primary transition-colors">
+                      {event.name}
+                    </CardTitle>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Badge variant="outline" className="text-xs">
+                        {event.type === 'Autre' ? event.customType || 'Autre' : event.type}
+                      </Badge>
+                      {user?.isAdmin && (
+                        <Badge variant={getPublicationStatus(event).variant} className="text-xs">
+                          {getPublicationStatus(event).status}
                         </Badge>
-                        {user?.isAdmin && (
-                          <Badge variant={getPublicationStatus(event).variant} className="text-xs flex-shrink-0">
-                            {getPublicationStatus(event).status}
-                          </Badge>
-                        )}
-                      </div>
+                      )}
                     </div>
                   </div>
                   {event.description && (
-                    <CardDescription className="line-clamp-2">
+                    <CardDescription className="line-clamp-2 mt-3 text-sm">
                       {event.description}
                     </CardDescription>
                   )}
                 </CardHeader>
 
-                <CardContent className="flex flex-col flex-1">
-                  <div className="space-y-3 flex-1">
-                    <div className="flex items-center text-sm text-muted-foreground">
-                      <MapPin className="w-4 h-4 mr-3 text-blue-500 flex-shrink-0" />
-                      <span className="truncate">{event.location}</span>
+                <CardContent className="flex flex-col flex-1 px-4 sm:px-6">
+                  <div className="space-y-2.5 sm:space-y-3 flex-1">
+                    <div className="flex items-start sm:items-center text-sm text-muted-foreground gap-3">
+                      <MapPin className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5 sm:mt-0" />
+                      <span className="line-clamp-2 sm:truncate">{event.location}</span>
                     </div>
-                    <div className="flex items-center text-sm text-muted-foreground">
-                      <Calendar className="w-4 h-4 mr-3 text-green-500 flex-shrink-0" />
-                      <span>
+                    <div className="flex items-center text-sm text-muted-foreground gap-3">
+                      <Calendar className="w-4 h-4 text-green-500 flex-shrink-0" />
+                      <span className="truncate">
                         {new Date(event.startDate).toLocaleDateString('fr-FR', {
                           day: 'numeric',
-                          month: 'long',
+                          month: 'short',
                           year: 'numeric'
                         })}
                       </span>
                     </div>
-                    <div className="flex items-center text-sm text-muted-foreground">
-                      <Clock className="w-4 h-4 mr-3 text-orange-500 flex-shrink-0" />
-                      <div>
-                        <div>
+                    <div className="flex items-start text-sm text-muted-foreground gap-3">
+                      <Clock className="w-4 h-4 text-orange-500 flex-shrink-0 mt-0.5" />
+                      <div className="min-w-0">
+                        <div className="truncate">
                           Début: {new Date(event.startDate).toLocaleTimeString('fr-FR', {
                             hour: '2-digit',
                             minute: '2-digit'
                           })}
                         </div>
-                        <div className="text-xs text-gray-400">
+                        <div className="text-xs text-muted-foreground/70 truncate">
                           Fin: {new Date(event.endDate).toLocaleTimeString('fr-FR', {
                             hour: '2-digit',
                             minute: '2-digit'
@@ -405,28 +499,24 @@ export default function Dashboard() {
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center text-sm text-muted-foreground">
-                      <Users className="w-4 h-4 mr-3 text-purple-500 flex-shrink-0" />
-                      <span>Capacité: {event.capacity} places</span>
+                    <div className="flex items-center text-sm text-muted-foreground gap-3">
+                      <Users className="w-4 h-4 text-purple-500 flex-shrink-0" />
+                      <span>{event.capacity} places</span>
                     </div>
-                    {event.publishedAt && (
-                      <div className="flex items-center text-sm text-muted-foreground">
-                        <Calendar className="w-4 h-4 mr-3 text-pink-500 flex-shrink-0" />
-                        <span>
-                          Publié le {new Date(event.publishedAt).toLocaleDateString('fr-FR', {
-                            day: '2-digit',
-                            month: '2-digit',
-                            year: 'numeric'
-                          })} à {new Date(event.publishedAt).toLocaleTimeString('fr-FR', {
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
+                    {/* Temps écoulé depuis la publication (pour les événements à venir) */}
+                    {getEventTimeStatus(event).status === 'À venir' && event.publishedAt && getTimeAgo(event.publishedAt) && (
+                      <div className="flex items-center text-sm gap-3">
+                        <div className="w-4 h-4 flex items-center justify-center flex-shrink-0">
+                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                        </div>
+                        <span className="text-blue-600 dark:text-blue-400 font-medium">
+                          Publié {getTimeAgo(event.publishedAt)}
                         </span>
                       </div>
                     )}
                     {event.rating && event.ratingCount > 0 && (
-                      <div className="flex items-center text-sm text-muted-foreground">
-                        <Star className="w-4 h-4 mr-3 text-yellow-500 flex-shrink-0 fill-yellow-500" />
+                      <div className="flex items-center text-sm text-muted-foreground gap-3">
+                        <Star className="w-4 h-4 text-yellow-500 flex-shrink-0 fill-yellow-500" />
                         <span>
                           {event.rating.toFixed(1)}/5 ({event.ratingCount} avis)
                         </span>

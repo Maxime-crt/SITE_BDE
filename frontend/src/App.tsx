@@ -13,9 +13,12 @@ import AdminDashboard from './pages/AdminDashboard';
 import AdminSupport from './pages/AdminSupport';
 import ScanTicket from './pages/ScanTicket';
 import MyTickets from './pages/MyTickets';
+import MyRides from './pages/MyRides';
+import RideDetail from './pages/RideDetail';
 import PurchaseTicket from './pages/PurchaseTicket';
 import RateEvent from './pages/RateEvent';
 import Support from './pages/Support';
+import NotFound from './pages/NotFound';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -194,6 +197,22 @@ function AppContent() {
             }
           />
           <Route
+            path="/my-rides"
+            element={
+              <ProtectedRoute>
+                <MyRides />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/ride/:rideId"
+            element={
+              <ProtectedRoute>
+                <RideDetail />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/purchase-ticket/:eventId"
             element={
               <ProtectedRoute>
@@ -265,6 +284,8 @@ function AppContent() {
               </ProtectedRoute>
             }
           />
+          {/* Route 404 - doit être en dernier */}
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
 

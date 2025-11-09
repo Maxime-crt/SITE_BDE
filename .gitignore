@@ -142,4 +142,7 @@ Thumbs.db
 $RECYCLE.BIN/
 
 # Claude
-.claude/
+.claude/nul
+*.tmp
+backend/.restart.tmp
+backend/erd.md

@@ -3,6 +3,12 @@ generator client {
   binaryTargets = ["native", "linux-musl", "debian-openssl-1.1.x", "debian-openssl-3.0.x"]
 }
 
+generator erd {
+  provider = "prisma-erd-generator"
+  output   = "../erd.md"
+  theme    = "forest"
+}
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
@@ -26,9 +32,22 @@ model User {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
-  tickets        Ticket[]
-  eventRatings   EventRating[]
-  supportMessages SupportMessage[]
+  // Uber Sharing Profile
+  gender           String?  // MALE, FEMALE, OTHER, PREFER_NOT_SAY
+  homeAddress      String?  // Adresse complète validée
+  homeCity         String?  // Ville (pour filtre rapide)
+  homePostcode     String?  // Code postal
+  homeLatitude     Float?   // Coordonnées GPS pour calculs de distance
+  homeLongitude    Float?   // Coordonnées GPS
+  bdeCredit        Float    @default(0) // Crédit BDE pour remboursements Uber
+
+  tickets          Ticket[]
+  eventRatings     EventRating[]
+  supportMessages  SupportMessage[]
+  uberRideRequests UberRideRequest[]
+  uberRideMessages UberRideMessage[]
+  uberRidePayments UberRidePayment[]
+  notifications    Notification[]
 
   @@map("users")
 }
@@ -48,11 +67,18 @@ model Event {
   ticketPrice Float    @default(0) // Prix du billet (peut être 0 pour gratuit)
   rating      Float?
   ratingCount Int      @default(0)
+
+  // Coordonnées GPS pour Uber Sharing
+  latitude    Float?
+  longitude   Float?
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  tickets Ticket[]
-  ratings EventRating[]
+  tickets          Ticket[]
+  ratings          EventRating[]
+  uberRides        UberRide[]
+  uberRideRequests UberRideRequest[]
 
   @@map("events")
 }
@@ -107,6 +133,123 @@ model SupportMessage {
   replies SupportMessage[] @relation("MessageReply")
 
   @@map("support_messages")
+}
+
+// ========================================
+// UBER SHARING MODELS
+// ========================================
+
+model UberRide {
+  id                String   @id @default(cuid())
+  eventId           String
+  status            String   @default("MATCHING") // MATCHING, CONFIRMED, IN_PROGRESS, COMPLETED, CANCELLED
+  departureTime     DateTime // Heure de départ planifiée
+  departNow         Boolean  @default(false) // True si "partir maintenant" pendant l'event
+  maxPassengers     Int      @default(4)
+  currentPassengers Int      @default(0)
+
+  // Adresse de départ (événement)
+  departureAddress  String
+  departureLat      Float
+  departureLng      Float
+
+  // Estimation et coût final
+  estimatedCost     Float?   // Estimation via API (si disponible)
+  finalCost         Float?   // Coût réel saisi par l'initiateur
+
+  // Itinéraire optimisé (JSON array d'objets {userId, address, lat, lng, order})
+  route             Json?
+  routePolyline     String?  // Polyline encodée pour affichage carte
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  event    Event             @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  requests UberRideRequest[]
+  messages UberRideMessage[]
+  payments UberRidePayment[]
+
+  @@map("uber_rides")
+}
+
+model UberRideRequest {
+  id                  String   @id @default(cuid())
+  rideId              String
+  userId              String
+  eventId             String
+  status              String   @default("PENDING") // PENDING, ACCEPTED, DECLINED, CANCELLED
+
+  // Horaire souhaité
+  maxDepartureTime    DateTime // Heure limite de départ souhaitée
+
+  // Destination
+  destinationAddress  String   // Adresse complète validée
+  destinationCity     String
+  destinationPostcode String
+  destinationLat      Float
+  destinationLng      Float
+
+  // Préférences
+  femaleOnly          Boolean  @default(false) // Uniquement femmes
+  isInitiator         Boolean  @default(false) // Créateur du ride (celui qui appellera l'Uber)
+
+  confirmedAt         DateTime?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  ride  UberRide @relation(fields: [rideId], references: [id], onDelete: Cascade)
+  user  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([rideId, userId]) // Un user ne peut être qu'une fois dans un ride
+  @@map("uber_ride_requests")
+}
+
+model UberRideMessage {
+  id        String   @id @default(cuid())
+  rideId    String
+  userId    String
+  message   String
+  createdAt DateTime @default(now())
+
+  ride UberRide @relation(fields: [rideId], references: [id], onDelete: Cascade)
+  user User     @relation(fields: [userId], references: [id])
+
+  @@map("uber_ride_messages")
+}
+
+model UberRidePayment {
+  id                String   @id @default(cuid())
+  rideId            String
+  userId            String
+  amount            Float    // Part à payer (calculée après la course)
+  preAuthAmount     Float?   // Montant pré-autorisé
+  status            String   @default("PENDING") // PENDING, PRE_AUTHORIZED, PAID, FAILED, REFUNDED
+  stripePaymentId   String?  // Stripe Payment Intent ID
+  paidAt            DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  ride UberRide @relation(fields: [rideId], references: [id], onDelete: Cascade)
+  user User     @relation(fields: [userId], references: [id])
+
+  @@unique([rideId, userId])
+  @@map("uber_ride_payments")
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String   // UBER_MATCH, UBER_CONFIRMED, UBER_CANCELLED, PAYMENT_REQUEST, PAYMENT_RECEIVED, etc.
+  title     String
+  message   String
+  rideId    String?  // Lien vers un ride si applicable
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
 }
 
 

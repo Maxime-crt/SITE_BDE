@@ -56,7 +56,7 @@ function CheckoutForm({ event, clientSecret }: CheckoutFormProps) {
         try {
           await ticketsApi.confirmPayment(paymentIntent.id, event.id);
           toast.success('Billet acheté avec succès !');
-          navigate('/my-tickets');
+          navigate(`/events/${event.id}`);
         } catch (apiError: any) {
           const errorMsg = apiError.response?.data?.error || 'Erreur lors de la création du billet';
           setErrorMessage(errorMsg);

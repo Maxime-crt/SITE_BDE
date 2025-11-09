@@ -158,7 +158,13 @@ router.post('/login', [
         firstName: user.firstName,
         lastName: user.lastName,
         phone: user.phone,
-        isAdmin: user.isAdmin
+        isAdmin: user.isAdmin,
+        gender: user.gender,
+        homeAddress: user.homeAddress,
+        homeCity: user.homeCity,
+        homePostcode: user.homePostcode,
+        homeLatitude: user.homeLatitude,
+        homeLongitude: user.homeLongitude
       },
       token
     });

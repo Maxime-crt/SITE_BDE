@@ -5,10 +5,12 @@ import type { User, Event, EventRating } from '../types';
 import toast from 'react-hot-toast';
 import { useState } from 'react';
 import { handleApiErrorWithLog } from '../utils/errorHandler';
-import { Calendar, MapPin, Users, Euro, Star, ArrowLeft, Edit, Trash2, ExternalLink } from 'lucide-react';
+import { Calendar, MapPin, Users, Euro, Star, ArrowLeft, Edit, Trash2, ExternalLink, Car } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import ConfirmDialog from '../components/ConfirmDialog';
+import UberRequestModal from '../components/UberRequestModal';
+import api from '../services/api';
 
 interface EventDetailProps {
   user: User | null;
@@ -20,6 +22,8 @@ export default function EventDetail({ user }: EventDetailProps) {
   const queryClient = useQueryClient();
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [purchasing, setPurchasing] = useState(false);
+  const [uberModalOpen, setUberModalOpen] = useState(false);
+  const [userProfile, setUserProfile] = useState<User | null>(null);
 
   const { data: event, isLoading: eventLoading } = useQuery({
     queryKey: ['event', id],
@@ -49,6 +53,37 @@ export default function EventDetail({ user }: EventDetailProps) {
     enabled: !!id
   });
 
+  // Récupérer le profil complet de l'utilisateur (pour Uber Sharing)
+  useQuery({
+    queryKey: ['user-profile'],
+    queryFn: async () => {
+      const response = await api.get('/users/me/profile');
+      setUserProfile(response.data);
+      return response.data;
+    },
+    enabled: !!user
+  });
+
+  // Vérifier si l'utilisateur a déjà une demande de trajet pour cet événement
+  const { data: existingRideRequest } = useQuery({
+    queryKey: ['existing-ride-request', id],
+    queryFn: async () => {
+      try {
+        const response = await api.get('/uber-rides/my-rides');
+        // Filtrer pour trouver une demande active pour cet événement
+        const activeRequest = response.data.find((ride: any) =>
+          ride.eventId === id &&
+          ['PENDING', 'MATCHED', 'ACCEPTED'].includes(ride.status)
+        );
+        return activeRequest || null;
+      } catch (error: any) {
+        console.error('Erreur vérification demande trajet:', error);
+        return null;
+      }
+    },
+    enabled: !!id && !!user
+  });
+
   const handlePurchaseTicket = async () => {
     if (!event) return;
 
@@ -60,7 +95,6 @@ export default function EventDetail({ user }: EventDetailProps) {
         toast.success('Billet gratuit obtenu !');
         queryClient.invalidateQueries({ queryKey: ['my-ticket', id] });
         queryClient.invalidateQueries({ queryKey: ['event-availability', id] });
-        navigate('/my-tickets');
       } else if (result.clientSecret) {
         // Vérifier si Stripe est configuré
         const stripeKey = import.meta.env.VITE_STRIPE_PUBLIC_KEY;
@@ -282,16 +316,57 @@ export default function EventDetail({ user }: EventDetailProps) {
 
                 {/* Bouton d'achat */}
                 {myTicket ? (
-                  <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
-                    <p className="text-green-800 dark:text-green-300 font-medium mb-2">
-                      ✓ Vous avez déjà un billet pour cet événement
-                    </p>
-                    <Button
-                      onClick={() => navigate('/my-tickets')}
-                      className="w-full"
-                    >
-                      Voir mon billet
-                    </Button>
+                  <div className="space-y-3">
+                    <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+                      <p className="text-green-800 dark:text-green-300 font-medium mb-2">
+                        ✓ Vous avez déjà un billet pour cet événement
+                      </p>
+                      <Button
+                        onClick={() => navigate('/my-tickets')}
+                        className="w-full"
+                      >
+                        Voir mon billet
+                      </Button>
+                    </div>
+
+                    {/* Section Uber Sharing */}
+                    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                      {existingRideRequest ? (
+                        <>
+                          <p className="text-blue-800 dark:text-blue-300 font-medium mb-3 flex items-center gap-2">
+                            <Car className="w-4 h-4" />
+                            Demande de trajet partagé en cours
+                          </p>
+                          <Button
+                            onClick={() => navigate('/my-rides')}
+                            className="w-full bg-blue-600 hover:bg-blue-700"
+                          >
+                            Voir mes trajets
+                          </Button>
+                        </>
+                      ) : (
+                        <>
+                          <div className="flex items-start gap-3 mb-3">
+                            <Car className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
+                            <div>
+                              <p className="text-blue-900 dark:text-blue-300 font-medium">
+                                Rentrer en Uber partagé
+                              </p>
+                              <p className="text-sm text-blue-700 dark:text-blue-400 mt-1">
+                                Partagez votre trajet retour avec d'autres participants et divisez le prix
+                              </p>
+                            </div>
+                          </div>
+                          <Button
+                            onClick={() => setUberModalOpen(true)}
+                            className="w-full gap-2 bg-blue-600 hover:bg-blue-700"
+                          >
+                            <Car className="w-4 h-4" />
+                            Rechercher un trajet partagé
+                          </Button>
+                        </>
+                      )}
+                    </div>
                   </div>
                 ) : isSoldOut ? (
                   <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 text-center">
@@ -406,6 +481,25 @@ export default function EventDetail({ user }: EventDetailProps) {
         confirmText="Supprimer"
         type="danger"
       />
+
+      {/* Modal Uber Sharing */}
+      {event && (
+        <UberRequestModal
+          isOpen={uberModalOpen}
+          onClose={() => {
+            setUberModalOpen(false);
+            // Invalider le cache pour recharger les données de demande de trajet
+            queryClient.invalidateQueries({ queryKey: ['existing-ride-request', id] });
+          }}
+          event={event}
+          userHomeAddress={userProfile?.homeAddress}
+          userHomeCity={userProfile?.homeCity}
+          userHomePostcode={userProfile?.homePostcode}
+          userHomeLatitude={userProfile?.homeLatitude}
+          userHomeLongitude={userProfile?.homeLongitude}
+          userGender={userProfile?.gender}
+        />
+      )}
     </div>
   );
 }

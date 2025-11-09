@@ -5,6 +5,7 @@ import { prisma } from '../utils/prisma';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
 import { requireAdmin } from '../middleware/admin';
 import { sessionManager } from '../services/sessionManager';
+import { geocodeAddress } from '../services/geocodingService';
 
 const router = express.Router();
 
@@ -79,6 +80,21 @@ router.post('/', authenticateToken, requireAdmin, [
 
     const { name, description, location, type, customType, startDate, endDate, publishedAt, capacity, ticketPrice } = req.body;
 
+    // Géocoder l'adresse pour obtenir les coordonnées GPS
+    let latitude: number | null = null;
+    let longitude: number | null = null;
+
+    if (location) {
+      const geocodeResult = await geocodeAddress(location);
+      if (geocodeResult) {
+        latitude = geocodeResult.latitude;
+        longitude = geocodeResult.longitude;
+        console.log(`Événement géocodé: ${location} -> ${latitude}, ${longitude}`);
+      } else {
+        console.warn(`Impossible de géocoder l'adresse: ${location}`);
+      }
+    }
+
     const event = await prisma.event.create({
       data: {
         name,
@@ -90,7 +106,9 @@ router.post('/', authenticateToken, requireAdmin, [
         endDate: new Date(endDate),
         publishedAt: publishedAt ? new Date(publishedAt) : null,
         capacity: parseInt(capacity),
-        ticketPrice: parseFloat(ticketPrice)
+        ticketPrice: parseFloat(ticketPrice),
+        latitude,
+        longitude
       }
     });
 
@@ -256,6 +274,21 @@ router.put('/:id', authenticateToken, requireAdmin, [
       newPublishedAt = existingEvent.publishedAt;
     }
 
+    // Géocoder l'adresse si elle a changé
+    let latitude = existingEvent.latitude;
+    let longitude = existingEvent.longitude;
+
+    if (location && location !== existingEvent.location) {
+      const geocodeResult = await geocodeAddress(location);
+      if (geocodeResult) {
+        latitude = geocodeResult.latitude;
+        longitude = geocodeResult.longitude;
+        console.log(`Événement mis à jour et géocodé: ${location} -> ${latitude}, ${longitude}`);
+      } else {
+        console.warn(`Impossible de géocoder l'adresse: ${location}`);
+      }
+    }
+
     const updatedEvent = await prisma.event.update({
       where: { id },
       data: {
@@ -268,7 +301,9 @@ router.put('/:id', authenticateToken, requireAdmin, [
         endDate: new Date(endDate),
         publishedAt: newPublishedAt,
         capacity: capacity !== undefined ? parseInt(capacity) : existingEvent.capacity,
-        ticketPrice: ticketPrice !== undefined ? parseFloat(ticketPrice) : existingEvent.ticketPrice
+        ticketPrice: ticketPrice !== undefined ? parseFloat(ticketPrice) : existingEvent.ticketPrice,
+        latitude,
+        longitude
       }
     });
 

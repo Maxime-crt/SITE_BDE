@@ -13,8 +13,11 @@ import eventRatingRoutes from './routes/eventRatings';
 import supportRoutes from './routes/support';
 import userRoutes from './routes/users';
 import addressRoutes from './routes/address';
+import uberRidesRoutes from './routes/uberRides';
+import notificationsRoutes from './routes/notifications';
 import { sessionManager } from './services/sessionManager';
 import { runMigrations } from './utils/migrate';
+import { startRideStatusCron } from './services/rideStatusCron';
 
 dotenv.config();
 
@@ -44,7 +47,7 @@ app.use(helmet({
       styleSrc: ["'self'", "'unsafe-inline'"],
       scriptSrc: ["'self'"],
       imgSrc: ["'self'", "data:", "https:"],
-      connectSrc: ["'self'", "https://api-adresse.data.gouv.fr"],
+      connectSrc: ["'self'", "https://api-adresse.data.gouv.fr", "http://router.project-osrm.org"],
     },
   },
 }));
@@ -63,6 +66,8 @@ app.use('/api/event-ratings', eventRatingRoutes);
 app.use('/api/support', supportRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/address', addressRoutes);
+app.use('/api/uber-rides', uberRidesRoutes);
+app.use('/api/notifications', notificationsRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ message: 'BDE Billetterie API is running!' });
@@ -71,6 +76,7 @@ app.get('/api/health', (req, res) => {
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
 
+  // Support chat events
   socket.on('join-support-chat', (userId) => {
     console.log(`User ${socket.id} joined support chat: ${userId}`);
     socket.join(`support-${userId}`);
@@ -83,14 +89,42 @@ io.on('connection', (socket) => {
 
   socket.on('support-message', (data) => {
     console.log('Broadcasting message to support:', data.userId);
-    // Diffuser le message à tous les autres utilisateurs du chat (admin et utilisateur)
     socket.to(`support-${data.userId}`).emit('support-message', data);
+  });
+
+  // Uber ride events
+  socket.on('join-user-notifications', (userId) => {
+    console.log(`User ${socket.id} joined notifications: ${userId}`);
+    socket.join(`user-${userId}`);
+  });
+
+  socket.on('leave-user-notifications', (userId) => {
+    console.log(`User ${socket.id} left notifications: ${userId}`);
+    socket.leave(`user-${userId}`);
+  });
+
+  socket.on('join-uber-ride', (rideId) => {
+    console.log(`User ${socket.id} joined uber ride: ${rideId}`);
+    socket.join(`uber-ride-${rideId}`);
+  });
+
+  socket.on('leave-uber-ride', (rideId) => {
+    console.log(`User ${socket.id} left uber ride: ${rideId}`);
+    socket.leave(`uber-ride-${rideId}`);
+  });
+
+  socket.on('uber-ride-message', (data) => {
+    console.log('Broadcasting uber ride message:', data.rideId);
+    socket.to(`uber-ride-${data.rideId}`).emit('uber-ride-message', data);
   });
 
   socket.on('disconnect', () => {
     console.log('User disconnected:', socket.id);
   });
 });
+
+// Exporter io pour l'utiliser dans les services
+export { io };
 
 // Fonction de démarrage asynchrone
 async function startServer() {
@@ -105,6 +139,9 @@ async function startServer() {
 
       // Démarrer le gestionnaire de sessions
       sessionManager.start();
+
+      // Démarrer le cron job pour la mise à jour automatique des statuts de trajets
+      startRideStatusCron();
     });
   } catch (error) {
     console.error('❌ Failed to start server:', error);
