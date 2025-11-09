@@ -13,6 +13,10 @@ export default function Register() {
     firstName: '',
     lastName: '',
     phone: '',
+    gender: 'PREFER_NOT_TO_SAY' as 'MALE' | 'FEMALE' | 'PREFER_NOT_TO_SAY',
+    address: '',
+    city: '',
+    postcode: '',
     password: '',
     confirmPassword: ''
   });
@@ -30,7 +34,7 @@ export default function Register() {
     confirmPassword: false
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
 
     setFormData(prev => ({
@@ -222,6 +226,69 @@ export default function Register() {
               {errors.phone && (
                 <p className="text-red-500 text-xs mt-1">{errors.phone}</p>
               )}
+            </div>
+
+            <div>
+              <label htmlFor="gender" className="block text-sm font-medium">
+                Genre
+              </label>
+              <select
+                id="gender"
+                name="gender"
+                value={formData.gender}
+                onChange={handleChange}
+                className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+                <option value="PREFER_NOT_TO_SAY">Préfère ne pas dire</option>
+                <option value="MALE">Homme</option>
+                <option value="FEMALE">Femme</option>
+              </select>
+            </div>
+
+            <div>
+              <label htmlFor="address" className="block text-sm font-medium">
+                Adresse <span className="text-muted-foreground text-xs">(optionnel)</span>
+              </label>
+              <Input
+                id="address"
+                name="address"
+                type="text"
+                placeholder="123 rue de la République"
+                value={formData.address}
+                onChange={handleChange}
+                className="mt-1"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="city" className="block text-sm font-medium">
+                  Ville <span className="text-muted-foreground text-xs">(optionnel)</span>
+                </label>
+                <Input
+                  id="city"
+                  name="city"
+                  type="text"
+                  placeholder="Paris"
+                  value={formData.city}
+                  onChange={handleChange}
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <label htmlFor="postcode" className="block text-sm font-medium">
+                  Code postal <span className="text-muted-foreground text-xs">(optionnel)</span>
+                </label>
+                <Input
+                  id="postcode"
+                  name="postcode"
+                  type="text"
+                  placeholder="75001"
+                  value={formData.postcode}
+                  onChange={handleChange}
+                  className="mt-1"
+                />
+              </div>
             </div>
 
             <div>

@@ -1,0 +1,37 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm create:*)",
+      "Read(//c/Users/maxim/AppData/Local/npm-cache/_logs/**)",
+      "Bash(npm run install:all:*)",
+      "Bash(npm run:*)",
+      "Bash(taskkill:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(npx kill-port:*)",
+      "Bash(curl:*)",
+      "WebFetch(domain:localhost)",
+      "Bash(timeout:*)",
+      "Bash(npx tailwindcss init:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(npx prisma migrate dev:*)",
+      "Bash(npx prisma:*)",
+      "Bash(node:*)",
+      "Bash(npx tailwindcss:*)",
+      "Bash(xcopy:*)",
+      "Bash(robocopy:*)",
+      "Bash(git add:*)",
+      "Bash(docker exec:*)",
+      "Bash(nul)",
+      "Bash(.restart.tmp)",
+      "Bash(del .restart.tmp)",
+      "Bash(index.ts)",
+      "Bash(git log:*)",
+      "Bash(.gitignore)"
+    ],
+    "deny": [],
+    "ask": [
+      "Bash(npm install:*)"
+    ]
+  }
+}

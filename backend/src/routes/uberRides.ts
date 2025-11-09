@@ -383,6 +383,17 @@ router.get('/:rideId', authenticateToken, async (req: AuthRequest, res: express.
       });
     }
 
+    console.log('🔍 [DEBUG] Ride details:');
+    console.log('  - Ride ID:', ride.id);
+    console.log('  - Current passengers:', ride.currentPassengers);
+    console.log('  - Requests found:', ride.requests.length);
+    console.log('  - Requests details:', ride.requests.map(r => ({
+      id: r.id,
+      userId: r.userId,
+      status: r.status,
+      userName: `${r.user.firstName} ${r.user.lastName}`
+    })));
+
     res.json(ride);
   } catch (error) {
     console.error('Erreur récupération détail trajet:', error);
