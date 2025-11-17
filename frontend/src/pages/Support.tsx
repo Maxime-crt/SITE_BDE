@@ -31,13 +31,7 @@ export default function Support({ user }: SupportProps) {
     refetchInterval: 5000 // Rafraîchir toutes les 5 secondes
   });
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+  // Removed auto-scroll to bottom - let user control scroll position
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();

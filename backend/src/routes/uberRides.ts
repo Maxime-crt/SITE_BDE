@@ -171,6 +171,26 @@ router.post('/request', authenticateToken, [
       }
     });
 
+    // Calculer l'estimation de prix initiale
+    const { estimateSimpleUberPrice } = await import('../services/uberPricingService');
+    const priceEstimate = estimateSimpleUberPrice(
+      event.latitude,
+      event.longitude,
+      destinationLat,
+      destinationLng,
+      1 // 1 passager pour l'instant
+    );
+
+    // Mettre à jour le ride avec le prix estimé
+    await prisma.uberRide.update({
+      where: { id: ride.id },
+      data: {
+        estimatedCost: priceEstimate.perPersonEstimate
+      }
+    });
+
+    console.log(`💰 Prix initial estimé: ${priceEstimate.perPersonEstimate}€ (${priceEstimate.totalDistance}km)`);
+
     // Lancer l'algorithme de matching pour trouver d'autres passagers
     const { findMatches } = await import('../services/uberMatchingService');
     const matchResult = await findMatches(request.id);

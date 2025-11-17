@@ -285,6 +285,39 @@ export default function RideDetail() {
                   </div>
                 )}
 
+                {/* Détails de l'estimation */}
+                <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+                  <div className="text-xs font-semibold text-foreground mb-2 flex items-center gap-2">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Comment est calculé ce prix ?
+                  </div>
+                  <div className="space-y-1.5 text-xs text-muted-foreground">
+                    <div className="flex justify-between items-center">
+                      <span>Prix de base UberX</span>
+                      <span className="font-medium">2,50€</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span>Distance parcourue</span>
+                      <span className="font-medium">~1,20€/km</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span>Temps de trajet</span>
+                      <span className="font-medium">~0,25€/min</span>
+                    </div>
+                    <div className="border-t border-border pt-1.5 mt-1.5 flex justify-between items-center">
+                      <span className="font-medium">Divisé par {acceptedMembers.length} {acceptedMembers.length > 1 ? 'personnes' : 'personne'}</span>
+                      <span className="text-green-600 dark:text-green-400 font-semibold">
+                        = {estimatedCostPerPerson || ride.estimatedCost.toFixed(2)}€
+                      </span>
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground italic mt-2">
+                    * Tarifs basés sur UberX en France. Les prix peuvent varier selon l'heure (majoration en heures de pointe et la nuit).
+                  </p>
+                </div>
+
                 <p className="text-xs text-muted-foreground">
                   Le coût réel sera calculé après la course et partagé équitablement entre tous les passagers.
                 </p>

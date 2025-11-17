@@ -2,6 +2,7 @@ import { prisma } from '../utils/prisma';
 import { areDestinationsClose } from './geocodingService';
 import { isDetourAcceptable, optimizeWaypoints } from './routingService';
 import { notifyUberMatch } from './notificationService';
+import { estimateUberPrice } from './uberPricingService';
 
 interface MatchResult {
   matched: boolean;
@@ -252,6 +253,58 @@ export async function findMatches(requestId: string): Promise<MatchResult> {
 }
 
 /**
+ * Met à jour l'estimation de prix pour un ride
+ */
+async function updateRidePriceEstimate(rideId: string) {
+  try {
+    const ride = await prisma.uberRide.findUnique({
+      where: { id: rideId },
+      include: {
+        requests: {
+          where: { status: { in: ['PENDING', 'ACCEPTED'] } }
+        }
+      }
+    });
+
+    if (!ride || ride.requests.length === 0) {
+      console.log('❌ Ride invalide pour estimation prix');
+      return;
+    }
+
+    // Récupérer toutes les destinations
+    const destinations = ride.requests.map(req => ({
+      lat: req.destinationLat,
+      lng: req.destinationLng
+    }));
+
+    // Calculer le prix estimé
+    const priceEstimate = estimateUberPrice({
+      departurePoint: {
+        lat: ride.departureLat,
+        lng: ride.departureLng
+      },
+      destinations,
+      numberOfPassengers: ride.currentPassengers
+    });
+
+    // Mettre à jour dans la base de données
+    await prisma.uberRide.update({
+      where: { id: rideId },
+      data: {
+        estimatedCost: priceEstimate.perPersonEstimate
+      }
+    });
+
+    console.log(`💰 Prix estimé mis à jour: ${priceEstimate.perPersonEstimate}€/personne (${priceEstimate.totalEstimate}€ total, ${priceEstimate.totalDistance}km)`);
+
+    return priceEstimate;
+  } catch (error) {
+    console.error('Erreur mise à jour prix:', error);
+    return null;
+  }
+}
+
+/**
  * Optimiser l'itinéraire d'un ride pour minimiser la distance
  */
 export async function optimizeRideRoute(rideId: string) {
@@ -268,6 +321,8 @@ export async function optimizeRideRoute(rideId: string) {
 
     if (!ride || ride.requests.length < 2) {
       console.log('Pas assez de passagers pour optimiser');
+      // Mettre à jour le prix même avec 1 passager
+      await updateRidePriceEstimate(rideId);
       return;
     }
 
@@ -297,6 +352,9 @@ export async function optimizeRideRoute(rideId: string) {
 
       console.log(` Itinéraire optimisé pour ride ${rideId}: ${optimized.totalDistance}m, ${Math.round(optimized.totalDuration / 60)} min`);
     }
+
+    // Mettre à jour le prix estimé après optimisation
+    await updateRidePriceEstimate(rideId);
   } catch (error) {
     console.error('Erreur optimisation route:', error);
   }
