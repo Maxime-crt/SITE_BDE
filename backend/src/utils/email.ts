@@ -1,7 +1,12 @@
 import { Resend } from 'resend';
 
-// Créer un client Resend
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Créer un client Resend (optionnel - si pas de clé, les emails seront simulés)
+const resendApiKey = process.env.RESEND_API_KEY;
+const resend = resendApiKey ? new Resend(resendApiKey) : null;
+
+if (!resendApiKey) {
+  console.warn('⚠️  RESEND_API_KEY non configurée - les emails seront simulés en mode développement');
+}
 
 // Générer un code de vérification à 6 chiffres
 export function generateVerificationCode(): string {
@@ -10,6 +15,13 @@ export function generateVerificationCode(): string {
 
 // Envoyer l'email de vérification
 export async function sendVerificationEmail(email: string, firstName: string, code: string): Promise<void> {
+  // Mode simulation si pas de clé Resend
+  if (!resend) {
+    console.log(`📧 [SIMULATION] Email de vérification pour ${email}`);
+    console.log(`   Code: ${code}`);
+    return;
+  }
+
   try {
     const { data, error } = await resend.emails.send({
       from: 'BDE IESEG <noreply@ieseg-events.fr>',

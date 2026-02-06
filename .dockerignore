@@ -4,6 +4,9 @@ npm-debug.log
 .gitignore
 README.md
 .env
+.env.docker
+.env.local
+.env.*.local
 .nyc_output
 coverage
 .nyc_output
@@ -13,4 +16,18 @@ backend/node_modules
 frontend/node_modules
 backend/dist
 frontend/dist
+backend/prisma/dev.db
+backend/prisma/dev.db-journal
 *.log
+
+# Docker
+docker-compose*.yml
+!docker-entrypoint.sh
+
+# IDE
+.vscode
+.idea
+
+# OS
+.DS_Store
+Thumbs.db

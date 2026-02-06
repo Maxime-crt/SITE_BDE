@@ -33,14 +33,8 @@ export async function runMigrations() {
   try {
     console.log('📊 Setting up database...');
 
-    // En production, utiliser db push pour créer la DB/tables
-    if (process.env.NODE_ENV === 'production') {
-      console.log('🔄 Running Prisma db push...');
-      execSync('npx prisma db push --accept-data-loss', {
-        stdio: 'inherit',
-        cwd: process.cwd()
-      });
-    }
+    // Note: En Docker, les migrations sont gérées par docker-entrypoint.sh
+    // Ici on ne fait que vérifier la connexion et configurer les admins
 
     // Tester la connexion DB
     await prisma.$connect();

@@ -1,0 +1,38 @@
+services:
+  # Application (Backend + Frontend)
+  # Utilise le conteneur PostgreSQL externe "postgres-site-bde"
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: site-bde-app
+    restart: unless-stopped
+    ports:
+      - "${PORT:-5000}:5000"
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: 5000
+      # Connexion au conteneur PostgreSQL externe via le réseau partagé
+      DATABASE_URL: postgresql://postgres:postgres@postgres-site-bde:5432/site_bde_dev?schema=public
+      DB_HOST: postgres-site-bde
+      DB_PORT: 5432
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5000}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY:-}
+      EMAIL_USER: ${EMAIL_USER:-}
+      EMAIL_PASSWORD: ${EMAIL_PASSWORD:-}
+      AUTO_ADMIN_EMAILS: ${AUTO_ADMIN_EMAILS:-}
+      BCRYPT_ROUNDS: ${BCRYPT_ROUNDS:-12}
+    volumes:
+      - uploads_data:/app/backend/uploads
+    networks:
+      - site-bde-network
+
+networks:
+  site-bde-network:
+    external: true
+
+volumes:
+  uploads_data:
+    driver: local
