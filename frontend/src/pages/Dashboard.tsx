@@ -1,13 +1,14 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { MapPin, Calendar, Users, ArrowRight, Clock, Loader2, Edit, Trash2, Star, ChevronDown } from 'lucide-react';
+import { MapPin, Calendar, Users, ArrowRight, Clock, Loader2, Edit, Trash2, Star, ChevronDown, CalendarDays, LayoutGrid } from 'lucide-react';
 import { eventsApi, eventRatingsApi } from '../services/api';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import ConfirmDialog from '../components/ConfirmDialog';
 import StarRating from '../components/StarRating';
+import EventCalendar from '../components/EventCalendar';
 import toast from 'react-hot-toast';
 import type { Event, User } from '../types';
 import { handleApiErrorWithLog } from '../utils/errorHandler';
@@ -18,10 +19,11 @@ export default function Dashboard() {
   const [user, setUser] = useState<User | null>(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [eventToDelete, setEventToDelete] = useState<string | null>(null);
-  const [sortBy, setSortBy] = useState<SortOption>('publication-desc');
+  const [sortBy, setSortBy] = useState<SortOption>('time-upcoming');
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [activeTab, setActiveTab] = useState<'upcoming' | 'past'>('upcoming');
+  const [viewMode, setViewMode] = useState<'calendar' | 'grid'>('calendar');
   const [ratingEventId, setRatingEventId] = useState<string | null>(null);
   const [userRating, setUserRating] = useState(0);
   const eventsPerPage = 6;
@@ -224,10 +226,23 @@ export default function Dashboard() {
         });
         break;
       case 'time-upcoming':
-        filtered = filtered.filter(event => {
+        // Trier : événements en cours en premier, puis à venir par date de début
+        filtered.sort((a, b) => {
           const now = new Date();
-          const startDate = new Date(event.startDate);
-          return now < startDate;
+          const startA = new Date(a.startDate);
+          const endA = new Date(a.endDate);
+          const startB = new Date(b.startDate);
+          const endB = new Date(b.endDate);
+
+          const aIsOngoing = now >= startA && now <= endA;
+          const bIsOngoing = now >= startB && now <= endB;
+
+          // Événements en cours en premier
+          if (aIsOngoing && !bIsOngoing) return -1;
+          if (!aIsOngoing && bIsOngoing) return 1;
+
+          // Si les deux sont en cours ou les deux ne sont pas en cours, trier par date de début
+          return startA.getTime() - startB.getTime();
         });
         break;
       case 'time-ongoing':
@@ -317,7 +332,7 @@ export default function Dashboard() {
             Événements BDE 🎉
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-6">
-            Découvrez les prochains événements et réservez vos billets pour la communauté IESEG
+            Découvrez les prochains événements et trouvez un covoiturage pour rentrer
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             {user?.isAdmin && (
@@ -349,29 +364,57 @@ export default function Dashboard() {
 
             {/* Onglets, Tri et compteur */}
             <div className="flex flex-col sm:flex-row gap-4 justify-between items-center">
-              {/* Onglets À venir / Passés */}
+              {/* Toggle vue Calendrier / Grille */}
               <div className="inline-flex rounded-lg border border-border bg-background p-1">
                 <button
-                  onClick={() => setActiveTab('upcoming')}
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                    activeTab === 'upcoming'
+                  onClick={() => setViewMode('calendar')}
+                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all flex items-center gap-2 ${
+                    viewMode === 'calendar'
                       ? 'bg-primary text-primary-foreground shadow-sm'
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
-                  À venir ({upcomingEvents.length})
+                  <CalendarDays className="w-4 h-4" />
+                  Calendrier
                 </button>
                 <button
-                  onClick={() => setActiveTab('past')}
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                    activeTab === 'past'
+                  onClick={() => setViewMode('grid')}
+                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all flex items-center gap-2 ${
+                    viewMode === 'grid'
                       ? 'bg-primary text-primary-foreground shadow-sm'
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
-                  Passés ({pastEvents.length})
+                  <LayoutGrid className="w-4 h-4" />
+                  Grille
                 </button>
               </div>
+
+              {/* Onglets À venir / Passés (seulement en vue grille) */}
+              {viewMode === 'grid' && (
+                <div className="inline-flex rounded-lg border border-border bg-background p-1">
+                  <button
+                    onClick={() => setActiveTab('upcoming')}
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                      activeTab === 'upcoming'
+                        ? 'bg-primary text-primary-foreground shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    À venir ({upcomingEvents.length})
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('past')}
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                      activeTab === 'past'
+                        ? 'bg-primary text-primary-foreground shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    Passés ({pastEvents.length})
+                  </button>
+                </div>
+              )}
               <div className="flex items-center gap-3">
                 <label htmlFor="sort" className="text-sm font-medium">
                   Trier par:
@@ -416,6 +459,12 @@ export default function Dashboard() {
               </CardDescription>
             </CardHeader>
           </Card>
+        ) : viewMode === 'calendar' ? (
+          /* Vue Calendrier */
+          <EventCalendar
+            events={events || []}
+            onEventClick={(event) => navigate(`/events/${event.id}`)}
+          />
         ) : sortedEvents.length === 0 ? (
           <Card className="max-w-md mx-auto">
             <CardHeader className="text-center pb-4">
@@ -429,6 +478,7 @@ export default function Dashboard() {
             </CardHeader>
           </Card>
         ) : (
+          /* Vue Grille */
           <>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {currentEvents.map((event: Event) => (
@@ -526,37 +576,21 @@ export default function Dashboard() {
 
                   {/* Système de notation pour les événements passés */}
                   {activeTab === 'past' && (
-                    <>
-                      {event.userHasTicket ? (
-                        <div className="mt-4 p-3 bg-muted/50 rounded-lg border border-border">
-                          <div className="text-sm font-medium mb-2 text-center">Notez cet événement</div>
-                          <div className="flex justify-center">
-                            <StarRating
-                              rating={0}
-                              onRatingChange={(rating) => handleRatingSubmit(event.id, rating)}
-                              size="lg"
-                            />
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="mt-4 p-3 bg-muted/50 rounded-lg border border-border text-center">
-                          <div className="flex items-center justify-center gap-2">
-                            <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
-                            <span className="text-sm font-medium">
-                              {event.rating && event.ratingCount > 0
-                                ? `${event.rating.toFixed(1)}/5`
-                                : '-/5'
-                              }
-                            </span>
-                          </div>
-                          {event.ratingCount > 0 && (
-                            <p className="text-xs text-muted-foreground mt-1">
-                              ({event.ratingCount} avis)
-                            </p>
-                          )}
-                        </div>
+                    <div className="mt-4 p-3 bg-muted/50 rounded-lg border border-border">
+                      <div className="text-sm font-medium mb-2 text-center">Notez cet événement</div>
+                      <div className="flex justify-center">
+                        <StarRating
+                          rating={0}
+                          onRatingChange={(rating) => handleRatingSubmit(event.id, rating)}
+                          size="lg"
+                        />
+                      </div>
+                      {event.ratingCount > 0 && (
+                        <p className="text-xs text-muted-foreground mt-2 text-center">
+                          Note actuelle: {event.rating?.toFixed(1)}/5 ({event.ratingCount} avis)
+                        </p>
                       )}
-                    </>
+                    </div>
                   )}
 
                   <Button asChild className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg mt-4 flex-shrink-0">

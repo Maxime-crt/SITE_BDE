@@ -1,0 +1,229 @@
+/* Dark mode support for react-big-calendar */
+
+/* Base calendar styles */
+.rbc-calendar {
+  font-family: inherit;
+}
+
+/* Dark mode overrides */
+.dark .rbc-calendar {
+  background: hsl(var(--card));
+  color: hsl(var(--foreground));
+}
+
+/* Toolbar (navigation) */
+.dark .rbc-toolbar {
+  margin-bottom: 1rem;
+}
+
+.dark .rbc-toolbar button {
+  color: hsl(var(--foreground));
+  border-color: hsl(var(--border));
+  background: transparent;
+}
+
+.dark .rbc-toolbar button:hover {
+  background-color: hsl(var(--accent));
+  color: hsl(var(--accent-foreground));
+}
+
+.dark .rbc-toolbar button.rbc-active {
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  border-color: hsl(var(--primary));
+}
+
+.dark .rbc-toolbar button.rbc-active:hover {
+  background-color: hsl(var(--primary));
+  opacity: 0.9;
+}
+
+/* Header (day names) */
+.dark .rbc-header {
+  border-color: hsl(var(--border));
+  color: hsl(var(--muted-foreground));
+  padding: 8px 4px;
+  font-weight: 500;
+}
+
+.dark .rbc-header + .rbc-header {
+  border-left-color: hsl(var(--border));
+}
+
+/* Month view */
+.dark .rbc-month-view {
+  border-color: hsl(var(--border));
+}
+
+.dark .rbc-month-row {
+  border-color: hsl(var(--border));
+}
+
+.dark .rbc-month-row + .rbc-month-row {
+  border-top-color: hsl(var(--border));
+}
+
+.dark .rbc-day-bg {
+  border-color: hsl(var(--border));
+}
+
+.dark .rbc-day-bg + .rbc-day-bg {
+  border-left-color: hsl(var(--border));
+}
+
+.dark .rbc-off-range-bg {
+  background: hsl(var(--muted) / 0.3);
+}
+
+.dark .rbc-today {
+  background-color: hsl(var(--primary) / 0.1);
+}
+
+/* Date cells */
+.dark .rbc-date-cell {
+  padding: 4px 8px;
+}
+
+.dark .rbc-date-cell > a {
+  color: hsl(var(--foreground));
+}
+
+.dark .rbc-date-cell.rbc-off-range > a {
+  color: hsl(var(--muted-foreground));
+}
+
+.dark .rbc-date-cell.rbc-now > a {
+  color: hsl(var(--primary));
+  font-weight: 600;
+}
+
+/* Events */
+.dark .rbc-event {
+  background-color: hsl(var(--primary));
+  border: none;
+}
+
+.dark .rbc-event:focus {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
+
+.dark .rbc-event.rbc-selected {
+  background-color: hsl(var(--primary));
+  opacity: 0.8;
+}
+
+.dark .rbc-event-content {
+  color: white;
+}
+
+/* Show more link */
+.dark .rbc-show-more {
+  color: hsl(var(--primary));
+  font-weight: 500;
+}
+
+/* Week view */
+.dark .rbc-time-view {
+  border-color: hsl(var(--border));
+}
+
+.dark .rbc-time-header {
+  border-color: hsl(var(--border));
+}
+
+.dark .rbc-time-header-content {
+  border-color: hsl(var(--border));
+}
+
+.dark .rbc-time-content {
+  border-color: hsl(var(--border));
+}
+
+.dark .rbc-time-content > * + * > * {
+  border-left-color: hsl(var(--border));
+}
+
+.dark .rbc-timeslot-group {
+  border-color: hsl(var(--border));
+}
+
+.dark .rbc-time-slot {
+  border-color: hsl(var(--border));
+}
+
+.dark .rbc-time-gutter {
+  color: hsl(var(--muted-foreground));
+}
+
+.dark .rbc-current-time-indicator {
+  background-color: hsl(var(--destructive));
+}
+
+/* Agenda view */
+.dark .rbc-agenda-view {
+  border-color: hsl(var(--border));
+}
+
+.dark .rbc-agenda-view table.rbc-agenda-table {
+  border-color: hsl(var(--border));
+}
+
+.dark .rbc-agenda-view table.rbc-agenda-table thead > tr > th {
+  border-color: hsl(var(--border));
+  color: hsl(var(--muted-foreground));
+  background: hsl(var(--muted) / 0.3);
+}
+
+.dark .rbc-agenda-view table.rbc-agenda-table tbody > tr > td {
+  border-color: hsl(var(--border));
+  color: hsl(var(--foreground));
+}
+
+.dark .rbc-agenda-view table.rbc-agenda-table tbody > tr > td + td {
+  border-left-color: hsl(var(--border));
+}
+
+.dark .rbc-agenda-date-cell,
+.dark .rbc-agenda-time-cell {
+  color: hsl(var(--muted-foreground));
+}
+
+.dark .rbc-agenda-event-cell {
+  color: hsl(var(--foreground));
+}
+
+/* Popup overlay */
+.dark .rbc-overlay {
+  background-color: hsl(var(--popover));
+  border-color: hsl(var(--border));
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.3);
+}
+
+.dark .rbc-overlay-header {
+  border-color: hsl(var(--border));
+  color: hsl(var(--foreground));
+}
+
+/* Light mode adjustments */
+.rbc-toolbar button {
+  transition: all 0.2s ease;
+}
+
+.rbc-event {
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.rbc-event:hover {
+  opacity: 0.85;
+}
+
+.rbc-show-more {
+  cursor: pointer;
+  background: transparent;
+}
+
+.rbc-show-more:hover {
+  text-decoration: underline;
+}

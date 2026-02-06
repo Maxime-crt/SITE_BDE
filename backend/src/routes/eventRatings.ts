@@ -34,19 +34,6 @@ router.post('/', authenticateToken, [
       return res.status(400).json({ error: 'Vous ne pouvez noter que les événements terminés' });
     }
 
-    // Vérifier que l'utilisateur a un billet pour cet événement
-    const ticket = await prisma.ticket.findFirst({
-      where: {
-        eventId,
-        userId,
-        status: { in: ['VALID', 'USED'] }
-      }
-    });
-
-    if (!ticket) {
-      return res.status(403).json({ error: 'Vous devez avoir un billet pour noter cet événement' });
-    }
-
     // Vérifier si une note existe déjà
     const existingRating = await prisma.eventRating.findUnique({
       where: {

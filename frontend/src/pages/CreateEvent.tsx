@@ -35,7 +35,6 @@ export default function CreateEvent() {
     startDate: '',
     endDate: '',
     capacity: '100',
-    ticketPrice: '0',
     publishMode: 'now', // 'now' | 'schedule' | 'draft'
     publishedAt: ''
   });
@@ -64,7 +63,6 @@ export default function CreateEvent() {
             startDate: new Date(event.startDate).toISOString().slice(0, 16),
             endDate: new Date(event.endDate).toISOString().slice(0, 16),
             capacity: event.capacity.toString(),
-            ticketPrice: event.ticketPrice.toString(),
             publishMode,
             publishedAt: event.publishedAt ? new Date(event.publishedAt).toISOString().slice(0, 16) : ''
           });
@@ -194,7 +192,6 @@ export default function CreateEvent() {
         startDate: new Date(formData.startDate).toISOString(),
         endDate: new Date(formData.endDate).toISOString(),
         capacity: parseInt(formData.capacity),
-        ticketPrice: parseFloat(formData.ticketPrice),
         publishedAt
       };
 
@@ -255,7 +252,7 @@ export default function CreateEvent() {
                 {isEditMode ? 'Modifier l\'événement' : 'Créer un nouvel événement'}
               </h1>
               <p className="text-xl text-muted-foreground">
-                {isEditMode ? 'Modifiez les informations de votre événement' : 'Organisez un événement avec billetterie pour la communauté IESEG'}
+                {isEditMode ? 'Modifiez les informations de votre événement' : 'Organisez un événement pour la communauté IESEG'}
               </p>
             </div>
           </div>
@@ -400,44 +397,21 @@ export default function CreateEvent() {
                   </div>
                 )}
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label htmlFor="capacity" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                      Capacité (places) *
-                    </label>
-                    <Input
-                      id="capacity"
-                      name="capacity"
-                      type="number"
-                      min="1"
-                      placeholder="Ex: 100"
-                      value={formData.capacity}
-                      onChange={handleChange}
-                      required
-                      className="h-11"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label htmlFor="ticketPrice" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                      Prix du billet (€) *
-                    </label>
-                    <Input
-                      id="ticketPrice"
-                      name="ticketPrice"
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      placeholder="0.00"
-                      value={formData.ticketPrice}
-                      onChange={handleChange}
-                      required
-                      className="h-11"
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Gratuit si 0€. Non modifiable après publication.
-                    </p>
-                  </div>
+                <div className="space-y-2">
+                  <label htmlFor="capacity" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                    Capacité (places) *
+                  </label>
+                  <Input
+                    id="capacity"
+                    name="capacity"
+                    type="number"
+                    min="1"
+                    placeholder="Ex: 100"
+                    value={formData.capacity}
+                    onChange={handleChange}
+                    required
+                    className="h-11"
+                  />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">

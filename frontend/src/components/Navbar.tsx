@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Ticket, User, LogOut, Menu, Calendar, X, Shield, MessageCircle, Car } from 'lucide-react';
+import { User, LogOut, Menu, Calendar, X, Shield, MessageCircle, Car } from 'lucide-react';
 import { Button } from './ui/button';
 import { ThemeToggle } from './ThemeToggle';
 import type { User as UserType } from '../types';
@@ -78,17 +78,6 @@ export default function Navbar({ user, onLogout }: NavbarProps) {
 
                   {/* Menu desktop - visible seulement au-dessus de 900px */}
                   <div className="hidden lg:flex items-center space-x-2">
-                    <Button
-                      asChild
-                      variant={isActive('/my-tickets') ? 'default' : 'ghost'}
-                      size="sm"
-                    >
-                      <Link to="/my-tickets" className="flex items-center space-x-2">
-                        <Ticket className="w-4 h-4" />
-                        <span>Mes billets</span>
-                      </Link>
-                    </Button>
-
                     <Button
                       asChild
                       variant={isActive('/my-rides') ? 'default' : 'ghost'}
@@ -196,17 +185,6 @@ export default function Navbar({ user, onLogout }: NavbarProps) {
             <div className="flex flex-col space-y-2">
               {user ? (
                 <>
-                  <Link
-                    to="/my-tickets"
-                    className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                      isActive('/my-tickets')
-                        ? 'bg-primary text-primary-foreground'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-accent'
-                    }`}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    Mes billets
-                  </Link>
                   <Link
                     to="/my-rides"
                     className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${

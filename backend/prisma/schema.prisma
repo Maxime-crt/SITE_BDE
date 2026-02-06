@@ -39,9 +39,7 @@ model User {
   homePostcode     String?  // Code postal
   homeLatitude     Float?   // Coordonnées GPS pour calculs de distance
   homeLongitude    Float?   // Coordonnées GPS
-  bdeCredit        Float    @default(0) // Crédit BDE pour remboursements Uber
 
-  tickets          Ticket[]
   eventRatings     EventRating[]
   supportMessages  SupportMessage[]
   uberRideRequests UberRideRequest[]
@@ -64,7 +62,6 @@ model Event {
   publishedAt DateTime? // Date de publication (null = brouillon)
   isActive    Boolean  @default(true)
   capacity    Int      @default(100) // Nombre total de places
-  ticketPrice Float    @default(0) // Prix du billet (peut être 0 pour gratuit)
   rating      Float?
   ratingCount Int      @default(0)
 
@@ -75,30 +72,11 @@ model Event {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  tickets          Ticket[]
   ratings          EventRating[]
   uberRides        UberRide[]
   uberRideRequests UberRideRequest[]
 
   @@map("events")
-}
-
-model Ticket {
-  id              String   @id @default(cuid())
-  eventId         String
-  userId          String
-  qrCode          String   @unique // Texte unique du QR code (ex: TICKET-xxx)
-  qrCodeImage     String   @default("") // Image base64 du QR code
-  status          String   @default("VALID") // VALID, USED, CANCELLED, REFUNDED
-  purchasePrice   Float    // Prix payé (fixé au moment de l'achat)
-  stripePaymentId String?  // ID du paiement Stripe
-  purchasedAt     DateTime @default(now())
-  usedAt          DateTime? // Quand le billet a été scanné
-
-  event Event @relation(fields: [eventId], references: [id])
-  user  User  @relation(fields: [userId], references: [id])
-
-  @@map("tickets")
 }
 
 model EventRating {

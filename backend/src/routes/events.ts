@@ -40,22 +40,10 @@ router.get('/', async (req: express.Request, res: express.Response) => {
 
     const events = await prisma.event.findMany({
       where: whereClause,
-      orderBy: { startDate: 'asc' },
-      include: {
-        tickets: {
-          where: { status: { in: ['VALID', 'USED'] } },
-          select: { id: true, userId: true }
-        }
-      }
+      orderBy: { startDate: 'asc' }
     });
 
-    // Ajouter un flag userHasTicket pour chaque événement
-    const eventsWithUserTicket = events.map(event => ({
-      ...event,
-      userHasTicket: userId ? event.tickets.some(ticket => ticket.userId === userId) : false
-    }));
-
-    res.json(eventsWithUserTicket);
+    res.json(events);
   } catch (error) {
     console.error('Erreur récupération événements:', error);
     res.status(500).json({ error: 'Erreur serveur' });
@@ -69,8 +57,7 @@ router.post('/', authenticateToken, requireAdmin, [
   body('type').trim().isLength({ min: 1 }).withMessage('Type requis'),
   body('startDate').isISO8601().withMessage('Date de début valide requise'),
   body('endDate').isISO8601().withMessage('Date de fin valide requise'),
-  body('capacity').isInt({ min: 1 }).withMessage('Capacité requise (min 1)'),
-  body('ticketPrice').isFloat({ min: 0 }).withMessage('Prix du billet requis (min 0)')
+  body('capacity').isInt({ min: 1 }).withMessage('Capacité requise (min 1)')
 ], async (req: AuthRequest, res: express.Response) => {
   try {
     const errors = validationResult(req);
@@ -78,7 +65,7 @@ router.post('/', authenticateToken, requireAdmin, [
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { name, description, location, type, customType, startDate, endDate, publishedAt, capacity, ticketPrice } = req.body;
+    const { name, description, location, type, customType, startDate, endDate, publishedAt, capacity } = req.body;
 
     // Géocoder l'adresse pour obtenir les coordonnées GPS
     let latitude: number | null = null;
@@ -106,7 +93,6 @@ router.post('/', authenticateToken, requireAdmin, [
         endDate: new Date(endDate),
         publishedAt: publishedAt ? new Date(publishedAt) : null,
         capacity: parseInt(capacity),
-        ticketPrice: parseFloat(ticketPrice),
         latitude,
         longitude
       }
@@ -127,10 +113,6 @@ router.get('/:id', async (req: express.Request, res: express.Response) => {
     const event = await prisma.event.findUnique({
       where: { id },
       include: {
-        tickets: {
-          where: { status: { in: ['VALID', 'USED'] } },
-          select: { id: true, userId: true }
-        },
         ratings: {
           include: {
             user: {
@@ -149,59 +131,6 @@ router.get('/:id', async (req: express.Request, res: express.Response) => {
     res.json(event);
   } catch (error) {
     console.error('Erreur récupération événement:', error);
-    res.status(500).json({ error: 'Erreur serveur' });
-  }
-});
-
-// Récupérer les billets disponibles pour un événement
-router.get('/:id/tickets-available', async (req: express.Request, res: express.Response) => {
-  try {
-    const { id } = req.params;
-
-    const event = await prisma.event.findUnique({
-      where: { id },
-      include: {
-        tickets: {
-          where: { status: { in: ['VALID', 'USED'] } }
-        }
-      }
-    });
-
-    if (!event) {
-      return res.status(404).json({ error: 'Événement non trouvé' });
-    }
-
-    const availableTickets = event.capacity - event.tickets.length;
-
-    res.json({
-      capacity: event.capacity,
-      sold: event.tickets.length,
-      available: availableTickets
-    });
-  } catch (error) {
-    console.error('Erreur récupération disponibilité:', error);
-    res.status(500).json({ error: 'Erreur serveur' });
-  }
-});
-
-// Admin: Voir tous les billets vendus
-router.get('/admin/all-tickets', authenticateToken, requireAdmin, async (req: AuthRequest, res: express.Response) => {
-  try {
-    const tickets = await prisma.ticket.findMany({
-      include: {
-        event: {
-          select: { id: true, name: true, location: true, startDate: true }
-        },
-        user: {
-          select: { id: true, firstName: true, lastName: true, email: true, phone: true }
-        }
-      },
-      orderBy: { purchasedAt: 'desc' }
-    });
-
-    res.json(tickets);
-  } catch (error) {
-    console.error('Erreur récupération billets admin:', error);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
@@ -248,17 +177,12 @@ router.put('/:id', authenticateToken, requireAdmin, [
     }
 
     const { id } = req.params;
-    const { name, description, location, type, customType, startDate, endDate, publishedAt, capacity, ticketPrice } = req.body;
+    const { name, description, location, type, customType, startDate, endDate, publishedAt, capacity } = req.body;
 
     // Vérifier que l'événement existe
     const existingEvent = await prisma.event.findUnique({ where: { id } });
     if (!existingEvent) {
       return res.status(404).json({ error: 'Événement non trouvé' });
-    }
-
-    // Si l'événement est déjà publié, ne pas autoriser la modification du prix
-    if (existingEvent.publishedAt && ticketPrice !== undefined && ticketPrice !== existingEvent.ticketPrice) {
-      return res.status(400).json({ error: 'Impossible de modifier le prix d\'un événement déjà publié' });
     }
 
     // Gestion de publishedAt
@@ -301,7 +225,6 @@ router.put('/:id', authenticateToken, requireAdmin, [
         endDate: new Date(endDate),
         publishedAt: newPublishedAt,
         capacity: capacity !== undefined ? parseInt(capacity) : existingEvent.capacity,
-        ticketPrice: ticketPrice !== undefined ? parseFloat(ticketPrice) : existingEvent.ticketPrice,
         latitude,
         longitude
       }
@@ -324,7 +247,6 @@ router.delete('/:id', authenticateToken, requireAdmin, async (req: AuthRequest, 
     const existingEvent = await prisma.event.findUnique({
       where: { id },
       include: {
-        tickets: true,
         ratings: true
       }
     });
@@ -339,11 +261,6 @@ router.delete('/:id', authenticateToken, requireAdmin, async (req: AuthRequest, 
     await prisma.$transaction(async (tx) => {
       // Supprimer toutes les notes de l'événement
       await tx.eventRating.deleteMany({
-        where: { eventId: id }
-      });
-
-      // Supprimer tous les billets de l'événement
-      await tx.ticket.deleteMany({
         where: { eventId: id }
       });
 

@@ -119,7 +119,6 @@ export const eventsApi = {
     startDate: string;
     endDate: string;
     capacity: number;
-    ticketPrice: number;
     publishedAt?: string;
   }): Promise<Event> => {
     const response = await api.post('/events', data);
@@ -135,57 +134,14 @@ export const eventsApi = {
     startDate: string;
     endDate: string;
     capacity?: number;
-    ticketPrice?: number;
     publishedAt?: string | null;
   }): Promise<Event> => {
     const response = await api.put(`/events/${id}`, data);
     return response.data;
   },
 
-  getTicketsAvailable: async (eventId: string): Promise<{ capacity: number; sold: number; available: number }> => {
-    const response = await api.get(`/events/${eventId}/tickets-available`);
-    return response.data;
-  },
-
   delete: async (id: string): Promise<{ message: string }> => {
     const response = await api.delete(`/events/${id}`);
-    return response.data;
-  },
-};
-
-export const ticketsApi = {
-  createPaymentIntent: async (eventId: string): Promise<{ clientSecret?: string; amount?: number; success?: boolean; isFree?: boolean; ticket?: any }> => {
-    const response = await api.post('/tickets/create-payment-intent', { eventId });
-    return response.data;
-  },
-
-  confirmPayment: async (paymentIntentId: string, eventId: string): Promise<{ ticket: any }> => {
-    const response = await api.post('/tickets/confirm-payment', { paymentIntentId, eventId });
-    return response.data;
-  },
-
-  getMyTickets: async (): Promise<any[]> => {
-    const response = await api.get('/tickets/my-tickets');
-    return response.data;
-  },
-
-  getTicket: async (ticketId: string): Promise<any> => {
-    const response = await api.get(`/tickets/${ticketId}`);
-    return response.data;
-  },
-
-  cancelTicket: async (ticketId: string): Promise<{ success: boolean; message: string }> => {
-    const response = await api.post(`/tickets/${ticketId}/cancel`);
-    return response.data;
-  },
-
-  scanTicket: async (ticketId: string): Promise<{ success: boolean; ticket: any }> => {
-    const response = await api.post(`/tickets/${ticketId}/scan`);
-    return response.data;
-  },
-
-  scanQRCode: async (qrCodeData: string): Promise<{ success: boolean; ticket: any }> => {
-    const response = await api.post('/tickets/scan-qr', { qrCodeData });
     return response.data;
   },
 };
@@ -243,11 +199,6 @@ export const supportApi = {
 
 
 export const adminApi = {
-  getAllTickets: async () => {
-    const response = await api.get('/events/admin/all-tickets');
-    return response.data;
-  },
-
   getAllMembers: async () => {
     const response = await api.get('/events/admin/members');
     return response.data;

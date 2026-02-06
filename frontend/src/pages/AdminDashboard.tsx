@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Shield, Users, Trash2, Star, Phone, Mail, Search, MessageCircle, QrCode } from 'lucide-react';
+import { Shield, Users, Trash2, Star, Phone, Mail, Search, MessageCircle } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
@@ -142,22 +142,13 @@ export default function AdminDashboard() {
             <Shield className="w-8 h-8 text-red-500" />
             <h1 className="text-2xl sm:text-3xl font-bold">Administration</h1>
           </div>
-          <div className="flex items-center gap-2">
-            <Button asChild variant="outline" className="flex-1 sm:flex-none">
-              <Link to="/admin/scan" className="flex items-center justify-center space-x-2">
-                <QrCode className="w-4 h-4" />
-                <span className="hidden sm:inline">Scanner billets</span>
-                <span className="sm:hidden">Scanner</span>
-              </Link>
-            </Button>
-            <Button asChild className="flex-1 sm:flex-none">
-              <Link to="/admin/support" className="flex items-center justify-center space-x-2">
-                <MessageCircle className="w-4 h-4" />
-                <span className="hidden sm:inline">Conversations</span>
-                <span className="sm:hidden">Messages</span>
-              </Link>
-            </Button>
-          </div>
+          <Button asChild className="flex-1 sm:flex-none">
+            <Link to="/admin/support" className="flex items-center justify-center space-x-2">
+              <MessageCircle className="w-4 h-4" />
+              <span className="hidden sm:inline">Conversations</span>
+              <span className="sm:hidden">Messages</span>
+            </Link>
+          </Button>
         </div>
         <p className="text-muted-foreground text-sm sm:text-base">
           Gérez les membres de la plateforme

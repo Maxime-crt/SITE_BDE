@@ -21,9 +21,6 @@ jest.mock('../utils/prisma', () => ({
       findUnique: jest.fn(),
       update: jest.fn(),
     },
-    ticket: {
-      findFirst: jest.fn(),
-    },
     user: {
       findUnique: jest.fn(),
       update: jest.fn(),
@@ -54,13 +51,6 @@ describe('Event Ratings Routes', () => {
     ratingCount: 0,
   };
 
-  const mockTicket = {
-    id: 'ticket-1',
-    userId: 'user-1',
-    eventId: 'event-1',
-    status: 'VALID',
-  };
-
   const mockRating = {
     id: 'rating-1',
     userId: 'user-1',
@@ -76,7 +66,7 @@ describe('Event Ratings Routes', () => {
   });
 
   describe('POST /event-ratings', () => {
-    it('should create a rating for a past event with valid ticket', async () => {
+    it('should create a rating for a past event', async () => {
       const newRating = {
         eventId: 'event-1',
         rating: 5,
@@ -86,7 +76,6 @@ describe('Event Ratings Routes', () => {
       (prisma.user.findUnique as jest.Mock).mockResolvedValue(mockUser);
       (prisma.user.update as jest.Mock).mockResolvedValue(mockUser);
       (prisma.event.findUnique as jest.Mock).mockResolvedValue(mockEvent);
-      (prisma.ticket.findFirst as jest.Mock).mockResolvedValue(mockTicket);
       (prisma.eventRating.findUnique as jest.Mock).mockResolvedValue(null);
       (prisma.eventRating.create as jest.Mock).mockResolvedValue({
         id: 'rating-new',
@@ -118,21 +107,6 @@ describe('Event Ratings Routes', () => {
       });
     });
 
-    it('should reject rating if user has no ticket', async () => {
-      (prisma.user.findUnique as jest.Mock).mockResolvedValue(mockUser);
-      (prisma.user.update as jest.Mock).mockResolvedValue(mockUser);
-      (prisma.event.findUnique as jest.Mock).mockResolvedValue(mockEvent);
-      (prisma.ticket.findFirst as jest.Mock).mockResolvedValue(null);
-
-      const response = await request(app)
-        .post('/event-ratings')
-        .set('Authorization', `Bearer ${userToken}`)
-        .send({ eventId: 'event-1', rating: 5 });
-
-      expect(response.status).toBe(403);
-      expect(response.body.error).toContain('billet');
-    });
-
     it('should reject rating if event is not finished', async () => {
       const futureEvent = {
         ...mockEvent,
@@ -156,7 +130,6 @@ describe('Event Ratings Routes', () => {
       (prisma.user.findUnique as jest.Mock).mockResolvedValue(mockUser);
       (prisma.user.update as jest.Mock).mockResolvedValue(mockUser);
       (prisma.event.findUnique as jest.Mock).mockResolvedValue(mockEvent);
-      (prisma.ticket.findFirst as jest.Mock).mockResolvedValue(mockTicket);
       (prisma.eventRating.findUnique as jest.Mock).mockResolvedValue(mockRating);
       (prisma.eventRating.update as jest.Mock).mockResolvedValue({
         ...mockRating,
@@ -181,7 +154,6 @@ describe('Event Ratings Routes', () => {
       (prisma.user.findUnique as jest.Mock).mockResolvedValue(mockUser);
       (prisma.user.update as jest.Mock).mockResolvedValue(mockUser);
       (prisma.event.findUnique as jest.Mock).mockResolvedValue(mockEvent);
-      (prisma.ticket.findFirst as jest.Mock).mockResolvedValue(mockTicket);
 
       // Rating > 5
       const response1 = await request(app)
@@ -210,7 +182,6 @@ describe('Event Ratings Routes', () => {
       (prisma.user.update as jest.Mock).mockResolvedValue(mockUser);
       (prisma.event.findUnique as jest.Mock).mockResolvedValue(mockEvent);
       (prisma.event.update as jest.Mock).mockResolvedValue(mockEvent);
-      (prisma.ticket.findFirst as jest.Mock).mockResolvedValue(mockTicket);
       (prisma.eventRating.findUnique as jest.Mock).mockResolvedValue(null);
       (prisma.eventRating.create as jest.Mock).mockResolvedValue({
         id: 'rating-new',

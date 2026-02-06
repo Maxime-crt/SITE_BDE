@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
 import Login from './pages/Login';
@@ -11,11 +11,8 @@ import CreateEvent from './pages/CreateEvent';
 import Profile from './pages/Profile';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminSupport from './pages/AdminSupport';
-import ScanTicket from './pages/ScanTicket';
-import MyTickets from './pages/MyTickets';
 import MyRides from './pages/MyRides';
 import RideDetail from './pages/RideDetail';
-import PurchaseTicket from './pages/PurchaseTicket';
 import RateEvent from './pages/RateEvent';
 import Support from './pages/Support';
 import NotFound from './pages/NotFound';
@@ -36,9 +33,8 @@ const canRender = checkAuthGuard();
 function AppContent() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const location = useLocation();
 
-  // Détecter les pages d'authentification
+  // Détecter les pages d'authentification pour le thème
   useAuthPageDetection();
 
   // Vérification initiale au chargement de l'app
@@ -70,18 +66,10 @@ function AppContent() {
     initAuth();
   }, []);
 
-  // Vérifier à chaque changement de route si on a un token
+  // Charger l'utilisateur depuis localStorage si présent
   useEffect(() => {
     const token = localStorage.getItem('token');
     const savedUser = localStorage.getItem('user');
-    const publicPaths = ['/login', '/register', '/verify-email'];
-    const isPublicPath = publicPaths.includes(location.pathname);
-
-    // Si pas de token et page protégée, rediriger immédiatement
-    if (!token && !isPublicPath) {
-      window.location.replace('/login');
-      return;
-    }
 
     // Si on a un token, charger l'user depuis localStorage
     if (token && savedUser && !user) {
@@ -91,12 +79,9 @@ function AppContent() {
         console.error('Erreur parsing user:', e);
         localStorage.removeItem('user');
         localStorage.removeItem('token');
-        if (!isPublicPath) {
-          window.location.replace('/login');
-        }
       }
     }
-  }, [location.pathname, user]);
+  }, [user]);
 
   const login = async (email: string, password: string) => {
     const response = await authApi.login({ email, password });
@@ -189,14 +174,6 @@ function AppContent() {
             }
           />
           <Route
-            path="/my-tickets"
-            element={
-              <ProtectedRoute>
-                <MyTickets />
-              </ProtectedRoute>
-            }
-          />
-          <Route
             path="/my-rides"
             element={
               <ProtectedRoute>
@@ -209,14 +186,6 @@ function AppContent() {
             element={
               <ProtectedRoute>
                 <RideDetail />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/purchase-ticket/:eventId"
-            element={
-              <ProtectedRoute>
-                <PurchaseTicket />
               </ProtectedRoute>
             }
           />
@@ -257,14 +226,6 @@ function AppContent() {
             element={
               <ProtectedRoute>
                 {user && (user.isAdmin ? <AdminSupport /> : <Navigate to="/" />)}
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/scan"
-            element={
-              <ProtectedRoute>
-                {user && (user.isAdmin ? <ScanTicket /> : <Navigate to="/" />)}
               </ProtectedRoute>
             }
           />

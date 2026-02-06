@@ -124,6 +124,9 @@ export default function UberRequestModal({
 
   const timeSlots = generateTimeSlots();
 
+  // Vérifier si l'événement a commencé (pour activer "Partir maintenant")
+  const eventHasStarted = new Date() >= new Date(event.startDate);
+
   // Initialiser l'heure par défaut
   useEffect(() => {
     if (timeSlots.length > 0 && !maxDepartureTime) {
@@ -477,19 +480,29 @@ export default function UberRequestModal({
             </label>
 
             <div className="space-y-3">
-              {/* Option: Partir maintenant (pendant l'événement) */}
-              <label className="flex items-center gap-3 p-4 border-2 border-gray-200 dark:border-gray-700 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+              {/* Option: Partir maintenant (seulement si l'événement a commencé) */}
+              <label className={`flex items-center gap-3 p-4 border-2 rounded-lg transition ${
+                eventHasStarted
+                  ? 'border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700'
+                  : 'border-gray-100 dark:border-gray-800 cursor-not-allowed opacity-50'
+              }`}>
                 <input
                   type="radio"
                   name="departureChoice"
                   checked={departNow}
-                  onChange={() => setDepartNow(true)}
+                  onChange={() => eventHasStarted && setDepartNow(true)}
+                  disabled={!eventHasStarted}
                   className="mt-1"
                 />
                 <div>
-                  <div className="font-medium text-gray-900 dark:text-white">Partir maintenant</div>
+                  <div className={`font-medium ${eventHasStarted ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-500'}`}>
+                    Partir maintenant
+                  </div>
                   <div className="text-sm text-gray-600 dark:text-gray-400">
-                    Trouver d&apos;autres personnes qui veulent partir tout de suite
+                    {eventHasStarted
+                      ? "Trouver d'autres personnes qui veulent partir tout de suite"
+                      : "Disponible uniquement pendant la soirée"
+                    }
                   </div>
                 </div>
               </label>

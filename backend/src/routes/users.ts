@@ -65,7 +65,6 @@ router.put('/profile', authenticateToken, [
         homePostcode: true,
         homeLatitude: true,
         homeLongitude: true,
-        bdeCredit: true,
         isAdmin: true,
         emailVerified: true
       }
@@ -97,7 +96,6 @@ router.get('/me/profile', authenticateToken, async (req: AuthRequest, res: expre
         homePostcode: true,
         homeLatitude: true,
         homeLongitude: true,
-        bdeCredit: true,
         isAdmin: true,
         emailVerified: true,
         createdAt: true
@@ -140,38 +138,6 @@ router.get('/:id', authenticateToken, async (req: AuthRequest, res: express.Resp
     res.json(user);
   } catch (error) {
     console.error('Erreur récupération utilisateur:', error);
-    res.status(500).json({ error: 'Erreur serveur' });
-  }
-});
-
-// Récupérer les billets d'un utilisateur (pour les admins)
-router.get('/:id/tickets', authenticateToken, async (req: AuthRequest, res: express.Response) => {
-  try {
-    // Vérifier que l'utilisateur est admin
-    if (!req.user?.isAdmin) {
-      return res.status(403).json({ error: 'Accès non autorisé' });
-    }
-
-    const { id } = req.params;
-
-    const tickets = await prisma.ticket.findMany({
-      where: { userId: id },
-      include: {
-        event: {
-          select: {
-            name: true,
-            location: true,
-            startDate: true,
-            endDate: true
-          }
-        }
-      },
-      orderBy: { purchasedAt: 'desc' }
-    });
-
-    res.json(tickets);
-  } catch (error) {
-    console.error('Erreur récupération billets utilisateur:', error);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });

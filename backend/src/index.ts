@@ -8,7 +8,6 @@ import { Server } from 'socket.io';
 
 import authRoutes from './routes/auth';
 import eventRoutes from './routes/events';
-import ticketRoutes from './routes/tickets';
 import eventRatingRoutes from './routes/eventRatings';
 import supportRoutes from './routes/support';
 import userRoutes from './routes/users';
@@ -61,7 +60,6 @@ app.use(express.json());
 // Routes API
 app.use('/api/auth', authRoutes);
 app.use('/api/events', eventRoutes);
-app.use('/api/tickets', ticketRoutes);
 app.use('/api/event-ratings', eventRatingRoutes);
 app.use('/api/support', supportRoutes);
 app.use('/api/users', userRoutes);
@@ -70,8 +68,22 @@ app.use('/api/uber-rides', uberRidesRoutes);
 app.use('/api/notifications', notificationsRoutes);
 
 app.get('/api/health', (req, res) => {
-  res.json({ message: 'BDE Billetterie API is running!' });
+  res.json({ message: 'BDE Rideshare API is running!' });
 });
+
+// Servir les fichiers statiques du frontend en production
+if (process.env.NODE_ENV === 'production') {
+  const publicPath = path.join(__dirname, '..', 'public');
+  app.use(express.static(publicPath));
+
+  // Fallback pour le routing SPA (React Router)
+  app.get('*', (req, res) => {
+    // Ne pas intercepter les routes API
+    if (!req.path.startsWith('/api')) {
+      res.sendFile(path.join(publicPath, 'index.html'));
+    }
+  });
+}
 
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);

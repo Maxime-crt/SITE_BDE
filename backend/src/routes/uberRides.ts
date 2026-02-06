@@ -36,21 +36,6 @@ router.post('/request', authenticateToken, [
       departNow = false
     } = req.body;
 
-    // Vérifier que l'utilisateur a un billet valide pour cet événement
-    const ticket = await prisma.ticket.findFirst({
-      where: {
-        userId,
-        eventId,
-        status: 'VALID'
-      }
-    });
-
-    if (!ticket) {
-      return res.status(403).json({
-        error: 'Vous devez avoir un billet valide pour cet événement pour demander un trajet partagé'
-      });
-    }
-
     // Récupérer l'événement avec coordonnées
     const event = await prisma.event.findUnique({
       where: { id: eventId },
@@ -214,17 +199,6 @@ router.get('/event/:eventId', authenticateToken, async (req: AuthRequest, res: e
   try {
     const { eventId } = req.params;
     const userId = req.userId!;
-
-    // Vérifier que l'utilisateur a un billet
-    const ticket = await prisma.ticket.findFirst({
-      where: { userId, eventId, status: 'VALID' }
-    });
-
-    if (!ticket) {
-      return res.status(403).json({
-        error: 'Vous devez avoir un billet pour voir les trajets de cet événement'
-      });
-    }
 
     const rides = await prisma.uberRide.findMany({
       where: {

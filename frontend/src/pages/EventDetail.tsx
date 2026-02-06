@@ -1,11 +1,11 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { eventsApi, ticketsApi, eventRatingsApi } from '../services/api';
+import { eventsApi, eventRatingsApi } from '../services/api';
 import type { User, Event, EventRating } from '../types';
 import toast from 'react-hot-toast';
 import { useState } from 'react';
 import { handleApiErrorWithLog } from '../utils/errorHandler';
-import { Calendar, MapPin, Users, Euro, Star, ArrowLeft, Edit, Trash2, ExternalLink, Car } from 'lucide-react';
+import { Calendar, MapPin, Star, ArrowLeft, Edit, Trash2, ExternalLink, Car, Users } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import ConfirmDialog from '../components/ConfirmDialog';
@@ -21,7 +21,6 @@ export default function EventDetail({ user }: EventDetailProps) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-  const [purchasing, setPurchasing] = useState(false);
   const [uberModalOpen, setUberModalOpen] = useState(false);
   const [userProfile, setUserProfile] = useState<User | null>(null);
 
@@ -29,22 +28,6 @@ export default function EventDetail({ user }: EventDetailProps) {
     queryKey: ['event', id],
     queryFn: () => eventsApi.getById(id!),
     enabled: !!id
-  });
-
-  const { data: availability } = useQuery({
-    queryKey: ['event-availability', id],
-    queryFn: () => eventsApi.getTicketsAvailable(id!),
-    enabled: !!id,
-    refetchInterval: 10000 // Rafraîchir toutes les 10 secondes
-  });
-
-  const { data: myTicket } = useQuery({
-    queryKey: ['my-ticket', id],
-    queryFn: async () => {
-      const tickets = await ticketsApi.getMyTickets();
-      return tickets.find((t: any) => t.eventId === id && ['VALID', 'USED'].includes(t.status)) || null;
-    },
-    enabled: !!id && !!user
   });
 
   const { data: ratings } = useQuery({
@@ -84,38 +67,6 @@ export default function EventDetail({ user }: EventDetailProps) {
     enabled: !!id && !!user
   });
 
-  const handlePurchaseTicket = async () => {
-    if (!event) return;
-
-    setPurchasing(true);
-    try {
-      const result = await ticketsApi.createPaymentIntent(event.id);
-
-      if (result.isFree) {
-        toast.success('Billet gratuit obtenu !');
-        queryClient.invalidateQueries({ queryKey: ['my-ticket', id] });
-        queryClient.invalidateQueries({ queryKey: ['event-availability', id] });
-      } else if (result.clientSecret) {
-        // Vérifier si Stripe est configuré
-        const stripeKey = import.meta.env.VITE_STRIPE_PUBLIC_KEY;
-        if (!stripeKey || stripeKey === 'pk_test_placeholder_add_your_stripe_public_key_here') {
-          toast.error('Les paiements ne sont pas encore configurés. Veuillez contacter l\'administrateur.');
-          setPurchasing(false);
-          return;
-        }
-
-        // Rediriger vers la page de paiement Stripe
-        navigate(`/purchase-ticket/${event.id}`, {
-          state: { clientSecret: result.clientSecret, event }
-        });
-      }
-    } catch (error: any) {
-      handleApiErrorWithLog(error, 'Erreur lors de l\'achat du billet', 'EventDetail.handlePurchaseTicket');
-    } finally {
-      setPurchasing(false);
-    }
-  };
-
   const handleDeleteEvent = async () => {
     if (!event) return;
 
@@ -138,18 +89,23 @@ export default function EventDetail({ user }: EventDetailProps) {
     });
   };
 
-  const formatPrice = (price: number) => {
-    return price === 0 ? 'Gratuit' : `${price.toFixed(2)} €`;
-  };
-
   const getGoogleMapsUrl = (location: string) => {
     return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location)}`;
   };
 
+  // Permettre à tous les utilisateurs de noter après la fin de l'événement
   const canRate = () => {
-    if (!event || !myTicket) return false;
-    // L'événement doit être terminé
+    if (!event || !user) return false;
     return new Date() > new Date(event.endDate);
+  };
+
+  // Vérifier si l'événement est en cours ou à venir (pour afficher la section Uber)
+  const canRequestRide = () => {
+    if (!event || !user) return false;
+    // L'événement ne doit pas être terminé depuis plus d'1h
+    const oneHourAfterEnd = new Date(event.endDate);
+    oneHourAfterEnd.setHours(oneHourAfterEnd.getHours() + 1);
+    return new Date() < oneHourAfterEnd;
   };
 
   if (eventLoading) {
@@ -176,9 +132,7 @@ export default function EventDetail({ user }: EventDetailProps) {
     );
   }
 
-  const isEventStarted = new Date() > new Date(event.startDate);
   const isEventFinished = new Date() > new Date(event.endDate);
-  const isSoldOut = availability && availability.available <= 0;
 
   return (
     <div className="min-h-screen bg-background">
@@ -273,123 +227,70 @@ export default function EventDetail({ user }: EventDetailProps) {
                       </a>
                     </div>
                   </div>
+                  <div className="flex items-start gap-3">
+                    <Users className="w-5 h-5 text-muted-foreground mt-0.5" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Capacité</p>
+                      <p className="font-medium">{event.capacity} places</p>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              {/* Billetterie */}
-              <div className="border-t pt-6">
-                <h3 className="text-lg font-semibold mb-4">Billetterie</h3>
-                <div className={`grid ${
-                  availability && (availability.available <= 10 || (availability.available / event.capacity) <= 0.7)
-                    ? 'md:grid-cols-3'
-                    : 'md:grid-cols-2'
-                } gap-4 mb-6`}>
-                  <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg">
-                    <Euro className="w-8 h-8 text-primary" />
-                    <div>
-                      <p className="text-sm text-muted-foreground">Prix</p>
-                      <p className="text-xl font-bold">{formatPrice(event.ticketPrice)}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg">
-                    <Users className="w-8 h-8 text-primary" />
-                    <div>
-                      <p className="text-sm text-muted-foreground">Capacité</p>
-                      <p className="text-xl font-bold">{event.capacity}</p>
-                    </div>
-                  </div>
-                  {/* Afficher les places restantes seulement si <= 70% ou <= 10 places */}
-                  {availability && (availability.available <= 10 || (availability.available / event.capacity) <= 0.7) && (
-                    <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg">
-                      <Users className="w-8 h-8 text-primary" />
-                      <div>
-                        <p className="text-sm text-muted-foreground">Places restantes</p>
-                        <p className={`text-xl font-bold ${
-                          availability.available <= 10 ? 'text-red-600' : 'text-orange-600'
-                        }`}>
-                          {availability.available}
+              {/* Section Covoiturage */}
+              {canRequestRide() && (
+                <div className="border-t pt-6">
+                  <h3 className="text-lg font-semibold mb-4">Covoiturage retour</h3>
+                  <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                    {existingRideRequest ? (
+                      <>
+                        <p className="text-blue-800 dark:text-blue-300 font-medium mb-3 flex items-center gap-2">
+                          <Car className="w-4 h-4" />
+                          Demande de trajet partagé en cours
                         </p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Bouton d'achat */}
-                {myTicket ? (
-                  <div className="space-y-3">
-                    <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
-                      <p className="text-green-800 dark:text-green-300 font-medium mb-2">
-                        ✓ Vous avez déjà un billet pour cet événement
-                      </p>
-                      <Button
-                        onClick={() => navigate('/my-tickets')}
-                        className="w-full"
-                      >
-                        Voir mon billet
-                      </Button>
-                    </div>
-
-                    {/* Section Uber Sharing */}
-                    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-                      {existingRideRequest ? (
-                        <>
-                          <p className="text-blue-800 dark:text-blue-300 font-medium mb-3 flex items-center gap-2">
-                            <Car className="w-4 h-4" />
-                            Demande de trajet partagé en cours
-                          </p>
-                          <Button
-                            onClick={() => navigate('/my-rides')}
-                            className="w-full bg-blue-600 hover:bg-blue-700"
-                          >
-                            Voir mes trajets
-                          </Button>
-                        </>
-                      ) : (
-                        <>
-                          <div className="flex items-start gap-3 mb-3">
-                            <Car className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
-                            <div>
-                              <p className="text-blue-900 dark:text-blue-300 font-medium">
-                                Rentrer en Uber partagé
-                              </p>
-                              <p className="text-sm text-blue-700 dark:text-blue-400 mt-1">
-                                Partagez votre trajet retour avec d'autres participants et divisez le prix
-                              </p>
-                            </div>
+                        <Button
+                          onClick={() => navigate('/my-rides')}
+                          className="w-full bg-blue-600 hover:bg-blue-700"
+                        >
+                          Voir mes trajets
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <div className="flex items-start gap-3 mb-3">
+                          <Car className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
+                          <div>
+                            <p className="text-blue-900 dark:text-blue-300 font-medium">
+                              Rentrer en Uber partagé
+                            </p>
+                            <p className="text-sm text-blue-700 dark:text-blue-400 mt-1">
+                              Partagez votre trajet retour avec d'autres participants et divisez le prix
+                            </p>
                           </div>
-                          <Button
-                            onClick={() => setUberModalOpen(true)}
-                            className="w-full gap-2 bg-blue-600 hover:bg-blue-700"
-                          >
-                            <Car className="w-4 h-4" />
-                            Rechercher un trajet partagé
-                          </Button>
-                        </>
-                      )}
-                    </div>
+                        </div>
+                        <Button
+                          onClick={() => setUberModalOpen(true)}
+                          className="w-full gap-2 bg-blue-600 hover:bg-blue-700"
+                        >
+                          <Car className="w-4 h-4" />
+                          Rechercher un trajet partagé
+                        </Button>
+                      </>
+                    )}
                   </div>
-                ) : isSoldOut ? (
-                  <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 text-center">
-                    <p className="text-red-800 dark:text-red-300 font-medium">
-                      Complet - Plus de places disponibles
-                    </p>
-                  </div>
-                ) : isEventFinished ? (
+                </div>
+              )}
+
+              {/* Message événement terminé */}
+              {isEventFinished && !canRequestRide() && (
+                <div className="border-t pt-6">
                   <div className="bg-gray-50 dark:bg-gray-900/20 border border-gray-200 dark:border-gray-800 rounded-lg p-4 text-center">
                     <p className="text-gray-800 dark:text-gray-300 font-medium">
                       Cet événement est terminé
                     </p>
                   </div>
-                ) : (
-                  <Button
-                    onClick={handlePurchaseTicket}
-                    disabled={purchasing}
-                    className="w-full h-12 text-lg"
-                  >
-                    {purchasing ? 'Chargement...' : `Obtenir un billet ${event.ticketPrice > 0 ? `- ${formatPrice(event.ticketPrice)}` : ''}`}
-                  </Button>
-                )}
-              </div>
+                </div>
+              )}
 
               {/* Notation */}
               {canRate() && (
@@ -477,7 +378,7 @@ export default function EventDetail({ user }: EventDetailProps) {
         onConfirm={handleDeleteEvent}
         onCancel={() => setDeleteConfirmOpen(false)}
         title="Supprimer l'événement"
-        message="Êtes-vous sûr de vouloir supprimer cet événement ? Tous les billets associés seront également supprimés. Cette action est irréversible."
+        message="Êtes-vous sûr de vouloir supprimer cet événement ? Cette action est irréversible."
         confirmText="Supprimer"
         type="danger"
       />

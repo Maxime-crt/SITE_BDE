@@ -11,7 +11,6 @@ export interface User {
   homePostcode?: string;
   homeLatitude?: number;
   homeLongitude?: number;
-  bdeCredit?: number;
 }
 
 export interface Event {
@@ -24,27 +23,12 @@ export interface Event {
   startDate: string;
   endDate: string;
   capacity: number;
-  ticketPrice: number;
   rating?: number;
   ratingCount: number;
   publishedAt?: string;
-  userHasTicket?: boolean;
-  tickets?: Ticket[];
+  latitude?: number;
+  longitude?: number;
   ratings?: EventRating[];
-}
-
-export interface Ticket {
-  id: string;
-  eventId: string;
-  userId: string;
-  qrCode: string;
-  status: TicketStatus;
-  purchasePrice: number;
-  stripePaymentId?: string;
-  purchasedAt: string;
-  usedAt?: string;
-  event?: Event;
-  user?: User;
 }
 
 export interface EventRating {
@@ -72,8 +56,6 @@ export interface SupportMessage {
   replyTo?: SupportMessage;
   replies?: SupportMessage[];
 }
-
-export type TicketStatus = 'VALID' | 'USED' | 'CANCELLED' | 'REFUNDED';
 
 export interface AuthResponse {
   message: string;
