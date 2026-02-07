@@ -70,7 +70,7 @@ export default function Login({ onLogin }: LoginProps) {
               Bienvenue
             </h1>
             <p className="text-muted-foreground">
-              Connectez-vous pour réserver vos billets
+              Connectez-vous pour réserver votre créneau Uber
             </p>
           </div>
         </div>
