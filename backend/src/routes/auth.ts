@@ -5,7 +5,7 @@ import { prisma } from '../utils/prisma';
 import { generateToken } from '../utils/jwt';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
 import { generateVerificationCode, sendVerificationEmail } from '../utils/email';
-import { ADMIN_EMAILS } from '../config/admins';
+import { ADMIN_EMAILS, ALLOWED_EMAILS } from '../config/admins';
 
 const router = express.Router();
 
@@ -41,8 +41,8 @@ router.post('/register', [
 
     console.log('✅ Test @ieseg.fr:', email.endsWith('@ieseg.fr'));
 
-    // Vérifier si email IESEG ou email admin autorisé
-    const isAllowedEmail = email.endsWith('@ieseg.fr') || ADMIN_EMAILS.includes(email);
+    // Vérifier si email IESEG ou email explicitement autorisé
+    const isAllowedEmail = email.endsWith('@ieseg.fr') || ADMIN_EMAILS.includes(email) || ALLOWED_EMAILS.includes(email);
     if (!isAllowedEmail) {
       console.log('❌ REJET EMAIL');
       return res.status(400).json({ error: 'Seules les adresses email IESEG (@ieseg.fr) sont autorisées pour l\'inscription' });
