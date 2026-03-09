@@ -1,18 +1,34 @@
 services:
+  # Base de données PostgreSQL
+  db:
+    image: postgres:16-alpine
+    container_name: postgres-site-bde
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: site_bde_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - site-bde-network
+
   # Application (Backend + Frontend)
-  # Utilise le conteneur PostgreSQL externe "postgres-site-bde"
   app:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: site-bde-app
     restart: unless-stopped
+    depends_on:
+      - db
     ports:
       - "${PORT:-5000}:5000"
     environment:
       NODE_ENV: ${NODE_ENV:-production}
       PORT: 5000
-      # Connexion au conteneur PostgreSQL externe via le réseau partagé
       DATABASE_URL: postgresql://postgres:postgres@postgres-site-bde:5432/site_bde_dev?schema=public
       DB_HOST: postgres-site-bde
       DB_PORT: 5432
@@ -24,6 +40,7 @@ services:
       EMAIL_PASSWORD: ${EMAIL_PASSWORD:-}
       AUTO_ADMIN_EMAILS: ${AUTO_ADMIN_EMAILS:-}
       BCRYPT_ROUNDS: ${BCRYPT_ROUNDS:-12}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
     volumes:
       - uploads_data:/app/backend/uploads
     networks:
@@ -31,8 +48,10 @@ services:
 
 networks:
   site-bde-network:
-    external: true
+    driver: bridge
 
 volumes:
+  postgres_data:
+    driver: local
   uploads_data:
     driver: local

@@ -41,8 +41,9 @@ router.post('/register', [
 
     console.log('✅ Test @ieseg.fr:', email.endsWith('@ieseg.fr'));
 
-    // Vérifier si email IESEG uniquement
-    if (!email.endsWith('@ieseg.fr')) {
+    // Vérifier si email IESEG ou email admin autorisé
+    const isAllowedEmail = email.endsWith('@ieseg.fr') || ADMIN_EMAILS.includes(email);
+    if (!isAllowedEmail) {
       console.log('❌ REJET EMAIL');
       return res.status(400).json({ error: 'Seules les adresses email IESEG (@ieseg.fr) sont autorisées pour l\'inscription' });
     }
