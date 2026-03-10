@@ -117,7 +117,7 @@ export default function Register() {
 
     const emailLower = formData.email.toLowerCase();
     if (!emailLower.endsWith('@ieseg.fr') && !emailLower.endsWith('@gmail.com')) {
-      toast.error('Veuillez utiliser votre email IESEG (@ieseg.fr) ou Gmail (@gmail.com)', { duration: 2000 });
+      toast.error('Veuillez utiliser votre email IESEG (@ieseg.fr) ', { duration: 2000 });
       return;
     }
 
@@ -155,7 +155,7 @@ export default function Register() {
             Inscription
           </h2>
           <p className="mt-2 text-center text-sm text-muted-foreground">
-            Créez votre compte BDE IESEG
+            Créez votre compte Fuelers
           </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>

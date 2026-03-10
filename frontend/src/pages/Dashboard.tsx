@@ -329,7 +329,7 @@ export default function Dashboard() {
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold tracking-tight mb-4">
-            Événements BDE 🎉
+            Événements Fuelers 🎉
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-6">
             Découvrez les prochains événements et trouvez un covoiturage pour rentrer
@@ -455,7 +455,7 @@ export default function Dashboard() {
               </div>
               <CardTitle>Aucun événement disponible</CardTitle>
               <CardDescription>
-                Les prochains événements du BDE apparaîtront ici. Restez connecté pour ne rien manquer !
+                Les prochains événements Fuelers apparaîtront ici. Restez connecté pour ne rien manquer !
               </CardDescription>
             </CardHeader>
           </Card>

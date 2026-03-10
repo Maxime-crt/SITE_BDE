@@ -19,7 +19,7 @@ interface CreateNotificationParams {
 }
 
 /**
- * Créer une nouvelle notification pour un utilisateur
+ * Crï¿½er une nouvelle notification pour un utilisateur
  */
 export async function createNotification(params: CreateNotificationParams) {
   const { userId, type, title, message, rideId } = params;
@@ -37,7 +37,7 @@ export async function createNotification(params: CreateNotificationParams) {
 
     return notification;
   } catch (error) {
-    console.error('Erreur création notification:', error);
+    console.error('Erreur crï¿½ation notification:', error);
     throw error;
   }
 }
@@ -64,7 +64,7 @@ export async function notifyRideMembers(
     });
 
     if (!ride) {
-      console.error('Ride non trouvé:', rideId);
+      console.error('Ride non trouvï¿½:', rideId);
       return;
     }
 
@@ -93,64 +93,64 @@ export async function notifyRideMembers(
 }
 
 /**
- * Notifier qu'un nouveau match a été trouvé
+ * Notifier qu'un nouveau match a ï¿½tï¿½ trouvï¿½
  */
 export async function notifyUberMatch(userId: string, rideId: string, nbPassengers: number) {
   return createNotification({
     userId,
     type: 'UBER_MATCH',
-    title: 'Trajet trouvé !',
+    title: 'Trajet trouvï¿½ !',
     message: `${nbPassengers} personne(s) souhaitent partager un Uber avec vous. Discutez pour confirmer.`,
     rideId
   });
 }
 
 /**
- * Notifier qu'un trajet est confirmé
+ * Notifier qu'un trajet est confirmï¿½
  */
 export async function notifyUberConfirmed(rideId: string, departureTime: Date) {
   return notifyRideMembers(
     rideId,
     'UBER_CONFIRMED',
-    'Trajet confirmé',
-    `Votre trajet est confirmé pour le ${departureTime.toLocaleString('fr-FR')}. Préparez-vous !`
+    'Trajet confirmï¿½',
+    `Votre trajet est confirmï¿½ pour le ${departureTime.toLocaleString('fr-FR')}. Prï¿½parez-vous !`
   );
 }
 
 /**
- * Notifier qu'un trajet est annulé
+ * Notifier qu'un trajet est annulï¿½
  */
 export async function notifyUberCancelled(rideId: string, reason?: string) {
   return notifyRideMembers(
     rideId,
     'UBER_CANCELLED',
-    'Trajet annulé',
-    reason || 'Votre trajet partagé a été annulé.'
+    'Trajet annulï¿½',
+    reason || 'Votre trajet partagï¿½ a ï¿½tï¿½ annulï¿½.'
   );
 }
 
 /**
- * Notifier qu'un passager a quitté le trajet
+ * Notifier qu'un passager a quittï¿½ le trajet
  */
 export async function notifyPassengerLeft(rideId: string, passengerName: string, excludeUserId: string) {
   return notifyRideMembers(
     rideId,
     'UBER_PASSENGER_LEFT',
-    'Passager retiré',
-    `${passengerName} a quitté le trajet. L'itinéraire a été mis à jour.`,
+    'Passager retirï¿½',
+    `${passengerName} a quittï¿½ le trajet. L'itinï¿½raire a ï¿½tï¿½ mis ï¿½ jour.`,
     excludeUserId
   );
 }
 
 /**
- * Notifier qu'un nouveau message a été envoyé
+ * Notifier qu'un nouveau message a ï¿½tï¿½ envoyï¿½
  */
 export async function notifyNewMessage(rideId: string, senderName: string, excludeUserId: string) {
   return notifyRideMembers(
     rideId,
     'UBER_MESSAGE',
     'Nouveau message',
-    `${senderName} a envoyé un message dans le chat du trajet.`,
+    `${senderName} a envoyï¿½ un message dans le chat du trajet.`,
     excludeUserId
   );
 }
@@ -163,33 +163,33 @@ export async function notifyPaymentRequest(userId: string, rideId: string, amoun
     userId,
     type: 'PAYMENT_REQUEST',
     title: 'Paiement requis',
-    message: `Veuillez payer votre part du trajet : ${amount.toFixed(2)}¬`,
+    message: `Veuillez payer votre part du trajet : ${amount.toFixed(2)}ï¿½`,
     rideId
   });
 }
 
 /**
- * Notifier qu'un paiement a été reçu
+ * Notifier qu'un paiement a ï¿½tï¿½ reï¿½u
  */
 export async function notifyPaymentReceived(userId: string, rideId: string, amount: number) {
   return createNotification({
     userId,
     type: 'PAYMENT_RECEIVED',
-    title: 'Paiement reçu',
-    message: `Vous avez reçu ${amount.toFixed(2)}¬ sur votre crédit BDE.`,
+    title: 'Paiement reï¿½u',
+    message: `Vous avez reï¿½u ${amount.toFixed(2)}ï¿½ sur votre crï¿½dit Fuelers.`,
     rideId
   });
 }
 
 /**
- * Notifier qu'un paiement a échoué
+ * Notifier qu'un paiement a ï¿½chouï¿½
  */
 export async function notifyPaymentFailed(userId: string, rideId: string) {
   return createNotification({
     userId,
     type: 'PAYMENT_FAILED',
-    title: 'Paiement échoué',
-    message: 'Le paiement de votre part du trajet a échoué. Veuillez réessayer.',
+    title: 'Paiement ï¿½chouï¿½',
+    message: 'Le paiement de votre part du trajet a ï¿½chouï¿½. Veuillez rï¿½essayer.',
     rideId
   });
 }

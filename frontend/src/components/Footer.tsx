@@ -7,8 +7,8 @@ export default function Footer() {
         <div className="flex flex-col items-center space-y-6">
           {/* Logo/Titre */}
           <div className="text-center">
-            <h3 className="text-xl font-bold mb-2">BDE IESEG</h3>
-            <p className="text-primary-foreground/80 text-sm">Plateforme de billetterie des événements BDE</p>
+            <h3 className="text-xl font-bold mb-2">Fuelers</h3>
+            <p className="text-primary-foreground/80 text-sm">Plateforme événementielle Fuelers</p>
           </div>
 
           {/* Réseaux sociaux */}
@@ -53,10 +53,7 @@ export default function Footer() {
           {/* Copyright et disclaimer */}
           <div className="text-center pt-4 border-t border-primary-foreground/20 w-full max-w-md space-y-2">
             <p className="text-primary-foreground/80 text-sm">
-              © {new Date().getFullYear()} BDE IESEG. Tous droits réservés.
-            </p>
-            <p className="text-primary-foreground/80 text-sm">
-              Site étudiant indépendant non affilié à l'IESEG School of Management.
+              © {new Date().getFullYear()} Fuelers. Tous droits réservés.
             </p>
           </div>
         </div>

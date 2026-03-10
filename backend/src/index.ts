@@ -68,7 +68,7 @@ app.use('/api/uber-rides', uberRidesRoutes);
 app.use('/api/notifications', notificationsRoutes);
 
 app.get('/api/health', (req, res) => {
-  res.json({ message: 'BDE Rideshare API is running!' });
+  res.json({ message: 'Fuelers Rideshare API is running!' });
 });
 
 // Servir les fichiers statiques du frontend en production

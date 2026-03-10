@@ -24,9 +24,9 @@ export async function sendVerificationEmail(email: string, firstName: string, co
 
   try {
     const { data, error } = await resend.emails.send({
-      from: 'BDE IESEG <noreply@ieseg-events.fr>',
+      from: 'Fuelers <noreply@ieseg-events.fr>',
       to: email,
-      subject: 'Vérification de votre compte BDE IESEG',
+      subject: 'Vérification de votre compte Fuelers',
       html: `
         <!DOCTYPE html>
         <html>
@@ -81,10 +81,10 @@ export async function sendVerificationEmail(email: string, firstName: string, co
         </head>
         <body>
           <div class="container">
-            <h1 class="header">🎓 BDE IESEG</h1>
+            <h1 class="header">🎓 Fuelers</h1>
             <div class="content">
               <h2>Bonjour ${firstName} !</h2>
-              <p>Merci de vous être inscrit sur la plateforme du BDE IESEG.</p>
+              <p>Merci de vous être inscrit sur la plateforme Fuelers.</p>
               <p>Pour finaliser votre inscription, veuillez utiliser le code de vérification ci-dessous :</p>
 
               <div class="code">${code}</div>
@@ -94,7 +94,7 @@ export async function sendVerificationEmail(email: string, firstName: string, co
 
               <div class="footer">
                 <p>Cet email a été envoyé automatiquement, merci de ne pas y répondre.</p>
-                <p>&copy; ${new Date().getFullYear()} BDE IESEG. Tous droits réservés.</p>
+                <p>&copy; ${new Date().getFullYear()} Fuelers. Tous droits réservés.</p>
               </div>
             </div>
           </div>
@@ -104,7 +104,7 @@ export async function sendVerificationEmail(email: string, firstName: string, co
       text: `
         Bonjour ${firstName},
 
-        Merci de vous être inscrit sur la plateforme du BDE IESEG.
+        Merci de vous être inscrit sur la plateforme Fuelers.
 
         Votre code de vérification est : ${code}
 
@@ -112,7 +112,7 @@ export async function sendVerificationEmail(email: string, firstName: string, co
 
         Si vous n'avez pas demandé cette inscription, vous pouvez ignorer cet email.
 
-        BDE IESEG
+        Fuelers
       `
     });
 

@@ -182,7 +182,7 @@ export default function Support({ user }: SupportProps) {
                 <MessageCircle className="w-8 h-8 text-primary-foreground" />
               </div>
               <h1 className="text-3xl font-bold tracking-tight mb-4">
-                Support BDE
+                Support Fuelers
               </h1>
               <p className="text-xl text-muted-foreground">
                 Posez vos questions, nous sommes là pour vous aider
@@ -193,7 +193,7 @@ export default function Support({ user }: SupportProps) {
           {/* Chat */}
           <Card className="shadow-2xl">
             <CardHeader>
-              <CardTitle>Conversation avec le BDE</CardTitle>
+              <CardTitle>Conversation avec Fuelers</CardTitle>
               <CardDescription>
                 Réponse généralement en moins de 24h
               </CardDescription>
@@ -225,7 +225,7 @@ export default function Support({ user }: SupportProps) {
                           >
                             {msg.isFromBDE && (
                               <p className="text-xs font-semibold mb-2">
-                                BDE IESEG
+                                Fuelers
                               </p>
                             )}
 

@@ -252,7 +252,7 @@ export default function CreateEvent() {
                 {isEditMode ? 'Modifier l\'événement' : 'Créer un nouvel événement'}
               </h1>
               <p className="text-xl text-muted-foreground">
-                {isEditMode ? 'Modifiez les informations de votre événement' : 'Organisez un événement pour la communauté IESEG'}
+                {isEditMode ? 'Modifiez les informations de votre événement' : 'Organisez un événement pour la communauté Fuelers'}
               </p>
             </div>
           </div>
@@ -277,7 +277,7 @@ export default function CreateEvent() {
                     id="name"
                     name="name"
                     type="text"
-                    placeholder="Ex: Soirée d'intégration IESEG"
+                    placeholder="Ex: Soirée d'intégration Fuelers"
                     value={formData.name}
                     onChange={handleChange}
                     required
