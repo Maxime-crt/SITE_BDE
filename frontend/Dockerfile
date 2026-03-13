@@ -14,9 +14,7 @@ COPY . .
 
 # Récupérer les variables d'environnement Railway au moment du build
 ARG VITE_API_URL
-ARG VITE_STRIPE_PUBLIC_KEY
 ENV VITE_API_URL=$VITE_API_URL
-ENV VITE_STRIPE_PUBLIC_KEY=$VITE_STRIPE_PUBLIC_KEY
 
 # Build pour production
 RUN npm run build

@@ -15,36 +15,54 @@ services:
     networks:
       - site-bde-network
 
-  # Application (Backend + Frontend)
+  # Application dev (Backend + Frontend) - hot-reload via volumes
   app:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
     container_name: site-bde-app
     restart: unless-stopped
     depends_on:
       - db
     ports:
-      - "${PORT:-5000}:5000"
+      - "5000:5000"
     environment:
-      NODE_ENV: ${NODE_ENV:-production}
-      PORT: 5000
+      NODE_ENV: development
+      PORT: 3001
       DATABASE_URL: postgresql://postgres:postgres@postgres-site-bde:5432/site_bde_dev?schema=public
       DB_HOST: postgres-site-bde
       DB_PORT: 5432
       JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5000}
-      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
-      STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY:-}
       EMAIL_USER: ${EMAIL_USER:-}
       EMAIL_PASSWORD: ${EMAIL_PASSWORD:-}
       AUTO_ADMIN_EMAILS: ${AUTO_ADMIN_EMAILS:-}
       BCRYPT_ROUNDS: ${BCRYPT_ROUNDS:-12}
       RESEND_API_KEY: ${RESEND_API_KEY:-}
     volumes:
+      - ./backend/src:/app/backend/src
+      - ./backend/prisma:/app/backend/prisma
+      - ./backend/tsconfig.json:/app/backend/tsconfig.json
+      - ./backend/package.json:/app/backend/package.json
+      - ./frontend/src:/app/frontend/src
+      - ./frontend/public:/app/frontend/public
+      - ./frontend/index.html:/app/frontend/index.html
+      - ./frontend/vite.config.ts:/app/frontend/vite.config.ts
+      - ./frontend/tailwind.config.js:/app/frontend/tailwind.config.js
+      - ./frontend/postcss.config.js:/app/frontend/postcss.config.js
+      - ./frontend/tsconfig.json:/app/frontend/tsconfig.json
+      - ./frontend/tsconfig.app.json:/app/frontend/tsconfig.app.json
+      - ./frontend/tsconfig.node.json:/app/frontend/tsconfig.node.json
       - uploads_data:/app/backend/uploads
     networks:
       - site-bde-network
+    command: >
+      sh -c "
+        cd /app/backend && npx prisma migrate deploy &&
+        cd /app && npm run dev:backend &
+        cd /app && npm run dev:frontend &
+        wait
+      "
 
 networks:
   site-bde-network:

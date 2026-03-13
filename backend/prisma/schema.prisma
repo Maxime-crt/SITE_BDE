@@ -44,7 +44,6 @@ model User {
   supportMessages  SupportMessage[]
   uberRideRequests UberRideRequest[]
   uberRideMessages UberRideMessage[]
-  uberRidePayments UberRidePayment[]
   notifications    Notification[]
 
   @@map("users")
@@ -145,8 +144,6 @@ model UberRide {
   event    Event             @relation(fields: [eventId], references: [id], onDelete: Cascade)
   requests UberRideRequest[]
   messages UberRideMessage[]
-  payments UberRidePayment[]
-
   @@map("uber_rides")
 }
 
@@ -194,25 +191,6 @@ model UberRideMessage {
   user User     @relation(fields: [userId], references: [id])
 
   @@map("uber_ride_messages")
-}
-
-model UberRidePayment {
-  id                String   @id @default(cuid())
-  rideId            String
-  userId            String
-  amount            Float    // Part à payer (calculée après la course)
-  preAuthAmount     Float?   // Montant pré-autorisé
-  status            String   @default("PENDING") // PENDING, PRE_AUTHORIZED, PAID, FAILED, REFUNDED
-  stripePaymentId   String?  // Stripe Payment Intent ID
-  paidAt            DateTime?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-
-  ride UberRide @relation(fields: [rideId], references: [id], onDelete: Cascade)
-  user User     @relation(fields: [userId], references: [id])
-
-  @@unique([rideId, userId])
-  @@map("uber_ride_payments")
 }
 
 model Notification {

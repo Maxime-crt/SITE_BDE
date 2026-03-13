@@ -93,7 +93,6 @@ export interface UberRide {
   event?: Event;
   requests?: UberRideRequest[];
   messages?: UberRideMessage[];
-  payments?: UberRidePayment[];
 }
 
 export interface UberRideRequest {
@@ -127,18 +126,6 @@ export interface UberRideMessage {
   user?: User;
 }
 
-export interface UberRidePayment {
-  id: string;
-  rideId: string;
-  userId: string;
-  amount: number;
-  preAuthAmount?: number;
-  status: 'PENDING' | 'PRE_AUTHORIZED' | 'PAID' | 'FAILED' | 'REFUNDED';
-  stripePaymentId?: string;
-  paidAt?: string;
-  createdAt: string;
-  updatedAt: string;
-}
 
 export interface Notification {
   id: string;

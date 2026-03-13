@@ -1,10 +1,7 @@
 import axios from 'axios';
 import type { User, Event, AuthResponse } from '../types';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL ||
-  (import.meta.env.PROD
-    ? '/api'  // En production (si pas de VITE_API_URL)
-    : 'http://localhost:3001/api');  // En développement
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,

@@ -627,23 +627,10 @@ router.post('/:rideId/finalize-payment', authenticateToken, [
       }
     });
 
-    // Créer les paiements pour chaque passager (sauf initiateur)
-    for (const passenger of otherPassengers) {
-      await prisma.uberRidePayment.create({
-        data: {
-          rideId,
-          userId: passenger.userId,
-          amount: sharePerPerson,
-          status: 'PENDING'
-        }
-      });
-    }
-
     // TODO: Envoyer notifications aux passagers pour qu'ils paient leur part
-    // TODO: Implémenter le système de pré-autorisation Stripe
 
     res.json({
-      message: 'Paiement finalisé. Les autres passagers vont être notifiés.',
+      message: 'Paiement finalisé.',
       sharePerPerson,
       totalCollected: sharePerPerson * otherPassengers.length
     });

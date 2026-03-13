@@ -27,7 +27,7 @@ const server = createServer(app);
 const isDevelopment = process.env.NODE_ENV !== 'production';
 const frontendUrl = (process.env.FRONTEND_URL || "https://bde-ieseg.onrender.com").replace(/\/$/, ''); // Retirer le slash final
 const allowedOrigins = isDevelopment
-  ? ["http://localhost:5173", "http://localhost:5174", "http://localhost:5175", "http://localhost:5176"]
+  ? ["http://localhost:5000", "http://localhost:5173", "http://localhost:5174", "http://localhost:5175", "http://localhost:5176"]
   : [frontendUrl];
 
 const io = new Server(server, {
@@ -145,7 +145,7 @@ async function startServer() {
     await runMigrations();
 
     // Démarrer le serveur (écouter sur 0.0.0.0 pour Railway)
-    const host = process.env.NODE_ENV === 'production' ? '0.0.0.0' : 'localhost';
+    const host = '0.0.0.0';
     server.listen(Number(PORT), host, () => {
       console.log(`🚀 Server running on ${host}:${PORT} - Database ready`);
 

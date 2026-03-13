@@ -1,0 +1,20 @@
+FROM node:20-slim
+
+RUN apt-get update -y && apt-get install -y openssl ca-certificates netcat-openbsd && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copier les fichiers package.json
+COPY package*.json ./
+COPY backend/package*.json ./backend/
+COPY frontend/package*.json ./frontend/
+
+# Installer toutes les dépendances
+RUN npm ci && npm install -g tsx
+
+# Copier prisma schema pour générer le client
+COPY backend/prisma ./backend/prisma
+RUN cd backend && npx prisma generate
+
+# Le code source sera monté en volume (pas de COPY du src)
+EXPOSE 5000

@@ -10,9 +10,9 @@ class SocketService {
     }
 
     // Configuration dynamique de l'URL Socket.io
-    const socketUrl = import.meta.env.PROD
-      ? window.location.origin  // En production, même domaine que l'app
-      : 'http://localhost:3001';  // En développement, serveur local
+    const socketUrl = import.meta.env.VITE_API_URL
+      ? import.meta.env.VITE_API_URL.replace('/api', '')
+      : window.location.origin;
 
     this.socket = io(socketUrl, {
       auth: {

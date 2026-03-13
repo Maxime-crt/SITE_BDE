@@ -347,7 +347,7 @@ export default function Dashboard() {
         </div>
 
         {/* Recherche et filtres */}
-        {events && events.length > 0 && (
+        {events && (
           <div className="mb-8 space-y-4">
             {/* Barre de recherche */}
             <div className="flex justify-center">
@@ -447,19 +447,7 @@ export default function Dashboard() {
           </div>
         )}
 
-        {events && events.length === 0 ? (
-          <Card className="max-w-md mx-auto">
-            <CardHeader className="text-center pb-4">
-              <div className="mx-auto w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
-                <Calendar className="w-8 h-8 text-muted-foreground" />
-              </div>
-              <CardTitle>Aucun événement disponible</CardTitle>
-              <CardDescription>
-                Les prochains événements Fuelers apparaîtront ici. Restez connecté pour ne rien manquer !
-              </CardDescription>
-            </CardHeader>
-          </Card>
-        ) : viewMode === 'calendar' ? (
+        {viewMode === 'calendar' ? (
           /* Vue Calendrier */
           <EventCalendar
             events={events || []}
