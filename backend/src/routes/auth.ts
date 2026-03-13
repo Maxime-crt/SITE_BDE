@@ -165,7 +165,8 @@ router.post('/login', [
         homeCity: user.homeCity,
         homePostcode: user.homePostcode,
         homeLatitude: user.homeLatitude,
-        homeLongitude: user.homeLongitude
+        homeLongitude: user.homeLongitude,
+        charterAcceptedAt: user.charterAcceptedAt
       },
       token
     });
@@ -235,7 +236,8 @@ router.post('/verify-email', [
         lastName: true,
         phone: true,
         isAdmin: true,
-        emailVerified: true
+        emailVerified: true,
+        charterAcceptedAt: true
       }
     });
 
@@ -299,6 +301,36 @@ router.post('/resend-verification', [
   } catch (error) {
     console.error('Erreur renvoi code:', error);
     res.status(500).json({ error: 'Erreur serveur lors du renvoi du code' });
+  }
+});
+
+// Accepter la charte d'utilisation
+router.post('/accept-charter', authenticateToken, async (req: AuthRequest, res: express.Response) => {
+  try {
+    const user = await prisma.user.update({
+      where: { id: req.userId! },
+      data: { charterAcceptedAt: new Date() },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        phone: true,
+        isAdmin: true,
+        gender: true,
+        homeAddress: true,
+        homeCity: true,
+        homePostcode: true,
+        homeLatitude: true,
+        homeLongitude: true,
+        charterAcceptedAt: true
+      }
+    });
+
+    res.json({ message: 'Charte acceptée avec succès', user });
+  } catch (error) {
+    console.error('Erreur acceptation charte:', error);
+    res.status(500).json({ error: 'Erreur serveur lors de l\'acceptation de la charte' });
   }
 });
 

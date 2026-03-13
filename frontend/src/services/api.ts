@@ -94,6 +94,11 @@ export const authApi = {
     const response = await api.post('/auth/logout');
     return response.data;
   },
+
+  acceptCharter: async (): Promise<{ message: string; user: User }> => {
+    const response = await api.post('/auth/accept-charter');
+    return response.data;
+  },
 };
 
 export const eventsApi = {

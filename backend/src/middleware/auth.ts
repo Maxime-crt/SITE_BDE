@@ -31,7 +31,8 @@ export const authenticateToken = async (req: AuthRequest, res: Response, next: N
         homeCity: true,
         homePostcode: true,
         homeLatitude: true,
-        homeLongitude: true
+        homeLongitude: true,
+        charterAcceptedAt: true
       }
     });
 

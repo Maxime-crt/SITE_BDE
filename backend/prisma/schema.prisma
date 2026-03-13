@@ -29,6 +29,7 @@ model User {
   codeExpiresAt    DateTime?
   lastLoginAt      DateTime?
   lastActivityAt   DateTime?
+  charterAcceptedAt DateTime? // Date d'acceptation de la charte d'utilisation
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 

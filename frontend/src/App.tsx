@@ -5,6 +5,7 @@ import { Toaster } from 'react-hot-toast';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import VerifyEmail from './pages/VerifyEmail';
+import AcceptCharter from './pages/AcceptCharter';
 import Dashboard from './pages/Dashboard';
 import EventDetail from './pages/EventDetail';
 import CreateEvent from './pages/CreateEvent';
@@ -156,6 +157,10 @@ function AppContent() {
           <Route
             path="/verify-email"
             element={<VerifyEmail />}
+          />
+          <Route
+            path="/accept-charter"
+            element={<AcceptCharter />}
           />
           <Route
             path="/"

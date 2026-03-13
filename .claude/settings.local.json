@@ -60,7 +60,9 @@
       "Bash(where python:*)",
       "Bash(where python3:*)",
       "Bash(python -m pip install Pillow --quiet)",
-      "Bash(node -e \":*)"
+      "Bash(node -e \":*)",
+      "Bash(npx --package=prisma@5 prisma migrate dev --name add-charter-accepted-at)",
+      "Bash(npx --package=prisma@5 prisma generate)"
     ],
     "deny": [],
     "ask": [

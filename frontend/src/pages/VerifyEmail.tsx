@@ -88,8 +88,12 @@ export default function VerifyEmail() {
 
       toast.success('Email vérifié avec succès !');
 
-      // Forcer un rechargement pour que App.tsx lise le localStorage
-      window.location.href = '/';
+      // Rediriger vers l'acceptation de la charte (ou dashboard si déjà acceptée)
+      if (response.user.charterAcceptedAt) {
+        window.location.href = '/';
+      } else {
+        window.location.href = '/accept-charter';
+      }
     } catch (error: any) {
       const errorMessage = error.response?.data?.error || 'Code invalide ou expiré';
       toast.error(errorMessage, { duration: 2000 });

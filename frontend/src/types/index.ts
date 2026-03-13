@@ -11,6 +11,7 @@ export interface User {
   homePostcode?: string;
   homeLatitude?: number;
   homeLongitude?: number;
+  charterAcceptedAt?: string;
 }
 
 export interface Event {

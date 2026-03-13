@@ -7,7 +7,7 @@ interface ProtectedRouteProps {
 
 /**
  * Composant qui protège une route en vérifiant la présence d'un token
- * La vérification est synchrone et se fait AVANT le rendu des enfants
+ * et que la charte d'utilisation a été acceptée
  */
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const token = localStorage.getItem('token');
@@ -18,6 +18,16 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     return <Navigate to="/login" replace />;
   }
 
-  // Token présent, on peut rendre les enfants
+  // Vérifier si la charte a été acceptée
+  try {
+    const user = JSON.parse(savedUser);
+    if (!user.charterAcceptedAt) {
+      return <Navigate to="/accept-charter" replace />;
+    }
+  } catch {
+    return <Navigate to="/login" replace />;
+  }
+
+  // Token présent et charte acceptée, on peut rendre les enfants
   return <>{children}</>;
 }
