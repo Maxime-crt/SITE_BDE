@@ -789,6 +789,16 @@ Utilisez la fonctionnalité "Support" directement dans l'application :
 
 ---
 
+## 🖼 Gestion des images
+
+Les images utilisées sur le site (photos d'événements, visuels, etc.) sont hébergées sur **Cloudinary**.
+
+- **Console Cloudinary** : https://console.cloudinary.com/app/c-6a16aae401fbb22cf9e7dd254d4d9b/assets/media_library/folders/ce738658b70937a167b99083431409f073?view_mode=mosaic
+
+Pour ajouter ou modifier des images, se connecter à la console Cloudinary et uploader les fichiers dans le dossier dédié.
+
+---
+
 ## 📝 Licence
 
 Projet privé - BDE IESEG
