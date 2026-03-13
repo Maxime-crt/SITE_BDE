@@ -132,10 +132,9 @@ function useDragScroll(speed: number, direction: 'left' | 'right') {
     isDragging.current = false;
   }, []);
 
-  const onWheel = useCallback(() => { pauseAutoScroll(); }, [pauseAutoScroll]);
   const shouldPreventClick = useCallback(() => hasMoved.current, []);
 
-  return { ref, onPointerDown, onPointerMove, onPointerUp, onWheel, shouldPreventClick };
+  return { ref, onPointerDown, onPointerMove, onPointerUp, shouldPreventClick };
 }
 
 
@@ -208,11 +207,10 @@ export default function PhotoGallery() {
       {/* Row 1 — Paysages */}
       <div
         ref={landscapeScroll.ref}
-        className="flex gap-4 overflow-x-auto cursor-grab active:cursor-grabbing select-none"
+        className="flex gap-4 overflow-x-hidden cursor-grab active:cursor-grabbing select-none"
         onPointerDown={landscapeScroll.onPointerDown}
         onPointerMove={landscapeScroll.onPointerMove}
         onPointerUp={landscapeScroll.onPointerUp}
-        onWheel={landscapeScroll.onWheel}
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
         {landscapeDup.map((img, i) => (
@@ -243,11 +241,10 @@ export default function PhotoGallery() {
       {/* Row 2 — Portraits */}
       <div
         ref={portraitScroll.ref}
-        className="flex gap-4 overflow-x-auto cursor-grab active:cursor-grabbing select-none"
+        className="flex gap-4 overflow-x-hidden cursor-grab active:cursor-grabbing select-none"
         onPointerDown={portraitScroll.onPointerDown}
         onPointerMove={portraitScroll.onPointerMove}
         onPointerUp={portraitScroll.onPointerUp}
-        onWheel={portraitScroll.onWheel}
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
         {portraitDup.map((img, i) => (
