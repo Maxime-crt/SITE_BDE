@@ -86,6 +86,7 @@ dist
 # Gatsby files
 .cache/
 public
+!frontend/public/favicon.ico
 
 # Vite build output
 dist/
