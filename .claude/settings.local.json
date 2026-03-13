@@ -47,7 +47,12 @@
       "Bash(node_modules/.bin/tsc.cmd --noEmit)",
       "Bash(ls d:/DEV/SITE_BDE/frontend/node_modules/.bin/tsc*)",
       "Bash(node -e \"require\\(''vite''\\)\")",
-      "Bash(xargs grep:*)"
+      "Bash(xargs grep:*)",
+      "Bash(find /d/DEV/SITE_BDE -type f \\\\\\(-name *.nginx -o -name *.conf -o -name .dockerignore \\\\\\))",
+      "Bash(find /d/DEV/SITE_BDE -type f \\\\\\(-name railway.json -o -name render.yaml -o -name .env.* -o -name docker-entrypoint.sh \\\\\\))",
+      "Bash(find /d/DEV/SITE_BDE -maxdepth 2 -type f \\\\\\(-name Makefile -o -name *.toml -o -name *.json \\\\\\))",
+      "Bash(grep -r \"frontend.*url\\\\|api.*url\\\\|domain\\\\|hostname\" /d/DEV/SITE_BDE --include=*.ts --include=*.tsx --include=*.js --include=*.json)",
+      "Bash(grep -rn \"VITE_API_URL\\\\|FRONTEND_URL\\\\|process.env\" /d/DEV/SITE_BDE/frontend/src --include=*.ts --include=*.tsx)"
     ],
     "deny": [],
     "ask": [

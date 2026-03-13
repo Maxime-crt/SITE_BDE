@@ -634,7 +634,7 @@ Répondre à un utilisateur
 
 ```bash
 # Build de l'image
-docker build -t bde-ieseg .
+docker build -t fuelers .
 
 # Lancer le container
 docker run -p 3001:3001 \
@@ -643,7 +643,7 @@ docker run -p 3001:3001 \
   -e STRIPE_SECRET_KEY="sk_..." \
   -e EMAIL_USER="..." \
   -e EMAIL_PASSWORD="..." \
-  bde-ieseg
+  fuelers
 ```
 
 ### Avec Render
@@ -662,7 +662,7 @@ Variables à configurer manuellement dans Render :
 EMAIL_USER=...
 EMAIL_PASSWORD=...
 STRIPE_SECRET_KEY=...
-FRONTEND_URL=https://site-bde-ieseg.onrender.com
+FRONTEND_URL=https://www.fuelers.fr
 ```
 
 ### Migration de la base de données en production

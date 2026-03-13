@@ -25,7 +25,7 @@ const server = createServer(app);
 
 // Configuration CORS pour développement et production
 const isDevelopment = process.env.NODE_ENV !== 'production';
-const frontendUrl = (process.env.FRONTEND_URL || "https://bde-ieseg.onrender.com").replace(/\/$/, ''); // Retirer le slash final
+const frontendUrl = (process.env.FRONTEND_URL || "https://www.fuelers.fr").replace(/\/$/, ''); // Retirer le slash final
 const allowedOrigins = isDevelopment
   ? ["http://localhost:5000", "http://localhost:5173", "http://localhost:5174", "http://localhost:5175", "http://localhost:5176"]
   : [frontendUrl];

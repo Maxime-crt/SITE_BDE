@@ -24,7 +24,7 @@ export async function sendVerificationEmail(email: string, firstName: string, co
 
   try {
     const { data, error } = await resend.emails.send({
-      from: 'Fuelers <noreply@ieseg-events.fr>',
+      from: 'Fuelers <noreply@fuelers.fr>',
       to: email,
       subject: 'Vérification de votre compte Fuelers',
       html: `
