@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { User, LogOut, Menu, Calendar, X, Shield, MessageCircle, Car } from 'lucide-react';
+import { User, LogOut, Menu, X, Shield, MessageCircle, Car } from 'lucide-react';
+import logoFLR from '../assets/Logo_FLR.png';
 import { Button } from './ui/button';
 import { ThemeToggle } from './ThemeToggle';
 import type { User as UserType } from '../types';
@@ -44,9 +45,7 @@ export default function Navbar({ user, onLogout }: NavbarProps) {
           {/* Logo et navigation principale */}
           <div className="flex items-center space-x-8">
             <Link to="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
-              <div className="flex items-center justify-center w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg">
-                <Calendar className="w-5 h-5 text-white" />
-              </div>
+              <img src={logoFLR} alt="Fuelers" className="h-10 w-10 rounded-full object-cover" />
               <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
                 Fuelers
               </span>
