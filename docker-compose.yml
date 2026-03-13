@@ -53,6 +53,7 @@ services:
       - ./frontend/tsconfig.json:/app/frontend/tsconfig.json
       - ./frontend/tsconfig.app.json:/app/frontend/tsconfig.app.json
       - ./frontend/tsconfig.node.json:/app/frontend/tsconfig.node.json
+      - ./scripts:/app/scripts
       - uploads_data:/app/backend/uploads
     networks:
       - site-bde-network
@@ -61,6 +62,7 @@ services:
         cd /app/backend && npx prisma migrate deploy &&
         cd /app && npm run dev:backend &
         cd /app && npm run dev:frontend &
+        sh /app/scripts/watch-frontend.sh &
         wait
       "
 

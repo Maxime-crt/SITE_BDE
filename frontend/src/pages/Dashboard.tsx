@@ -9,6 +9,7 @@ import { Badge } from '../components/ui/badge';
 import ConfirmDialog from '../components/ConfirmDialog';
 import StarRating from '../components/StarRating';
 import EventCalendar from '../components/EventCalendar';
+import PhotoGallery from '../components/PhotoGallery';
 import toast from 'react-hot-toast';
 import type { Event, User } from '../types';
 import { handleApiErrorWithLog } from '../utils/errorHandler';
@@ -345,6 +346,9 @@ export default function Dashboard() {
             )}
           </div>
         </div>
+
+        {/* Galerie photos */}
+        <PhotoGallery />
 
         {/* Recherche et filtres */}
         {events && (

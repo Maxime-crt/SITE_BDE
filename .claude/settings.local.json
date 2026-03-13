@@ -41,7 +41,12 @@
       "Bash(find d:DEVSITE_BDE -type f \\\\\\(-name *.env* -o -name *.yml -o -name *.yaml -o -name *.md \\\\\\))",
       "Bash(grep -r stripe -i d:DEVSITE_BDE --include=*.md --include=*.yml --include=*.yaml --include=*.env* --include=*.ts --include=*.tsx)",
       "Bash(docker restart:*)",
-      "Bash(docker compose:*)"
+      "Bash(docker compose:*)",
+      "Bash(npx tsc:*)",
+      "Bash(./node_modules/.bin/tsc --noEmit)",
+      "Bash(node_modules/.bin/tsc.cmd --noEmit)",
+      "Bash(ls d:/DEV/SITE_BDE/frontend/node_modules/.bin/tsc*)",
+      "Bash(node -e \"require\\(''vite''\\)\")"
     ],
     "deny": [],
     "ask": [
