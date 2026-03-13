@@ -5,8 +5,9 @@ import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 const CLOUD_NAME = 'dk93ledz2';
 
 // f_auto → WebP/AVIF, q_auto:low → aggressive compression for thumbnails
+const CACHE_VERSION = 2; // bump to force CDN cache refresh after replacing an image
 function cloudUrl(publicId: string, width: number, quality = 'auto') {
-  return `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/f_auto,q_${quality},w_${width}/${publicId}`;
+  return `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/f_auto,q_${quality},w_${width}/v${CACHE_VERSION}/${publicId}`;
 }
 
 const HERO_IMAGE = {
