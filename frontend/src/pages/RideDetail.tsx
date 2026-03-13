@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import api from '../services/api';
 import { Button } from '../components/ui/button';
 import RideMap from '../components/RideMap';
+import { formatParisDate } from '../utils/dateUtils';
 
 interface RideMember {
   id: string;
@@ -136,7 +137,7 @@ export default function RideDetail() {
                 <Calendar className="w-5 h-5 text-muted-foreground flex-shrink-0" />
                 <div>
                   <div className="text-sm font-medium text-foreground">
-                    {new Date(ride.event.startDate).toLocaleDateString('fr-FR', {
+                    {formatParisDate(ride.event.startDate, {
                       weekday: 'long',
                       day: 'numeric',
                       month: 'long',
@@ -151,7 +152,7 @@ export default function RideDetail() {
                 <div>
                   <div className="text-sm text-muted-foreground">Départ prévu</div>
                   <div className="text-sm font-medium text-foreground">
-                    {new Date(ride.departureTime).toLocaleTimeString('fr-FR', {
+                    {formatParisDate(ride.departureTime, {
                       hour: '2-digit',
                       minute: '2-digit'
                     })}

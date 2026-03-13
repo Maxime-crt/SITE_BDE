@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import api from '../services/api';
 import { Button } from '../components/ui/button';
 import ConfirmDialog from '../components/ConfirmDialog';
+import { formatParisDate } from '../utils/dateUtils';
 
 interface UberRide {
   id: string;
@@ -254,7 +255,7 @@ export default function MyRides() {
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <Calendar className="w-4 h-4 flex-shrink-0" />
                         <span>
-                          {new Date(ride.event.startDate).toLocaleDateString('fr-FR', {
+                          {formatParisDate(ride.event.startDate, {
                             day: 'numeric',
                             month: 'long',
                             year: 'numeric'
@@ -266,7 +267,7 @@ export default function MyRides() {
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Clock className="w-4 h-4 flex-shrink-0" />
                       <span>
-                        Départ à {new Date(ride.departureTime).toLocaleTimeString('fr-FR', {
+                        Départ à {formatParisDate(ride.departureTime, {
                           hour: '2-digit',
                           minute: '2-digit'
                         })}

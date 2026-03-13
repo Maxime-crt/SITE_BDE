@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import AddressInput from './AddressInput';
 import api from '../services/api';
 import { Event } from '../types';
+import { formatParisDate } from '../utils/dateUtils';
 
 interface UberRequestModalProps {
   isOpen: boolean;
@@ -538,7 +539,7 @@ export default function UberRequestModal({
                     >
                       {maxDepartureTime ? (
                         <span className="text-gray-900 dark:text-white font-medium">
-                          {new Date(maxDepartureTime).toLocaleString('fr-FR', {
+                          {formatParisDate(maxDepartureTime, {
                             weekday: 'short',
                             day: 'numeric',
                             month: 'short',
@@ -556,7 +557,6 @@ export default function UberRequestModal({
                       <div className="mt-2 border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
                         <div className="max-h-48 overflow-y-auto bg-white dark:bg-gray-800">
                           {timeSlots.map((slot) => {
-                            const date = new Date(slot);
                             const isSelected = maxDepartureTime === slot;
                             return (
                               <button
@@ -572,7 +572,7 @@ export default function UberRequestModal({
                                     : 'text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700'
                                 }`}
                               >
-                                {date.toLocaleString('fr-FR', {
+                                {formatParisDate(slot, {
                                   weekday: 'short',
                                   day: 'numeric',
                                   month: 'short',

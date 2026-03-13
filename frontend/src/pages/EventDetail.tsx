@@ -5,6 +5,7 @@ import type { User, Event, EventRating } from '../types';
 import toast from 'react-hot-toast';
 import { useState } from 'react';
 import { handleApiErrorWithLog } from '../utils/errorHandler';
+import { formatParisDate } from '../utils/dateUtils';
 import { Calendar, MapPin, Star, ArrowLeft, Edit, Trash2, ExternalLink, Car, Users } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
@@ -80,7 +81,7 @@ export default function EventDetail({ user }: EventDetailProps) {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('fr-FR', {
+    return formatParisDate(dateString, {
       day: 'numeric',
       month: 'long',
       year: 'numeric',

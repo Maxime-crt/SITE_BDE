@@ -46,7 +46,8 @@
       "Bash(./node_modules/.bin/tsc --noEmit)",
       "Bash(node_modules/.bin/tsc.cmd --noEmit)",
       "Bash(ls d:/DEV/SITE_BDE/frontend/node_modules/.bin/tsc*)",
-      "Bash(node -e \"require\\(''vite''\\)\")"
+      "Bash(node -e \"require\\(''vite''\\)\")",
+      "Bash(xargs grep:*)"
     ],
     "deny": [],
     "ask": [

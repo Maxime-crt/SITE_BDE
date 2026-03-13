@@ -13,6 +13,7 @@ import PhotoGallery from '../components/PhotoGallery';
 import toast from 'react-hot-toast';
 import type { Event, User } from '../types';
 import { handleApiErrorWithLog } from '../utils/errorHandler';
+import { formatParisDate } from '../utils/dateUtils';
 
 type SortOption = 'publication-desc' | 'publication-asc' | 'rating-desc' | 'status-published' | 'status-draft' | 'status-scheduled' | 'time-upcoming' | 'time-ongoing' | 'time-finished';
 
@@ -517,7 +518,7 @@ export default function Dashboard() {
                     <div className="flex items-center text-sm text-muted-foreground gap-3">
                       <Calendar className="w-4 h-4 text-green-500 flex-shrink-0" />
                       <span className="truncate">
-                        {new Date(event.startDate).toLocaleDateString('fr-FR', {
+                        {formatParisDate(event.startDate, {
                           day: 'numeric',
                           month: 'short',
                           year: 'numeric'
@@ -528,13 +529,13 @@ export default function Dashboard() {
                       <Clock className="w-4 h-4 text-orange-500 flex-shrink-0 mt-0.5" />
                       <div className="min-w-0">
                         <div className="truncate">
-                          Début: {new Date(event.startDate).toLocaleTimeString('fr-FR', {
+                          Début: {formatParisDate(event.startDate, {
                             hour: '2-digit',
                             minute: '2-digit'
                           })}
                         </div>
                         <div className="text-xs text-muted-foreground/70 truncate">
-                          Fin: {new Date(event.endDate).toLocaleTimeString('fr-FR', {
+                          Fin: {formatParisDate(event.endDate, {
                             hour: '2-digit',
                             minute: '2-digit'
                           })}

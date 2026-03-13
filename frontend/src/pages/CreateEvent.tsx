@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../co
 import { eventsApi } from '../services/api';
 import toast from 'react-hot-toast';
 import { handleApiErrorWithLog } from '../utils/errorHandler';
+import { parisLocalToUTC, utcToParisLocal } from '../utils/dateUtils';
 
 interface AddressSuggestion {
   label: string;
@@ -60,11 +61,11 @@ export default function CreateEvent() {
             location: event.location,
             type: event.type || 'CB',
             customType: event.customType || '',
-            startDate: new Date(event.startDate).toISOString().slice(0, 16),
-            endDate: new Date(event.endDate).toISOString().slice(0, 16),
+            startDate: utcToParisLocal(event.startDate),
+            endDate: utcToParisLocal(event.endDate),
             capacity: event.capacity.toString(),
             publishMode,
-            publishedAt: event.publishedAt ? new Date(event.publishedAt).toISOString().slice(0, 16) : ''
+            publishedAt: event.publishedAt ? utcToParisLocal(event.publishedAt) : ''
           });
           setAddressValid(true); // L'adresse est déjà validée
         } catch (error: any) {
@@ -176,7 +177,7 @@ export default function CreateEvent() {
       if (formData.publishMode === 'now') {
         publishedAt = new Date().toISOString();
       } else if (formData.publishMode === 'schedule') {
-        publishedAt = new Date(formData.publishedAt).toISOString();
+        publishedAt = parisLocalToUTC(formData.publishedAt);
       }
       // Si publishMode === 'draft', publishedAt reste undefined (brouillon)
 
@@ -186,8 +187,8 @@ export default function CreateEvent() {
         location: formData.location,
         type: formData.type,
         customType: formData.type === 'Autre' ? formData.customType : undefined,
-        startDate: new Date(formData.startDate).toISOString(),
-        endDate: new Date(formData.endDate).toISOString(),
+        startDate: parisLocalToUTC(formData.startDate),
+        endDate: parisLocalToUTC(formData.endDate),
         capacity: parseInt(formData.capacity),
         publishedAt
       };
@@ -446,6 +447,7 @@ export default function CreateEvent() {
                     />
                   </div>
                 </div>
+                <p className="text-xs text-muted-foreground">Les horaires sont en heure de Paris (Europe/Paris)</p>
 
                 <div className="space-y-4 border-t pt-6">
                   <h3 className="text-lg font-semibold">Publication</h3>
@@ -506,7 +508,7 @@ export default function CreateEvent() {
                         onChange={handleChange}
                         required={formData.publishMode === 'schedule'}
                         className="h-11"
-                        min={new Date().toISOString().slice(0, 16)}
+                        min={utcToParisLocal(new Date().toISOString())}
                         lang="fr"
                       />
                       <p className="text-xs text-gray-500">
