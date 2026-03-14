@@ -6,5 +6,6 @@ export const ADMIN_EMAILS = [
 
 // Emails non-IESEG autorisés à s'inscrire (sans droits admin)
 export const ALLOWED_EMAILS = [
-  'coriton.maxime@gmail.com'
+  'coriton.maxime@gmail.com',
+  'maxime.coriton35@gmail.com'
 ];
