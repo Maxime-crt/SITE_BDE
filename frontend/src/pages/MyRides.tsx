@@ -214,7 +214,7 @@ export default function MyRides() {
           </p>
           {activeTab === 'active' && (
             <Link
-              to="/"
+              to="/#calendar"
               className="mt-6 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-primary-foreground bg-primary hover:bg-primary/90"
             >
               Voir les événements

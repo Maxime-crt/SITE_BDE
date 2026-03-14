@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { MapPin, Calendar, Users, ArrowRight, Clock, Loader2, Edit, Trash2, Star, ChevronDown, CalendarDays, LayoutGrid } from 'lucide-react';
 import { eventsApi, eventRatingsApi } from '../services/api';
@@ -30,6 +30,7 @@ export default function Dashboard() {
   const [userRating, setUserRating] = useState(0);
   const eventsPerPage = 6;
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
 
   // Fonction pour obtenir le statut de publication d'un événement
@@ -299,6 +300,17 @@ export default function Dashboard() {
     setCurrentPage(1);
   }, [sortBy, searchQuery, activeTab]);
 
+  // Scroll to hash section (e.g. /#calendar)
+  useEffect(() => {
+    if (location.hash && !isLoading) {
+      const id = location.hash.replace('#', '');
+      const element = document.getElementById(id);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  }, [location.hash, isLoading]);
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -353,7 +365,7 @@ export default function Dashboard() {
 
         {/* Recherche et filtres */}
         {events && (
-          <div className="mb-8 space-y-4">
+          <div id="calendar" className="mb-8 space-y-4">
             {/* Barre de recherche */}
             <div className="flex justify-center">
               <div className="w-full max-w-2xl">
