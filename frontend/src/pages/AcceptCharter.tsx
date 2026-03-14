@@ -57,7 +57,7 @@ export default function AcceptCharter() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background flex flex-col items-center pt-8 sm:pt-16 p-4">
       <Card className="w-full max-w-2xl shadow-2xl">
         <CardHeader className="text-center pb-4">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-primary rounded-2xl mx-auto mb-4 shadow-lg">
