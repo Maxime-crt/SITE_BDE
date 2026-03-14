@@ -348,7 +348,8 @@ router.get('/:rideId', authenticateToken, async (req: AuthRequest, res: express.
                 firstName: true,
                 lastName: true,
                 gender: true,
-                phone: true
+                phone: true,
+                instagram: true
               }
             }
           }

@@ -32,6 +32,7 @@ export const authenticateToken = async (req: AuthRequest, res: Response, next: N
         homePostcode: true,
         homeLatitude: true,
         homeLongitude: true,
+        instagram: true,
         charterAcceptedAt: true
       }
     });

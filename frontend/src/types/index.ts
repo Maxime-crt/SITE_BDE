@@ -11,6 +11,7 @@ export interface User {
   homePostcode?: string;
   homeLatitude?: number;
   homeLongitude?: number;
+  instagram?: string;
   charterAcceptedAt?: string;
 }
 

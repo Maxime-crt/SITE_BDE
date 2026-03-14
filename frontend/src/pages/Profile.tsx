@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Save, MapPin, Users, Edit2, X } from 'lucide-react';
+import { Save, MapPin, Users, Edit2, X, Instagram } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../services/api';
 import AddressInput from '../components/AddressInput';
@@ -17,6 +17,9 @@ export default function Profile({ user }: ProfileProps) {
   const [firstName, setFirstName] = useState(user.firstName);
   const [lastName, setLastName] = useState(user.lastName);
   const [phone, setPhone] = useState(user.phone);
+
+  // États pour l'édition - réseaux sociaux
+  const [instagram, setInstagram] = useState(user.instagram || '');
 
   // États pour l'édition - informations personnelles
   const [gender, setGender] = useState<'MALE' | 'FEMALE' | 'OTHER' | 'PREFER_NOT_SAY'>(
@@ -70,6 +73,7 @@ export default function Profile({ user }: ProfileProps) {
         lastName: lastName.trim(),
         phone: phone.trim(),
         gender,
+        instagram: instagram.trim() || null,
         homeAddress,
         homeCity: addressCoords?.city || '',
         homePostcode: addressCoords?.postcode || '',
@@ -97,6 +101,7 @@ export default function Profile({ user }: ProfileProps) {
     setLastName(user.lastName);
     setPhone(user.phone);
     setGender(user.gender || 'PREFER_NOT_SAY');
+    setInstagram(user.instagram || '');
     setHomeAddress(user.homeAddress || '');
     setAddressCoords(
       user.homeLatitude && user.homeLongitude
@@ -194,6 +199,26 @@ export default function Profile({ user }: ProfileProps) {
                         Genre
                       </label>
                       <div className="text-foreground">{getGenderLabel(user.gender)}</div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-muted-foreground mb-2 flex items-center gap-2">
+                        <Instagram className="w-4 h-4" />
+                        Instagram
+                      </label>
+                      <div className="text-foreground">
+                        {user.instagram ? (
+                          <a
+                            href={`https://instagram.com/${user.instagram}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary hover:underline"
+                          >
+                            @{user.instagram}
+                          </a>
+                        ) : (
+                          'Non renseigné'
+                        )}
+                      </div>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-muted-foreground mb-2 flex items-center gap-2">
@@ -310,6 +335,24 @@ export default function Profile({ user }: ProfileProps) {
                         >
                           Ne pas préciser
                         </button>
+                      </div>
+                    </div>
+
+                    {/* Instagram */}
+                    <div>
+                      <label className="block text-sm font-medium text-muted-foreground mb-2 flex items-center gap-2">
+                        <Instagram className="w-4 h-4" />
+                        Instagram
+                      </label>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">@</span>
+                        <input
+                          type="text"
+                          value={instagram}
+                          onChange={(e) => setInstagram(e.target.value)}
+                          className="w-full pl-7 pr-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                          placeholder="ton_pseudo"
+                        />
                       </div>
                     </div>
 

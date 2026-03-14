@@ -15,6 +15,8 @@ router.put('/profile', authenticateToken, [
     .withMessage('Le numéro de téléphone doit contenir au moins 10 caractères'),
   body('gender').optional().isIn(['MALE', 'FEMALE', 'OTHER', 'PREFER_NOT_SAY'])
     .withMessage('Genre invalide'),
+  body('instagram').optional().isString().isLength({ max: 30 })
+    .withMessage('Pseudo Instagram invalide'),
   body('homeAddress').optional().isString().isLength({ min: 5 })
     .withMessage('Adresse invalide'),
   body('homeCity').optional().isString(),
@@ -29,7 +31,7 @@ router.put('/profile', authenticateToken, [
     }
 
     const userId = req.userId!;
-    const { firstName, lastName, phone, gender, homeAddress, homeCity, homePostcode, homeLatitude, homeLongitude } = req.body;
+    const { firstName, lastName, phone, gender, instagram, homeAddress, homeCity, homePostcode, homeLatitude, homeLongitude } = req.body;
 
     // Si une adresse est fournie, valider les coordonnées
     if (homeAddress && (!homeLatitude || !homeLongitude)) {
@@ -44,6 +46,7 @@ router.put('/profile', authenticateToken, [
     if (lastName !== undefined) updateData.lastName = lastName;
     if (phone !== undefined) updateData.phone = phone;
     if (gender !== undefined) updateData.gender = gender;
+    if (instagram !== undefined) updateData.instagram = instagram ? instagram.replace(/^@/, '') : null;
     if (homeAddress !== undefined) updateData.homeAddress = homeAddress;
     if (homeCity !== undefined) updateData.homeCity = homeCity;
     if (homePostcode !== undefined) updateData.homePostcode = homePostcode;
@@ -60,6 +63,7 @@ router.put('/profile', authenticateToken, [
         lastName: true,
         phone: true,
         gender: true,
+        instagram: true,
         homeAddress: true,
         homeCity: true,
         homePostcode: true,
@@ -91,6 +95,7 @@ router.get('/me/profile', authenticateToken, async (req: AuthRequest, res: expre
         lastName: true,
         phone: true,
         gender: true,
+        instagram: true,
         homeAddress: true,
         homeCity: true,
         homePostcode: true,

@@ -27,7 +27,7 @@ router.post('/register', [
       return res.status(400).json({ errors: errors.array() });
     }
 
-    let { email, firstName, lastName, phone, password, gender, address, city, postcode } = req.body;
+    let { email, firstName, lastName, phone, password, gender, address, city, postcode, instagram } = req.body;
 
     console.log('📧 EMAIL REÇU:', JSON.stringify(email));
     console.log('📧 Type:', typeof email);
@@ -79,6 +79,7 @@ router.post('/register', [
         verificationCode,
         codeExpiresAt,
         ...(gender && { gender }),
+        ...(instagram && { instagram: instagram.replace(/^@/, '') }),
         ...(address && { homeAddress: address }),
         ...(city && { homeCity: city }),
         ...(postcode && { homePostcode: postcode }),
@@ -170,6 +171,7 @@ router.post('/login', [
         homePostcode: user.homePostcode,
         homeLatitude: user.homeLatitude,
         homeLongitude: user.homeLongitude,
+        instagram: user.instagram,
         charterAcceptedAt: user.charterAcceptedAt
       },
       token
@@ -327,6 +329,7 @@ router.post('/accept-charter', authenticateToken, async (req: AuthRequest, res: 
         homePostcode: true,
         homeLatitude: true,
         homeLongitude: true,
+        instagram: true,
         charterAcceptedAt: true
       }
     });

@@ -61,6 +61,7 @@ export const authApi = {
     phone: string;
     password: string;
     gender?: string;
+    instagram?: string;
     address?: string;
     city?: string;
     postcode?: string;

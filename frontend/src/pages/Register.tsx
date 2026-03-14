@@ -14,6 +14,7 @@ export default function Register() {
     lastName: '',
     phone: '',
     gender: 'PREFER_NOT_TO_SAY' as 'MALE' | 'FEMALE' | 'PREFER_NOT_TO_SAY',
+    instagram: '',
     address: '',
     city: '',
     postcode: '',
@@ -243,6 +244,24 @@ export default function Register() {
                 <option value="MALE">Homme</option>
                 <option value="FEMALE">Femme</option>
               </select>
+            </div>
+
+            <div>
+              <label htmlFor="instagram" className="block text-sm font-medium">
+                Instagram <span className="text-muted-foreground text-xs">(optionnel)</span>
+              </label>
+              <div className="relative mt-1">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">@</span>
+                <Input
+                  id="instagram"
+                  name="instagram"
+                  type="text"
+                  placeholder="ton_pseudo"
+                  value={formData.instagram}
+                  onChange={handleChange}
+                  className="pl-7"
+                />
+              </div>
             </div>
 
             <div>

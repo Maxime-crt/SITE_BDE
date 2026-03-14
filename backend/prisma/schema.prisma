@@ -33,6 +33,9 @@ model User {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
+  // Réseaux sociaux
+  instagram        String?  // Pseudo Instagram (sans le @)
+
   // Uber Sharing Profile
   gender           String?  // MALE, FEMALE, OTHER, PREFER_NOT_SAY
   homeAddress      String?  // Adresse complète validée
