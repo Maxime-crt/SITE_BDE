@@ -60,6 +60,10 @@ export const authApi = {
     lastName: string;
     phone: string;
     password: string;
+    gender?: string;
+    address?: string;
+    city?: string;
+    postcode?: string;
   }): Promise<AuthResponse> => {
     const response = await api.post('/auth/register', data);
     return response.data;

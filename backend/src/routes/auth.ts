@@ -27,7 +27,7 @@ router.post('/register', [
       return res.status(400).json({ errors: errors.array() });
     }
 
-    let { email, firstName, lastName, phone, password } = req.body;
+    let { email, firstName, lastName, phone, password, gender, address, city, postcode } = req.body;
 
     console.log('📧 EMAIL REÇU:', JSON.stringify(email));
     console.log('📧 Type:', typeof email);
@@ -77,7 +77,11 @@ router.post('/register', [
         isAdmin,
         emailVerified: false,
         verificationCode,
-        codeExpiresAt
+        codeExpiresAt,
+        ...(gender && { gender }),
+        ...(address && { homeAddress: address }),
+        ...(city && { homeCity: city }),
+        ...(postcode && { homePostcode: postcode }),
       },
       select: {
         id: true,
