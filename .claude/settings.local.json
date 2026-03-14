@@ -67,7 +67,9 @@
       "Bash(grep -r \"TIMEZONE\\\\|timezone\\\\|UTC\\\\|Europe/Paris\" /d/DEV/SITE_BDE/backend/src --include=*.ts)",
       "Bash(find d:/DEV/SITE_BDE -type f \\\\\\(-name *map* -o -name *Map* \\\\\\))",
       "Bash(find d:/DEV/SITE_BDE -path */node_modules -prune -o -type f \\\\\\(-name *.ts -o -name *.js \\\\\\) -path */backend/* -print)",
-      "Bash(grep -r \"routePolyline\\\\|route.*polyline\" d:/DEV/SITE_BDE --include=*.ts --include=*.tsx --include=*.js --include=*.jsx)"
+      "Bash(grep -r \"routePolyline\\\\|route.*polyline\" d:/DEV/SITE_BDE --include=*.ts --include=*.tsx --include=*.js --include=*.jsx)",
+      "Bash(find /d/DEV/SITE_BDE -maxdepth 2 -name .env* -o -name *.env)",
+      "Bash(grep -rn \"RESEND\\\\|SENDGRID\\\\|SMTP\\\\|EMAIL\" /d/DEV/SITE_BDE/backend/src --include=*.ts --include=*.tsx)"
     ],
     "deny": [],
     "ask": [

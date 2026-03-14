@@ -81,7 +81,9 @@ export async function sendVerificationEmail(email: string, firstName: string, co
         </head>
         <body>
           <div class="container">
-            <h1 class="header">🎓 Fuelers</h1>
+            <div class="header">
+              <img src="https://res.cloudinary.com/dk93ledz2/image/upload/v1773527791/gallery/Logo_FLR_d91qt0.jpg" alt="Fuelers" width="120" height="120" style="border-radius: 50%; display: block; margin: 0 auto 10px;" />
+            </div>
             <div class="content">
               <h2>Bonjour ${firstName} !</h2>
               <p>Merci de vous être inscrit sur la plateforme Fuelers.</p>
