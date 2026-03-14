@@ -68,7 +68,11 @@ export default function UberRequestModal({
         setShowProfileCompletion(true);
         if (userGender) setProfileGender(userGender);
         if (userHomeAddress) {
-          setProfileAddress(userHomeAddress);
+          // Composer l'adresse complète avec ville et code postal si disponibles
+          const fullAddress = [userHomeAddress, userHomePostcode, userHomeCity]
+            .filter(Boolean)
+            .join(', ');
+          setProfileAddress(fullAddress);
           if (userHomeLatitude && userHomeLongitude) {
             setProfileAddressCoords({
               lat: userHomeLatitude,
