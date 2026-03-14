@@ -62,7 +62,9 @@
       "Bash(python -m pip install Pillow --quiet)",
       "Bash(node -e \":*)",
       "Bash(npx --package=prisma@5 prisma migrate dev --name add-charter-accepted-at)",
-      "Bash(npx --package=prisma@5 prisma generate)"
+      "Bash(npx --package=prisma@5 prisma generate)",
+      "Bash(find /d/DEV/SITE_BDE -type f -name *.js -o -name *.jsx -o -name *.ts -o -name *.tsx -o -name *.vue -o -name *.json -o -name *.py)",
+      "Bash(grep -r \"TIMEZONE\\\\|timezone\\\\|UTC\\\\|Europe/Paris\" /d/DEV/SITE_BDE/backend/src --include=*.ts)"
     ],
     "deny": [],
     "ask": [

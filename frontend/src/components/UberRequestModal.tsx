@@ -4,7 +4,7 @@ import toast from 'react-hot-toast';
 import AddressInput from './AddressInput';
 import api from '../services/api';
 import { Event } from '../types';
-import { formatParisDate } from '../utils/dateUtils';
+import { formatParisDate, parisLocalToUTC } from '../utils/dateUtils';
 
 interface UberRequestModalProps {
   isOpen: boolean;
@@ -67,6 +67,17 @@ export default function UberRequestModal({
       if (needsGender || needsAddress) {
         setShowProfileCompletion(true);
         if (userGender) setProfileGender(userGender);
+        if (userHomeAddress) {
+          setProfileAddress(userHomeAddress);
+          if (userHomeLatitude && userHomeLongitude) {
+            setProfileAddressCoords({
+              lat: userHomeLatitude,
+              lng: userHomeLongitude,
+              city: userHomeCity || '',
+              postcode: userHomePostcode || ''
+            });
+          }
+        }
       } else {
         setShowProfileCompletion(false);
       }
@@ -234,7 +245,7 @@ export default function UberRequestModal({
         destinationPostcode,
         destinationLat,
         destinationLng,
-        maxDepartureTime: departNow ? new Date().toISOString() : maxDepartureTime,
+        maxDepartureTime: departNow ? new Date().toISOString() : parisLocalToUTC(maxDepartureTime),
         femaleOnly,
         departNow
       });
@@ -384,6 +395,7 @@ export default function UberRequestModal({
                 }}
                 placeholder="Ex: 3 Rue de la Digue Verte, 59000 Lille"
                 required
+                initiallyValidated={!!profileAddressCoords}
               />
               <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
                 Cette adresse sera proposée par défaut pour vos trajets de retour.
