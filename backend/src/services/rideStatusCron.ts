@@ -1,6 +1,7 @@
 import cron from 'node-cron';
 import { prisma } from '../utils/prisma';
 import { runPeriodicMatching } from './uberMatchingService';
+import { notifyRideUpdated } from './rideSocketService';
 
 /**
  * Cron job qui vérifie toutes les minutes les trajets dont l'heure de départ est passée de plus de 30 minutes
@@ -68,6 +69,10 @@ export function startRideStatusCron() {
             console.log(`✅ [CRON] Ride ${rideId} updated to COMPLETED`);
           }
         }
+
+        // Notifier les utilisateurs concernés via socket
+        const affectedUserIds = [...new Set(expiredRequests.map(r => r.userId))];
+        notifyRideUpdated(affectedUserIds);
 
         console.log(`✅ [CRON] Successfully processed ${expiredRequests.length} expired requests`);
       }

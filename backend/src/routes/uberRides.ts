@@ -2,6 +2,7 @@ import express from 'express';
 import { body, validationResult } from 'express-validator';
 import { prisma } from '../utils/prisma';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
+import { notifyRideUpdated } from '../services/rideSocketService';
 
 const router = express.Router();
 
@@ -459,8 +460,12 @@ router.delete('/request/:requestId', authenticateToken, async (req: AuthRequest,
       });
     }
 
-    // TODO: Notifier les autres passagers
-    // TODO: Recalculer l'itinéraire si nécessaire
+    // Notifier les autres passagers via socket
+    if (updatedRide) {
+      const memberUserIds = updatedRide.requests.map(r => r.userId);
+      memberUserIds.push(userId); // inclure l'utilisateur qui annule
+      notifyRideUpdated(memberUserIds);
+    }
 
     res.json({ message: 'Demande annulée avec succès' });
   } catch (error) {
@@ -697,6 +702,21 @@ router.post('/:requestId/cancel', authenticateToken, async (req: AuthRequest, re
           data: { status: 'PENDING' }
         });
       }
+    }
+
+    // Notifier l'utilisateur via socket
+    notifyRideUpdated([userId]);
+
+    // Si dans un ride, notifier aussi les autres membres
+    if (request.rideId) {
+      const remainingMembers = await prisma.uberRideRequest.findMany({
+        where: {
+          rideId: request.rideId,
+          status: { in: ['PENDING', 'MATCHED', 'ACCEPTED'] }
+        },
+        select: { userId: true }
+      });
+      notifyRideUpdated(remainingMembers.map(m => m.userId));
     }
 
     res.json({ message: 'Demande annulée avec succès' });

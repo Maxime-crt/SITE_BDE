@@ -56,6 +56,30 @@ class SocketService {
     }
   }
 
+  joinUserNotifications(userId: string) {
+    if (this.socket) {
+      this.socket.emit('join-user-notifications', userId);
+    }
+  }
+
+  leaveUserNotifications(userId: string) {
+    if (this.socket) {
+      this.socket.emit('leave-user-notifications', userId);
+    }
+  }
+
+  onRideUpdated(callback: () => void) {
+    if (this.socket) {
+      this.socket.on('ride-updated', callback);
+    }
+  }
+
+  offRideUpdated(callback: () => void) {
+    if (this.socket) {
+      this.socket.off('ride-updated', callback);
+    }
+  }
+
   disconnect() {
     if (this.socket) {
       this.socket.disconnect();

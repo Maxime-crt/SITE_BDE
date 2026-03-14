@@ -3,6 +3,7 @@ import { areDestinationsClose } from './geocodingService';
 import { isDetourAcceptable, optimizeWaypoints } from './routingService';
 import { notifyUberMatch } from './notificationService';
 import { estimateUberPrice } from './uberPricingService';
+import { notifyRideUpdated } from './rideSocketService';
 
 interface MatchResult {
   matched: boolean;
@@ -192,6 +193,9 @@ export async function findMatches(requestId: string): Promise<MatchResult> {
         // Optimiser l'itinéraire
         await optimizeRideRoute(existingRide.id);
 
+        // Notifier tous les membres via socket
+        notifyRideUpdated(allMembers.map(m => m.userId));
+
         return {
           matched: true,
           rideId: existingRide.id,
@@ -231,6 +235,9 @@ export async function findMatches(requestId: string): Promise<MatchResult> {
 
       // Optimiser l'itinéraire
       await optimizeRideRoute(bestMatch.rideId);
+
+      // Notifier via socket
+      notifyRideUpdated([bestMatch.userId, request.userId]);
 
       return {
         matched: true,

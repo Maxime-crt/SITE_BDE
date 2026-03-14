@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { Car, Calendar, MapPin, Users, Clock, Check, X, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../services/api';
+import { socketService } from '../services/socket';
 import { Button } from '../components/ui/button';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { formatParisDate } from '../utils/dateUtils';
@@ -43,17 +44,31 @@ export default function MyRides() {
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [rideToCancel, setRideToCancel] = useState<string | null>(null);
 
+  const handleRideUpdated = useCallback(() => {
+    fetchRides(false);
+  }, []);
+
   useEffect(() => {
     fetchRides();
 
-    // Polling automatique toutes les 10 secondes pour actualiser les données
-    const intervalId = setInterval(() => {
-      fetchRides();
-    }, 10000); // 10 secondes
+    // Se connecter au socket et écouter les mises à jour en temps réel
+    const token = localStorage.getItem('token') || undefined;
+    const savedUser = localStorage.getItem('user');
+    const userId = savedUser ? JSON.parse(savedUser).id : null;
 
-    // Nettoyer l'intervalle quand le composant est démonté
-    return () => clearInterval(intervalId);
-  }, []);
+    socketService.init(token);
+    if (userId) {
+      socketService.joinUserNotifications(userId);
+    }
+    socketService.onRideUpdated(handleRideUpdated);
+
+    return () => {
+      socketService.offRideUpdated(handleRideUpdated);
+      if (userId) {
+        socketService.leaveUserNotifications(userId);
+      }
+    };
+  }, [handleRideUpdated]);
 
   const fetchRides = async (showLoading = true) => {
     console.log('🔵 [FRONTEND] fetchRides appelé');
