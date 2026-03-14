@@ -250,6 +250,8 @@ router.get('/my-rides', authenticateToken, async (req: AuthRequest, res: express
                 id: true,
                 name: true,
                 location: true,
+                latitude: true,
+                longitude: true,
                 startDate: true,
                 endDate: true
               }

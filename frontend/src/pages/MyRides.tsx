@@ -7,6 +7,7 @@ import { socketService } from '../services/socket';
 import { Button } from '../components/ui/button';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { formatParisDate } from '../utils/dateUtils';
+import RideMap from '../components/RideMap';
 
 interface UberRide {
   id: string;
@@ -27,6 +28,8 @@ interface UberRide {
     id: string;
     name: string;
     location: string;
+    latitude: number | null;
+    longitude: number | null;
     startDate: string;
     endDate: string;
   };
@@ -312,6 +315,19 @@ export default function MyRides() {
                       </div>
                     )}
                   </div>
+
+                  {/* Mini carte du trajet (trajets actifs uniquement) */}
+                  {['PENDING', 'MATCHED', 'ACCEPTED'].includes(ride.status) && ride.event?.latitude && ride.event?.longitude && (
+                    <div className="mb-4">
+                      <RideMap
+                        departureAddress={ride.event.location}
+                        departureLat={ride.event.latitude}
+                        departureLng={ride.event.longitude}
+                        destinations={[{ lat: ride.homeLatitude, lng: ride.homeLongitude, address: ride.homeAddress }]}
+                        height="250px"
+                      />
+                    </div>
+                  )}
 
                   {/* Info groupe */}
                   {ride.group && (

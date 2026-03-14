@@ -6,7 +6,7 @@ import toast from 'react-hot-toast';
 import { useState } from 'react';
 import { handleApiErrorWithLog } from '../utils/errorHandler';
 import { formatParisDate } from '../utils/dateUtils';
-import { Calendar, MapPin, Star, ArrowLeft, Edit, Trash2, ExternalLink, Car, Users } from 'lucide-react';
+import { Calendar, MapPin, Star, ArrowLeft, Edit, Trash2, ExternalLink, Car, Users, Shield } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import ConfirmDialog from '../components/ConfirmDialog';
@@ -136,13 +136,13 @@ export default function EventDetail({ user }: EventDetailProps) {
   const isEventFinished = new Date() > new Date(event.endDate);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="bg-background">
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
           {/* Header */}
           <div className="mb-8">
             <Link
-              to="/"
+              to="/#calendar"
               className="inline-flex items-center text-blue-600 hover:text-blue-500 mb-4"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -151,7 +151,9 @@ export default function EventDetail({ user }: EventDetailProps) {
 
             {/* Actions Admin */}
             {user?.isAdmin && (
-              <div className="flex gap-2 mb-4">
+              <div className="flex items-center gap-3 mb-4 px-4 py-3 rounded-lg border border-yellow-500/30 bg-yellow-500/5">
+                <Shield className="w-5 h-5 text-yellow-500 flex-shrink-0" />
+                <span className="text-sm font-medium text-yellow-500 mr-auto">Admin</span>
                 <Button
                   onClick={() => navigate(`/events/${event.id}/edit`)}
                   variant="outline"

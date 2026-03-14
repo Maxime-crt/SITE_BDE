@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { MapPin, Calendar, Users, ArrowRight, Clock, Loader2, Edit, Trash2, Star, ChevronDown, CalendarDays, LayoutGrid } from 'lucide-react';
+import { MapPin, Calendar, Users, ArrowRight, Clock, Loader2, Edit, Trash2, Star, ChevronDown, CalendarDays, LayoutGrid, Shield } from 'lucide-react';
 import { eventsApi, eventRatingsApi } from '../services/api';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
@@ -352,7 +352,7 @@ export default function Dashboard() {
             {user?.isAdmin && (
               <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg">
                 <Link to="/create-event" className="flex items-center">
-                  <Calendar className="w-4 h-4 mr-2" />
+                  <Shield className="w-4 h-4 mr-2" />
                   Créer un événement
                 </Link>
               </Button>

@@ -40,20 +40,30 @@ interface RideMember {
   };
 }
 
+interface SimpleDestination {
+  lat: number;
+  lng: number;
+  address?: string;
+}
+
 interface RideMapProps {
   departureAddress: string;
   departureLat: number;
   departureLng: number;
-  members: RideMember[];
+  members?: RideMember[];
+  destinations?: SimpleDestination[];
   routePolyline?: string | null;
+  height?: string;
 }
 
 export default function RideMap({
   departureAddress,
   departureLat,
   departureLng,
-  members,
-  routePolyline
+  members = [],
+  destinations,
+  routePolyline,
+  height = '400px'
 }: RideMapProps) {
   // Icône personnalisée pour le point de départ
   const startIcon = new L.Icon({
@@ -116,19 +126,26 @@ export default function RideMap({
     return orderedMembers;
   };
 
-  const orderedMembers = getOptimalRoute();
+  // Mode simplifié (destinations) ou mode complet (members)
+  const useSimpleMode = destinations && destinations.length > 0;
+
+  const orderedMembers = useSimpleMode ? [] : getOptimalRoute();
 
   // Créer le chemin complet : départ -> arrêt 1 -> arrêt 2 -> ... -> arrêt N
-  const routePath: [number, number][] = [
-    [departureLat, departureLng],
-    ...orderedMembers.map(m => [m.destinationLat, m.destinationLng] as [number, number])
-  ];
+  const routePath: [number, number][] = useSimpleMode
+    ? [
+        [departureLat, departureLng],
+        ...destinations.map(d => [d.lat, d.lng] as [number, number])
+      ]
+    : [
+        [departureLat, departureLng],
+        ...orderedMembers.map(m => [m.destinationLat, m.destinationLng] as [number, number])
+      ];
 
   // Calculer le centre et le zoom pour afficher tous les points
-  const allPoints = [
-    [departureLat, departureLng],
-    ...members.map(m => [m.destinationLat, m.destinationLng])
-  ];
+  const allPoints = useSimpleMode
+    ? [[departureLat, departureLng], ...destinations.map(d => [d.lat, d.lng])]
+    : [[departureLat, departureLng], ...members.map(m => [m.destinationLat, m.destinationLng])];
 
   const centerLat = allPoints.reduce((sum, point) => sum + (point[0] as number), 0) / allPoints.length;
   const centerLng = allPoints.reduce((sum, point) => sum + (point[1] as number), 0) / allPoints.length;
@@ -164,7 +181,7 @@ export default function RideMap({
   const optimalZoom = getOptimalZoom();
 
   return (
-    <div className="w-full h-[400px] rounded-lg overflow-hidden border border-border">
+    <div className="w-full rounded-lg overflow-hidden border border-border" style={{ height }}>
       <MapContainer
         center={[centerLat, centerLng]}
         zoom={optimalZoom}
@@ -186,28 +203,45 @@ export default function RideMap({
           </Popup>
         </Marker>
 
-        {/* Marqueurs de destination pour chaque membre avec numéro d'ordre */}
-        {orderedMembers.map((member, index) => (
-          <Marker
-            key={member.userId}
-            position={[member.destinationLat, member.destinationLng]}
-            icon={destinationIcon}
-          >
-            <Popup>
-              <div className="text-sm">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-green-600 text-white text-xs font-bold">
-                    {index + 1}
-                  </span>
-                  <strong className="font-semibold">
-                    {member.user.firstName} {member.user.lastName}
-                  </strong>
-                </div>
-                <p className="text-xs text-muted-foreground">{member.destinationAddress}</p>
-              </div>
-            </Popup>
-          </Marker>
-        ))}
+        {/* Marqueurs de destination */}
+        {useSimpleMode
+          ? destinations.map((dest, index) => (
+              <Marker
+                key={index}
+                position={[dest.lat, dest.lng]}
+                icon={destinationIcon}
+              >
+                <Popup>
+                  <div className="text-sm">
+                    <strong className="font-semibold">Destination</strong>
+                    {dest.address && (
+                      <p className="text-xs text-muted-foreground mt-1">{dest.address}</p>
+                    )}
+                  </div>
+                </Popup>
+              </Marker>
+            ))
+          : orderedMembers.map((member, index) => (
+              <Marker
+                key={member.userId}
+                position={[member.destinationLat, member.destinationLng]}
+                icon={destinationIcon}
+              >
+                <Popup>
+                  <div className="text-sm">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-green-600 text-white text-xs font-bold">
+                        {index + 1}
+                      </span>
+                      <strong className="font-semibold">
+                        {member.user.firstName} {member.user.lastName}
+                      </strong>
+                    </div>
+                    <p className="text-xs text-muted-foreground">{member.destinationAddress}</p>
+                  </div>
+                </Popup>
+              </Marker>
+            ))}
 
         {/* Chemin optimal passant par tous les points */}
         {routePath.length > 1 && (

@@ -64,7 +64,10 @@
       "Bash(npx --package=prisma@5 prisma migrate dev --name add-charter-accepted-at)",
       "Bash(npx --package=prisma@5 prisma generate)",
       "Bash(find /d/DEV/SITE_BDE -type f -name *.js -o -name *.jsx -o -name *.ts -o -name *.tsx -o -name *.vue -o -name *.json -o -name *.py)",
-      "Bash(grep -r \"TIMEZONE\\\\|timezone\\\\|UTC\\\\|Europe/Paris\" /d/DEV/SITE_BDE/backend/src --include=*.ts)"
+      "Bash(grep -r \"TIMEZONE\\\\|timezone\\\\|UTC\\\\|Europe/Paris\" /d/DEV/SITE_BDE/backend/src --include=*.ts)",
+      "Bash(find d:/DEV/SITE_BDE -type f \\\\\\(-name *map* -o -name *Map* \\\\\\))",
+      "Bash(find d:/DEV/SITE_BDE -path */node_modules -prune -o -type f \\\\\\(-name *.ts -o -name *.js \\\\\\) -path */backend/* -print)",
+      "Bash(grep -r \"routePolyline\\\\|route.*polyline\" d:/DEV/SITE_BDE --include=*.ts --include=*.tsx --include=*.js --include=*.jsx)"
     ],
     "deny": [],
     "ask": [
