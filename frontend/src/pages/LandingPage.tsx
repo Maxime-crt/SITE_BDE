@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { MapPin, Users, ArrowRight, Car, Clock, ChevronLeft, ChevronRight, Euro, Shield, Plus, User, LogOut, MessageCircle, Menu, X } from 'lucide-react';
 import { eventsApi, authApi } from '../services/api';
@@ -34,6 +34,97 @@ const PORTRAIT_IMAGES = [
   'gallery/image7_ggdz6m.jpg',
   'gallery/image8_hmk3h1.jpg',
 ];
+
+// ── Drag-to-scroll + auto-scroll hook ───────────────────────
+const ALL_GALLERY = [...LANDSCAPE_IMAGES, ...PORTRAIT_IMAGES];
+
+function useDragScroll(speed: number, direction: 'left' | 'right', onTap?: (target: HTMLElement) => void) {
+  const ref = useRef<HTMLDivElement>(null);
+  const isDragging = useRef(false);
+  const startX = useRef(0);
+  const scrollStart = useRef(0);
+  const hasMoved = useRef(false);
+  const userInteracting = useRef(false);
+  const resumeTimer = useRef<ReturnType<typeof setTimeout>>();
+  const downTarget = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    let animId: number;
+    let accumulator = 0;
+    let lastTime = 0;
+    let initialized = false;
+
+    const step = (now: number) => {
+      if (!initialized) {
+        initialized = true;
+        lastTime = now;
+        const oneThird = el.scrollWidth / 3;
+        el.scrollLeft = direction === 'right'
+          ? oneThird + (oneThird - el.clientWidth)
+          : oneThird;
+        animId = requestAnimationFrame(step);
+        return;
+      }
+      const dt = now - lastTime;
+      lastTime = now;
+      if (!userInteracting.current) {
+        accumulator += speed * (dt / 1000);
+        const move = Math.floor(accumulator);
+        if (move >= 1) {
+          accumulator -= move;
+          el.scrollLeft += direction === 'left' ? move : -move;
+        }
+      }
+      const oneThird = el.scrollWidth / 3;
+      if (el.scrollLeft >= oneThird * 2) el.scrollLeft -= oneThird;
+      else if (el.scrollLeft <= 0) el.scrollLeft += oneThird;
+      animId = requestAnimationFrame(step);
+    };
+    animId = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(animId);
+  }, [speed, direction]);
+
+  const pauseAutoScroll = useCallback(() => {
+    userInteracting.current = true;
+    clearTimeout(resumeTimer.current);
+    resumeTimer.current = setTimeout(() => { userInteracting.current = false; }, 3000);
+  }, []);
+
+  const onPointerDown = useCallback((e: React.PointerEvent) => {
+    const el = ref.current;
+    if (!el) return;
+    el.setPointerCapture(e.pointerId);
+    isDragging.current = true;
+    hasMoved.current = false;
+    startX.current = e.clientX;
+    scrollStart.current = el.scrollLeft;
+    downTarget.current = e.target as HTMLElement;
+    pauseAutoScroll();
+  }, [pauseAutoScroll]);
+
+  const onPointerMove = useCallback((e: React.PointerEvent) => {
+    if (!isDragging.current || !ref.current) return;
+    const dx = e.clientX - startX.current;
+    if (Math.abs(dx) > 5) hasMoved.current = true;
+    ref.current.scrollLeft = scrollStart.current - dx;
+  }, []);
+
+  const onPointerUp = useCallback((e: React.PointerEvent) => {
+    const el = ref.current;
+    if (el) el.releasePointerCapture(e.pointerId);
+    isDragging.current = false;
+    if (!hasMoved.current && onTap && downTarget.current) {
+      // Find the closest clickable container with data-index
+      const item = (downTarget.current as HTMLElement).closest('[data-index]') as HTMLElement | null;
+      if (item) onTap(item);
+    }
+    downTarget.current = null;
+  }, [onTap]);
+
+  return { ref, onPointerDown, onPointerMove, onPointerUp };
+}
 
 // ── Navbar ──────────────────────────────────────────────────
 function LandingNav({ isAdmin }: { isAdmin: boolean }) {
@@ -148,6 +239,16 @@ export default function LandingPage() {
   const [events, setEvents] = useState<Event[]>([]);
   const [calendarDate, setCalendarDate] = useState(new Date());
   const [showCalendar, setShowCalendar] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+
+  const landscapeScroll = useDragScroll(30, 'left', (el) => {
+    const idx = el.getAttribute('data-index');
+    if (idx !== null) setLightboxIndex(parseInt(idx) % LANDSCAPE_IMAGES.length);
+  });
+  const portraitScroll = useDragScroll(25, 'right', (el) => {
+    const idx = el.getAttribute('data-index');
+    if (idx !== null) setLightboxIndex(LANDSCAPE_IMAGES.length + (parseInt(idx) % PORTRAIT_IMAGES.length));
+  });
 
   useEffect(() => {
     eventsApi.getAll().then((data: Event[]) => setEvents(data)).catch(() => {});
@@ -290,41 +391,101 @@ export default function LandingPage() {
       {/* ═══════════════════════════════════════════════════════════ */}
       {/*  PHOTO MARQUEE                                             */}
       {/* ═══════════════════════════════════════════════════════════ */}
-      <section className="relative py-8 overflow-hidden bg-[#060a18]">
-        {/* Row 1 — landscape, scroll left */}
-        <div className="landing-marquee mb-4">
-          <div className="landing-marquee-track landing-marquee-left">
-            {[...LANDSCAPE_IMAGES, ...LANDSCAPE_IMAGES].map((img, i) => (
-              <div key={i} className="flex-shrink-0 w-72 h-44 rounded-2xl overflow-hidden">
+      <section className="relative py-8 bg-[#060a18]">
+        <div className="relative max-w-7xl mx-auto overflow-hidden rounded-3xl">
+          {/* Row 1 — landscape, drag + auto-scroll left */}
+          <div
+            ref={landscapeScroll.ref}
+            className="flex gap-4 mb-4 overflow-x-hidden cursor-grab active:cursor-grabbing select-none"
+            onPointerDown={landscapeScroll.onPointerDown}
+            onPointerMove={landscapeScroll.onPointerMove}
+            onPointerUp={landscapeScroll.onPointerUp}
+            style={{ scrollbarWidth: 'none' }}
+          >
+            {[...LANDSCAPE_IMAGES, ...LANDSCAPE_IMAGES, ...LANDSCAPE_IMAGES].map((img, i) => (
+              <div
+                key={`land-${i}`}
+                data-index={i}
+                className="flex-shrink-0 w-72 h-44 rounded-2xl overflow-hidden group cursor-pointer"
+              >
                 <img
                   src={cloudUrl(img, 640)}
                   alt=""
-                  className="w-full h-full object-cover hover:scale-110 transition-transform duration-700"
-                  loading="lazy"
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 pointer-events-none"
+                  loading="eager"
+                  draggable={false}
                 />
               </div>
             ))}
           </div>
-        </div>
-        {/* Row 2 — portrait, scroll right */}
-        <div className="landing-marquee">
-          <div className="landing-marquee-track landing-marquee-right">
-            {[...PORTRAIT_IMAGES, ...PORTRAIT_IMAGES].map((img, i) => (
-              <div key={i} className="flex-shrink-0 w-36 h-48 rounded-2xl overflow-hidden">
+          {/* Row 2 — portrait, drag + auto-scroll right */}
+          <div
+            ref={portraitScroll.ref}
+            className="flex gap-4 overflow-x-hidden cursor-grab active:cursor-grabbing select-none"
+            onPointerDown={portraitScroll.onPointerDown}
+            onPointerMove={portraitScroll.onPointerMove}
+            onPointerUp={portraitScroll.onPointerUp}
+            style={{ scrollbarWidth: 'none' }}
+          >
+            {[...PORTRAIT_IMAGES, ...PORTRAIT_IMAGES, ...PORTRAIT_IMAGES].map((img, i) => (
+              <div
+                key={`port-${i}`}
+                data-index={i}
+                className="flex-shrink-0 w-36 h-48 rounded-2xl overflow-hidden group cursor-pointer"
+              >
                 <img
                   src={cloudUrl(img, 400)}
                   alt=""
-                  className="w-full h-full object-cover hover:scale-110 transition-transform duration-700"
-                  loading="lazy"
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 pointer-events-none"
+                  loading="eager"
+                  draggable={false}
                 />
               </div>
             ))}
           </div>
+          {/* Edge fades */}
+          <div className="absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-[#060a18] to-transparent pointer-events-none z-10" />
+          <div className="absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-[#060a18] to-transparent pointer-events-none z-10" />
         </div>
-        {/* Edge fades */}
-        <div className="absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-[#060a18] to-transparent pointer-events-none z-10" />
-        <div className="absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-[#060a18] to-transparent pointer-events-none z-10" />
       </section>
+
+      {/* ═══════════════════════════════════════════════════════════ */}
+      {/*  LIGHTBOX                                                  */}
+      {/* ═══════════════════════════════════════════════════════════ */}
+      {lightboxIndex !== null && (
+        <div
+          className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4"
+          onClick={() => setLightboxIndex(null)}
+        >
+          <button
+            onClick={() => setLightboxIndex(null)}
+            className="absolute top-4 right-4 text-white/80 hover:text-white z-50 p-2"
+          >
+            <X className="w-8 h-8" />
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); setLightboxIndex((prev: number | null) => prev !== null ? (prev - 1 + ALL_GALLERY.length) % ALL_GALLERY.length : null); }}
+            className="absolute left-4 text-white/80 hover:text-white z-50 p-2"
+          >
+            <ChevronLeft className="w-10 h-10" />
+          </button>
+          <img
+            src={cloudUrl(ALL_GALLERY[lightboxIndex], 1280)}
+            alt=""
+            className="max-h-[85vh] max-w-[90vw] object-contain rounded-lg shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          />
+          <button
+            onClick={(e) => { e.stopPropagation(); setLightboxIndex((prev: number | null) => prev !== null ? (prev + 1) % ALL_GALLERY.length : null); }}
+            className="absolute right-4 text-white/80 hover:text-white z-50 p-2"
+          >
+            <ChevronRight className="w-10 h-10" />
+          </button>
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/70 text-sm">
+            {lightboxIndex + 1} / {ALL_GALLERY.length}
+          </div>
+        </div>
+      )}
 
       {/* ═══════════════════════════════════════════════════════════ */}
       {/*  EVENTS SECTION                                            */}
