@@ -67,7 +67,7 @@ router.post('/', authenticateToken, requireAdmin, uploadImage, [
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { name, description, location, type, customType, startDate, endDate, publishedAt, capacity } = req.body;
+    const { name, description, location, type, customType, startDate, endDate, publishedAt, capacity, association } = req.body;
 
     // Upload image si présente
     let imageUrl: string | null = null;
@@ -102,6 +102,7 @@ router.post('/', authenticateToken, requireAdmin, uploadImage, [
         publishedAt: publishedAt ? new Date(publishedAt) : null,
         capacity: parseInt(capacity),
         imageUrl,
+        association: association || null,
         latitude,
         longitude
       }
@@ -186,7 +187,7 @@ router.put('/:id', authenticateToken, requireAdmin, uploadImage, [
     }
 
     const { id } = req.params;
-    const { name, description, location, type, customType, startDate, endDate, publishedAt, capacity, removeImage } = req.body;
+    const { name, description, location, type, customType, startDate, endDate, publishedAt, capacity, removeImage, association } = req.body;
 
     // Vérifier que l'événement existe
     const existingEvent = await prisma.event.findUnique({ where: { id } });
@@ -248,6 +249,7 @@ router.put('/:id', authenticateToken, requireAdmin, uploadImage, [
         publishedAt: newPublishedAt,
         capacity: capacity !== undefined ? parseInt(capacity) : existingEvent.capacity,
         imageUrl,
+        association: association !== undefined ? (association || null) : existingEvent.association,
         latitude,
         longitude
       }

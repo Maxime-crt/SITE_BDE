@@ -68,6 +68,7 @@ model Event {
   rating      Float?
   ratingCount Int      @default(0)
   imageUrl    String?  // Cloudinary public ID
+  association String?  // Association organisatrice (Fuelers, Art Breakers, etc.)
 
   // Coordonnées GPS pour Uber Sharing
   latitude    Float?

@@ -40,6 +40,7 @@ export default function CreateEvent() {
     startDate: '',
     endDate: '',
     capacity: '100',
+    association: 'Fuelers',
     publishMode: 'now', // 'now' | 'schedule' | 'draft'
     publishedAt: ''
   });
@@ -68,6 +69,7 @@ export default function CreateEvent() {
             startDate: utcToParisLocal(event.startDate),
             endDate: utcToParisLocal(event.endDate),
             capacity: event.capacity.toString(),
+            association: event.association || 'Fuelers',
             publishMode,
             publishedAt: event.publishedAt ? utcToParisLocal(event.publishedAt) : ''
           });
@@ -220,6 +222,7 @@ export default function CreateEvent() {
         startDate: parisLocalToUTC(formData.startDate),
         endDate: parisLocalToUTC(formData.endDate),
         capacity: parseInt(formData.capacity),
+        association: formData.association,
         publishedAt
       };
 
@@ -463,6 +466,27 @@ export default function CreateEvent() {
                     />
                   </div>
                 )}
+
+                <div className="space-y-2">
+                  <label htmlFor="association" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                    Association organisatrice *
+                  </label>
+                  <select
+                    id="association"
+                    name="association"
+                    value={formData.association}
+                    onChange={handleChange}
+                    required
+                    className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <option value="Fuelers">Fuelers</option>
+                    <option value="Art Breakers">Art Breakers</option>
+                    <option value="Scare'pions">Scare'pions</option>
+                    <option value="Gold'n'Grizz">Gold'n'Grizz</option>
+                    <option value="Spotl'eye't">Spotl'eye't</option>
+                    <option value="Cash in S'eye'ght">Cash in S'eye'ght</option>
+                  </select>
+                </div>
 
                 <div className="space-y-2">
                   <label htmlFor="capacity" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">

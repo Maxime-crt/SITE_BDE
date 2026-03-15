@@ -29,6 +29,7 @@ export interface Event {
   ratingCount: number;
   publishedAt?: string;
   imageUrl?: string;
+  association?: string;
   latitude?: number;
   longitude?: number;
   ratings?: EventRating[];

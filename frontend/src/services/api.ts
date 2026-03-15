@@ -126,6 +126,7 @@ export const eventsApi = {
     startDate: string;
     endDate: string;
     capacity: number;
+    association?: string;
     publishedAt?: string;
   }, image?: File): Promise<Event> => {
     const formData = new FormData();
@@ -148,6 +149,7 @@ export const eventsApi = {
     startDate: string;
     endDate: string;
     capacity?: number;
+    association?: string;
     publishedAt?: string | null;
   }, image?: File, removeImage?: boolean): Promise<Event> => {
     const formData = new FormData();

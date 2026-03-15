@@ -7,8 +7,9 @@ import logoFLR from '../assets/Logo_FLR.png';
 
 // ── Cloudinary ──────────────────────────────────────────────
 const CLOUD = 'dk93ledz2';
-function cloudUrl(publicId: string, w: number) {
-  return `https://res.cloudinary.com/${CLOUD}/image/upload/f_auto,q_auto,w_${w}/v2/${publicId}`;
+function cloudUrl(publicId: string, w: number, format?: string) {
+  const f = format || 'auto';
+  return `https://res.cloudinary.com/${CLOUD}/image/upload/f_${f},q_auto,w_${w}/v2/${publicId}`;
 }
 
 // ── Gallery images ──────────────────────────────────────────
@@ -34,6 +35,16 @@ const PORTRAIT_IMAGES = [
   'gallery/image7_ggdz6m.jpg',
   'gallery/image8_hmk3h1.jpg',
 ];
+
+// ── Association logos ────────────────────────────────────────
+const ASSO_LOGOS: Record<string, string> = {
+  'Fuelers': 'Logo-Assos/Logo_FLR_nuoqmd.jpg',
+  'Art Breakers': 'Logo-Assos/LAB_n9b5sr.jpg',
+  "Scare'pions": 'Logo-Assos/SP_nwoqtw.jpg',
+  "Gold'n'Grizz": 'Logo-Assos/GNG_ugio23.jpg',
+  "Spotl'eye't": 'Logo-Assos/SET_sfembi.jpg',
+  "Cash in S'eye'ght": 'Logo-Assos/CIS_frfhly.jpg',
+};
 
 // ── Drag-to-scroll + auto-scroll hook ───────────────────────
 const ALL_GALLERY = [...LANDSCAPE_IMAGES, ...PORTRAIT_IMAGES];
@@ -275,18 +286,6 @@ export default function LandingPage() {
     return days;
   }, [calendarDate]);
 
-  const eventDateCounts = useMemo(() => {
-    const counts = new Map<string, number>();
-    events.forEach(e => {
-      const d = new Date(e.startDate);
-      const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
-      counts.set(key, (counts.get(key) || 0) + 1);
-    });
-    return counts;
-  }, [events]);
-
-  const eventCountForDay = (day: number) =>
-    eventDateCounts.get(`${calendarDate.getFullYear()}-${calendarDate.getMonth()}-${day}`) || 0;
 
   const upcomingEvents = events
     .filter(e => new Date(e.startDate) >= new Date())
@@ -681,29 +680,54 @@ export default function LandingPage() {
                         new Date().getDate() === day &&
                         new Date().getMonth() === calendarDate.getMonth() &&
                         new Date().getFullYear() === calendarDate.getFullYear();
-                      const evtCount = day !== null ? eventCountForDay(day) : 0;
+                      const dayEvents = day !== null
+                        ? events
+                            .filter(e => {
+                              const d = new Date(e.startDate);
+                              return d.getDate() === day && d.getMonth() === calendarDate.getMonth() && d.getFullYear() === calendarDate.getFullYear();
+                            })
+                            .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
+                        : [];
+                      const evtCount = dayEvents.length;
+                      const dayAssos = dayEvents
+                        .map(e => e.association || 'Fuelers')
+                        .filter((a) => !!ASSO_LOGOS[a])
+                        .filter((a, idx, arr) => arr.indexOf(a) === idx)
+                        .slice(0, 2);
 
                       return (
                         <div
                           key={i}
-                          className={`relative aspect-square flex items-center justify-center rounded-xl text-sm font-medium transition-all duration-200 ${
+                          onClick={() => {
+                            if (dayEvents.length > 0) {
+                              document.getElementById(`cal-event-${dayEvents[0].id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            }
+                          }}
+                          className={`relative aspect-square flex items-center justify-center rounded-xl text-sm font-medium transition-all duration-200 overflow-hidden ${
                             day === null
                               ? ''
                               : evtCount > 0
-                                ? 'bg-gradient-to-br from-blue-500/30 to-indigo-500/20 text-blue-200 border border-blue-400/20 hover:scale-105 cursor-pointer shadow-lg shadow-blue-500/10'
+                                ? 'text-white border border-blue-400/20 hover:scale-105 cursor-pointer shadow-lg shadow-blue-500/10'
                                 : isToday
                                   ? 'bg-white/10 text-white border border-white/20'
                                   : 'text-white/50 hover:bg-white/5 hover:text-white/60'
                           }`}
                         >
-                          {day}
-                          {evtCount > 0 && (
-                            <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-0.5">
-                              {Array.from({ length: Math.min(evtCount, 3) }).map((_, di) => (
-                                <div key={di} className="w-1 h-1 bg-blue-400 rounded-full" />
-                              ))}
-                            </div>
+                          {evtCount > 0 && dayAssos.length > 0 && (
+                            dayAssos.length === 1 ? (
+                              <img src={cloudUrl(ASSO_LOGOS[dayAssos[0]], 96, 'png')} alt="" className="absolute inset-0 w-full h-full object-cover opacity-30" />
+                            ) : (
+                              <>
+                                <div className="absolute inset-0 overflow-hidden" style={{ clipPath: 'polygon(0 0, 100% 0, 0 100%)' }}>
+                                  <img src={cloudUrl(ASSO_LOGOS[dayAssos[0]], 96, 'png')} alt="" className="w-full h-full object-cover opacity-30" />
+                                </div>
+                                <div className="absolute inset-0 overflow-hidden" style={{ clipPath: 'polygon(100% 0, 100% 100%, 0 100%)' }}>
+                                  <img src={cloudUrl(ASSO_LOGOS[dayAssos[1]], 96, 'png')} alt="" className="w-full h-full object-cover opacity-30" />
+                                </div>
+                              </>
+                            )
                           )}
+                          <span className="relative z-10 drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">{day}</span>
                         </div>
                       );
                     })}
@@ -724,6 +748,7 @@ export default function LandingPage() {
                       <Link
                         to={`/events/${event.id}`}
                         key={event.id}
+                        id={`cal-event-${event.id}`}
                         className="group flex items-center gap-4 p-4 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-blue-400/20 hover:bg-blue-500/5 transition-all"
                       >
                         <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-500/20 to-indigo-500/10 border border-blue-400/20 flex flex-col items-center justify-center flex-shrink-0">
@@ -734,6 +759,13 @@ export default function LandingPage() {
                             {new Date(event.startDate).toLocaleDateString('fr-FR', { month: 'short' })}
                           </span>
                         </div>
+                        {event.association && ASSO_LOGOS[event.association] && (
+                          <img
+                            src={cloudUrl(ASSO_LOGOS[event.association], 48, 'png')}
+                            alt={event.association}
+                            className="w-14 h-14 rounded-full object-cover flex-shrink-0 ring-1 ring-white/10"
+                          />
+                        )}
                         <div className="flex-1 min-w-0">
                           <h5 className="font-syne font-bold text-white group-hover:text-blue-200 transition-colors truncate">
                             {event.name}

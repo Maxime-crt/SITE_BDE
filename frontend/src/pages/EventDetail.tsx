@@ -13,6 +13,15 @@ import ConfirmDialog from '../components/ConfirmDialog';
 import UberRequestModal from '../components/UberRequestModal';
 import api from '../services/api';
 
+const ASSO_LOGOS: Record<string, string> = {
+  'Fuelers': 'Logo-Assos/Logo_FLR_nuoqmd.jpg',
+  'Art Breakers': 'Logo-Assos/LAB_n9b5sr.jpg',
+  "Scare'pions": 'Logo-Assos/SP_nwoqtw.jpg',
+  "Gold'n'Grizz": 'Logo-Assos/GNG_ugio23.jpg',
+  "Spotl'eye't": 'Logo-Assos/SET_sfembi.jpg',
+  "Cash in S'eye'ght": 'Logo-Assos/CIS_frfhly.jpg',
+};
+
 interface EventDetailProps {
   user: User | null;
 }
@@ -141,13 +150,18 @@ export default function EventDetail({ user }: EventDetailProps) {
         <div className="max-w-4xl mx-auto">
           {/* Header */}
           <div className="mb-8">
-            <Link
-              to="/#calendar"
+            <button
+              onClick={() => {
+                navigate('/');
+                setTimeout(() => {
+                  document.getElementById('events')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 100);
+              }}
               className="inline-flex items-center text-blue-600 hover:text-blue-500 mb-4"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Retour aux événements
-            </Link>
+            </button>
 
             {/* Actions Admin */}
             {user?.isAdmin && (
@@ -193,8 +207,20 @@ export default function EventDetail({ user }: EventDetailProps) {
             <CardHeader>
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <div className="inline-block px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium mb-3">
-                    {event.type === 'Autre' ? event.customType : event.type}
+                  <div className="flex items-center gap-3 flex-wrap mb-3">
+                    <div className="inline-block px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium">
+                      {event.type === 'Autre' ? event.customType : event.type}
+                    </div>
+                    {(event.association || 'Fuelers') && ASSO_LOGOS[event.association || 'Fuelers'] && (
+                      <div className="flex items-center gap-2 px-3 py-1 bg-muted rounded-full">
+                        <img
+                          src={`https://res.cloudinary.com/dk93ledz2/image/upload/f_png,q_auto,w_32/${ASSO_LOGOS[event.association || 'Fuelers']}`}
+                          alt={event.association || 'Fuelers'}
+                          className="w-5 h-5 rounded-full object-cover"
+                        />
+                        <span className="text-sm font-medium">{event.association || 'Fuelers'}</span>
+                      </div>
+                    )}
                   </div>
                   <CardTitle className="text-3xl mb-4">{event.name}</CardTitle>
                   {event.description && (
