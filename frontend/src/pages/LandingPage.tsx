@@ -161,7 +161,7 @@ function LandingNav({ isAdmin }: { isAdmin: boolean }) {
         {/* Desktop links */}
         <div className="hidden md:flex items-center gap-1">
           <button onClick={() => document.getElementById('events')?.scrollIntoView({ behavior: 'smooth' })} className="px-4 py-2 text-base text-white/50 hover:text-white font-medium rounded-xl hover:bg-white/5 transition-all">
-            Evenements
+            Événements
           </button>
           <Link to="/my-rides" className="px-4 py-2 text-base text-white/50 hover:text-white font-medium rounded-xl hover:bg-white/5 transition-all flex items-center gap-1.5">
             <Car className="w-4 h-4" />
@@ -209,7 +209,7 @@ function LandingNav({ isAdmin }: { isAdmin: boolean }) {
       {mobileOpen && (
         <div className="md:hidden bg-[#0a1128]/95 backdrop-blur-xl border-t border-white/5 px-6 py-4 space-y-1">
           <button onClick={() => { setMobileOpen(false); document.getElementById('events')?.scrollIntoView({ behavior: 'smooth' }); }} className="block w-full text-left px-4 py-3 text-sm text-white/60 hover:text-white rounded-xl hover:bg-white/5 transition-all">
-            Evenements
+            Événements
           </button>
           <Link to="/my-rides" onClick={() => setMobileOpen(false)} className="block px-4 py-3 text-sm text-white/60 hover:text-white rounded-xl hover:bg-white/5 transition-all">
             Mes trajets
@@ -356,8 +356,8 @@ export default function LandingPage() {
           </p>
 
           <p className="landing-fade-up landing-delay-3 text-base sm:text-lg text-white/70 max-w-lg mx-auto mb-12 leading-relaxed">
-            Evenements et retours partages entre etudiants.
-            Trouve des gens avec qui rentrer, partage les frais, profite a fond.
+            Événements et retours partagés entre étudiants.
+            Trouve des gens avec qui rentrer, partage les frais, profite à fond.
           </p>
 
           <div className="landing-fade-up landing-delay-4 flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -365,7 +365,7 @@ export default function LandingPage() {
               onClick={() => document.getElementById('events')?.scrollIntoView({ behavior: 'smooth' })}
               className="group relative inline-flex items-center gap-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-syne font-bold text-base sm:text-lg px-8 py-4 rounded-full hover:scale-105 transition-all duration-300 shadow-xl shadow-blue-600/25"
             >
-              Voir les evenements
+              Voir les événements
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </button>
             {isAdmin && (
@@ -374,7 +374,7 @@ export default function LandingPage() {
                 className="inline-flex items-center gap-2 text-white/60 hover:text-blue-300 font-medium text-sm sm:text-base px-6 py-4 rounded-full border border-white/10 hover:border-blue-400/30 transition-all duration-300"
               >
                 <Plus className="w-4 h-4" />
-                Creer un evenement
+                Creer un événement
               </Link>
             )}
           </div>
@@ -500,7 +500,7 @@ export default function LandingPage() {
                 Prochainement
               </p>
               <h2 className="font-syne font-extrabold text-4xl sm:text-5xl md:text-7xl tracking-tight text-white">
-                Les soirees
+                Les soirées
                 <br />
                 <span className="bg-gradient-to-r from-blue-400 via-indigo-400 to-blue-300 bg-clip-text text-transparent">
                   qui arrivent.
@@ -575,7 +575,7 @@ export default function LandingPage() {
                   </Link>
                 ) : (
                   <div className="md:col-span-7 rounded-3xl overflow-hidden bg-gradient-to-br from-blue-600/10 to-indigo-600/5 border border-dashed border-white/10 h-[380px] md:h-[480px] flex items-center justify-center">
-                    <p className="text-white/20 font-syne text-lg">Aucun evenement a venir</p>
+                    <p className="text-white/20 font-syne text-lg">Aucun événement à venir</p>
                   </div>
                 )}
 
@@ -620,7 +620,7 @@ export default function LandingPage() {
                   ))}
                   {upcomingEvents.length < 2 && (
                     <div className="flex-1 rounded-3xl bg-gradient-to-br from-white/5 to-white/[0.02] border border-dashed border-white/10 p-8 flex items-center justify-center min-h-[200px]">
-                      <p className="text-white/20 font-syne text-center">D'autres evenements arrivent bientot...</p>
+                      <p className="text-white/20 font-syne text-center">D'autres événements arrivent bientôt...</p>
                     </div>
                   )}
                 </div>
@@ -712,7 +712,7 @@ export default function LandingPage() {
 
                 <div className="mt-8 space-y-3">
                   <h4 className="font-syne font-bold text-lg text-white/60 mb-4">
-                    Evenements en {monthNames[calendarDate.getMonth()]}
+                    Événements en {monthNames[calendarDate.getMonth()]}
                   </h4>
                   {events
                     .filter(e => {
@@ -752,7 +752,7 @@ export default function LandingPage() {
                     const d = new Date(e.startDate);
                     return d.getMonth() === calendarDate.getMonth() && d.getFullYear() === calendarDate.getFullYear();
                   }).length === 0 && (
-                    <p className="text-white/20 text-center py-8 font-syne">Aucun evenement ce mois-ci</p>
+                    <p className="text-white/20 text-center py-8 font-syne">Aucun événement ce mois-ci</p>
                   )}
                 </div>
               </div>
@@ -779,11 +779,11 @@ export default function LandingPage() {
                 Rentre
                 <br />
                 <span className="bg-gradient-to-r from-blue-400 via-indigo-400 to-blue-300 bg-clip-text text-transparent">
-                  accompagne.
+                  accompagné.
                 </span>
               </h2>
               <p className="text-white/50 text-lg leading-relaxed mb-10 max-w-md">
-                Apres chaque soiree, trouve des gens qui rentrent dans la meme direction.
+                Après chaque soirée, trouve des gens qui rentrent dans la même direction.
                 Partagez un trajet, divisez les frais. C'est aussi simple que ca.
               </p>
 
@@ -799,29 +799,29 @@ export default function LandingPage() {
                   <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-400/20 flex items-center justify-center mb-3 mx-auto sm:mx-0">
                     <Shield className="w-6 h-6 text-indigo-400" />
                   </div>
-                  <h4 className="font-syne font-bold text-white text-base mb-1">Plus sur</h4>
-                  <p className="text-white/50 text-sm leading-relaxed">Entre etudiants verifies</p>
+                  <h4 className="font-syne font-bold text-white text-base mb-1">Plus sûr</h4>
+                  <p className="text-white/50 text-sm leading-relaxed">Entre étudiants vérifiés</p>
                 </div>
                 <div className="text-center sm:text-left">
                   <div className="w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-400/20 flex items-center justify-center mb-3 mx-auto sm:mx-0">
                     <Car className="w-6 h-6 text-blue-400" />
                   </div>
-                  <h4 className="font-syne font-bold text-white text-base mb-1">Depuis la soiree</h4>
-                  <p className="text-white/50 text-sm leading-relaxed">Demande un retour sur l'evenement</p>
+                  <h4 className="font-syne font-bold text-white text-base mb-1">Depuis la soirée</h4>
+                  <p className="text-white/50 text-sm leading-relaxed">Demande un retour depuis l'événement</p>
                 </div>
               </div>
             </div>
 
-            {/* Route illustration: 1 depart (soiree) → multiple drop-offs */}
+            {/* Route illustration: 1 départ (soirée) → multiple drop-offs */}
             <div className="relative">
               <div className="relative h-[400px] md:h-[480px] rounded-3xl overflow-hidden border border-white/5 bg-gradient-to-br from-[#0a1025] to-[#0a1128]">
                 {/* Grid background */}
-                <div className="absolute inset-0 opacity-[0.07]" style={{
+                <div className="absolute inset-0" style={{
                   backgroundImage: `
-                    linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
-                    linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)
+                    linear-gradient(rgba(100,150,255,0.12) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(100,150,255,0.12) 1px, transparent 1px)
                   `,
-                  backgroundSize: '40px 40px'
+                  backgroundSize: '28px 28px'
                 }} />
 
                 <svg className="absolute inset-0 w-full h-full" viewBox="0 0 500 480" fill="none">
@@ -832,7 +832,7 @@ export default function LandingPage() {
                     </linearGradient>
                   </defs>
 
-                  {/* Main route: soiree (top center) going south */}
+                  {/* Main route: soirée (top center) going south */}
                   <path
                     d="M250 60 C250 100, 240 140, 230 180 S210 240, 200 280 S180 340, 160 400"
                     stroke="url(#routeMain)" strokeWidth="3" strokeLinecap="round"
@@ -857,7 +857,7 @@ export default function LandingPage() {
                     strokeDasharray="5 5" opacity="0.6" className="landing-route-draw-delay3"
                   />
 
-                  {/* Start: soiree (blue) */}
+                  {/* Start: soirée (blue) */}
                   <circle cx="250" cy="60" r="10" fill="#3b82f6" className="landing-pulse-dot" />
                   <circle cx="250" cy="60" r="5" fill="white" />
 
@@ -880,20 +880,20 @@ export default function LandingPage() {
 
                 {/* Labels */}
                 <div className="absolute top-3 left-1/2 -translate-x-1/2 bg-blue-500/15 backdrop-blur-md border border-blue-400/20 rounded-2xl px-4 py-2">
-                  <p className="text-blue-300 text-xs font-bold font-syne text-center">La soiree 🎉</p>
+                  <p className="text-blue-300 text-xs font-bold font-syne text-center">La soirée 🎉</p>
                 </div>
 
-                {/* Passenger labels */}
-                <div className="absolute top-[40%] right-[18%] bg-green-500/10 backdrop-blur-sm border border-green-400/20 rounded-xl px-3 py-1.5">
-                  <p className="text-green-300 text-[10px] font-bold">Maxime depose</p>
+                {/* Passenger labels — positioned next to dots, not on top */}
+                <div className="absolute top-[41%] right-[15%] bg-green-500/10 backdrop-blur-sm border border-green-400/20 rounded-xl px-3 py-1.5">
+                  <p className="text-green-300 text-[10px] font-bold">Maxime déposé</p>
                 </div>
-                <div className="absolute top-[61%] left-[6%] bg-green-500/10 backdrop-blur-sm border border-green-400/20 rounded-xl px-3 py-1.5">
-                  <p className="text-green-300 text-[10px] font-bold">Lea depose</p>
+                <div className="absolute top-[62%] left-[4%] bg-green-500/10 backdrop-blur-sm border border-green-400/20 rounded-xl px-3 py-1.5">
+                  <p className="text-green-300 text-[10px] font-bold">Léa déposée</p>
                 </div>
-                <div className="absolute bottom-[16%] right-[18%] bg-green-500/10 backdrop-blur-sm border border-green-400/20 rounded-xl px-3 py-1.5">
-                  <p className="text-green-300 text-[10px] font-bold">Hugo depose</p>
+                <div className="absolute bottom-[18%] right-[16%] bg-green-500/10 backdrop-blur-sm border border-green-400/20 rounded-xl px-3 py-1.5">
+                  <p className="text-green-300 text-[10px] font-bold">Hugo déposé</p>
                 </div>
-                <div className="absolute bottom-[10%] left-[22%] bg-indigo-500/10 backdrop-blur-sm border border-indigo-400/20 rounded-xl px-3 py-1.5">
+                <div className="absolute bottom-[12%] left-[23%] bg-indigo-500/10 backdrop-blur-sm border border-indigo-400/20 rounded-xl px-3 py-1.5">
                   <p className="text-indigo-300 text-[10px] font-bold">Toi 🏠</p>
                 </div>
 
