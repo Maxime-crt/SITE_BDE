@@ -6,6 +6,8 @@ import { authenticateToken, AuthRequest } from '../middleware/auth';
 import { requireAdmin } from '../middleware/admin';
 import { sessionManager } from '../services/sessionManager';
 import { geocodeAddress } from '../services/geocodingService';
+import { uploadImage } from '../middleware/upload';
+import { uploadToCloudinary, deleteFromCloudinary } from '../services/cloudinaryService';
 
 const router = express.Router();
 
@@ -51,7 +53,7 @@ router.get('/', async (req: express.Request, res: express.Response) => {
 });
 
 // Créer un nouvel événement (admin seulement)
-router.post('/', authenticateToken, requireAdmin, [
+router.post('/', authenticateToken, requireAdmin, uploadImage, [
   body('name').trim().isLength({ min: 3 }).withMessage('Nom requis (min 3 caractères)'),
   body('location').trim().isLength({ min: 3 }).withMessage('Lieu requis'),
   body('type').trim().isLength({ min: 1 }).withMessage('Type requis'),
@@ -66,6 +68,12 @@ router.post('/', authenticateToken, requireAdmin, [
     }
 
     const { name, description, location, type, customType, startDate, endDate, publishedAt, capacity } = req.body;
+
+    // Upload image si présente
+    let imageUrl: string | null = null;
+    if (req.file) {
+      imageUrl = await uploadToCloudinary(req.file.buffer);
+    }
 
     // Géocoder l'adresse pour obtenir les coordonnées GPS
     let latitude: number | null = null;
@@ -93,6 +101,7 @@ router.post('/', authenticateToken, requireAdmin, [
         endDate: new Date(endDate),
         publishedAt: publishedAt ? new Date(publishedAt) : null,
         capacity: parseInt(capacity),
+        imageUrl,
         latitude,
         longitude
       }
@@ -163,7 +172,7 @@ router.get('/admin/members', authenticateToken, requireAdmin, async (req: AuthRe
 });
 
 // Admin: Modifier un événement
-router.put('/:id', authenticateToken, requireAdmin, [
+router.put('/:id', authenticateToken, requireAdmin, uploadImage, [
   body('name').trim().isLength({ min: 3 }).withMessage('Nom requis (min 3 caractères)'),
   body('location').trim().isLength({ min: 3 }).withMessage('Lieu requis'),
   body('type').trim().isLength({ min: 1 }).withMessage('Type requis'),
@@ -177,7 +186,7 @@ router.put('/:id', authenticateToken, requireAdmin, [
     }
 
     const { id } = req.params;
-    const { name, description, location, type, customType, startDate, endDate, publishedAt, capacity } = req.body;
+    const { name, description, location, type, customType, startDate, endDate, publishedAt, capacity, removeImage } = req.body;
 
     // Vérifier que l'événement existe
     const existingEvent = await prisma.event.findUnique({ where: { id } });
@@ -185,16 +194,29 @@ router.put('/:id', authenticateToken, requireAdmin, [
       return res.status(404).json({ error: 'Événement non trouvé' });
     }
 
+    // Gestion de l'image
+    let imageUrl = existingEvent.imageUrl;
+    if (req.file) {
+      // Nouvelle image uploadée → supprimer l'ancienne si elle existe
+      if (existingEvent.imageUrl) {
+        await deleteFromCloudinary(existingEvent.imageUrl);
+      }
+      imageUrl = await uploadToCloudinary(req.file.buffer);
+    } else if (removeImage === 'true') {
+      // Suppression explicite de l'image
+      if (existingEvent.imageUrl) {
+        await deleteFromCloudinary(existingEvent.imageUrl);
+      }
+      imageUrl = null;
+    }
+
     // Gestion de publishedAt
     let newPublishedAt;
-    if (publishedAt === null) {
-      // Explicitement null pour dépublier
+    if (publishedAt === null || publishedAt === 'null') {
       newPublishedAt = null;
     } else if (publishedAt) {
-      // Nouvelle date de publication
       newPublishedAt = new Date(publishedAt);
     } else {
-      // Garder la valeur actuelle si publishedAt n'est pas fourni
       newPublishedAt = existingEvent.publishedAt;
     }
 
@@ -225,6 +247,7 @@ router.put('/:id', authenticateToken, requireAdmin, [
         endDate: new Date(endDate),
         publishedAt: newPublishedAt,
         capacity: capacity !== undefined ? parseInt(capacity) : existingEvent.capacity,
+        imageUrl,
         latitude,
         longitude
       }
@@ -255,6 +278,11 @@ router.delete('/:id', authenticateToken, requireAdmin, async (req: AuthRequest, 
 
     if (!existingEvent) {
       return res.status(404).json({ error: 'Événement non trouvé' });
+    }
+
+    // Supprimer l'image Cloudinary si elle existe
+    if (existingEvent.imageUrl) {
+      await deleteFromCloudinary(existingEvent.imageUrl);
     }
 
     // Utiliser une transaction pour garantir la cohérence

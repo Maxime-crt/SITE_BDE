@@ -63,6 +63,220 @@
   }
 }
 
+/* ══════════════════════════════════════════════════════════════ */
+/*  LANDING PAGE STYLES                                          */
+/* ══════════════════════════════════════════════════════════════ */
+
+.font-syne {
+  font-family: 'Syne', sans-serif;
+}
+
+.font-dm-sans {
+  font-family: 'DM Sans', sans-serif;
+}
+
+/* Dark full-bleed background for landing — force Dark Reader to skip */
+.landing-page {
+  background: #060a18;
+  color-scheme: dark;
+}
+
+/* Animated gradient mesh — electric blue palette */
+.landing-gradient-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 50% at 25% 30%, rgba(59, 130, 246, 0.12) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 60% at 75% 20%, rgba(99, 102, 241, 0.10) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 50% at 50% 70%, rgba(37, 99, 235, 0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 40% at 80% 80%, rgba(79, 70, 229, 0.05) 0%, transparent 50%),
+    linear-gradient(180deg, #060a18 0%, #0a1025 50%, #060a18 100%);
+  animation: landing-mesh-shift 12s ease-in-out infinite alternate;
+}
+
+@keyframes landing-mesh-shift {
+  0% {
+    background-position: 0% 0%, 100% 0%, 50% 100%, 0% 0%;
+  }
+  100% {
+    background-position: 20% 10%, 80% 30%, 40% 80%, 0% 0%;
+  }
+}
+
+/* Film grain texture */
+.landing-grain {
+  position: absolute;
+  inset: 0;
+  opacity: 0.03;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 128px;
+}
+
+/* Floating geometric shapes */
+.landing-shape {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(80px);
+  animation: landing-float 20s ease-in-out infinite;
+}
+
+.landing-shape-1 {
+  width: 400px;
+  height: 400px;
+  top: 10%;
+  left: -5%;
+  background: rgba(59, 130, 246, 0.08);
+  animation-delay: 0s;
+}
+
+.landing-shape-2 {
+  width: 300px;
+  height: 300px;
+  top: 60%;
+  right: -5%;
+  background: rgba(99, 102, 241, 0.06);
+  animation-delay: -7s;
+}
+
+.landing-shape-3 {
+  width: 250px;
+  height: 250px;
+  bottom: 5%;
+  left: 30%;
+  background: rgba(37, 99, 235, 0.05);
+  animation-delay: -14s;
+}
+
+@keyframes landing-float {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(30px, -30px) scale(1.05); }
+  66% { transform: translate(-20px, 20px) scale(0.95); }
+}
+
+/* Fade-up entrance animation */
+.landing-fade-up {
+  opacity: 0;
+  transform: translateY(30px);
+  animation: landing-fade-in-up 0.8s ease-out forwards;
+}
+
+.landing-delay-1 { animation-delay: 0.15s; }
+.landing-delay-2 { animation-delay: 0.3s; }
+.landing-delay-3 { animation-delay: 0.45s; }
+.landing-delay-4 { animation-delay: 0.6s; }
+.landing-delay-5 { animation-delay: 0.9s; }
+
+@keyframes landing-fade-in-up {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Scroll indicator dot */
+.landing-scroll-dot {
+  animation: landing-scroll-bounce 2s ease-in-out infinite;
+}
+
+@keyframes landing-scroll-bounce {
+  0%, 100% { transform: translateY(0); opacity: 0.4; }
+  50% { transform: translateY(8px); opacity: 1; }
+}
+
+/* Route line draw animation */
+.landing-route-draw {
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+  animation: landing-draw-line 3s ease-out 1s forwards;
+}
+
+.landing-route-draw-delay1 {
+  stroke-dasharray: 500;
+  stroke-dashoffset: 500;
+  animation: landing-draw-line 1.5s ease-out 2.2s forwards;
+}
+
+.landing-route-draw-delay2 {
+  stroke-dasharray: 500;
+  stroke-dashoffset: 500;
+  animation: landing-draw-line 1.5s ease-out 2.8s forwards;
+}
+
+.landing-route-draw-delay3 {
+  stroke-dasharray: 500;
+  stroke-dashoffset: 500;
+  animation: landing-draw-line 1.5s ease-out 3.4s forwards;
+}
+
+@keyframes landing-draw-line {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Pulsing map dots */
+.landing-pulse-dot {
+  animation: landing-dot-pulse 2s ease-in-out infinite;
+}
+
+@keyframes landing-dot-pulse {
+  0%, 100% { opacity: 1; r: 8; }
+  50% { opacity: 0.6; r: 12; }
+}
+
+/* View transition — smooth calendar toggle */
+.landing-view-enter {
+  animation: landing-view-fade-in 0.4s ease-out;
+}
+
+@keyframes landing-view-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Photo marquee — seamless infinite scroll */
+.landing-marquee {
+  overflow: hidden;
+  width: 100%;
+  position: relative;
+}
+
+.landing-marquee-track {
+  display: flex;
+  gap: 1rem;
+  width: max-content;
+  will-change: transform;
+}
+
+.landing-marquee-left {
+  animation: landing-scroll-left 60s linear infinite;
+}
+
+.landing-marquee-right {
+  animation: landing-scroll-right 70s linear infinite;
+}
+
+@keyframes landing-scroll-left {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(calc(-50% - 0.5rem)); }
+}
+
+@keyframes landing-scroll-right {
+  0% { transform: translateX(calc(-50% - 0.5rem)); }
+  100% { transform: translateX(0); }
+}
+
+/* ══════════════════════════════════════════════════════════════ */
+
 @layer components {
   /* Override des couleurs pour la compatibilité dark mode */
   .bg-gray-50 {

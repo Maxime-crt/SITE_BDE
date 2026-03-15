@@ -67,6 +67,7 @@ model Event {
   capacity    Int      @default(100) // Nombre total de places
   rating      Float?
   ratingCount Int      @default(0)
+  imageUrl    String?  // Cloudinary public ID
 
   // Coordonnées GPS pour Uber Sharing
   latitude    Float?

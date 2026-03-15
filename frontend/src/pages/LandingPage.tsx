@@ -1,0 +1,777 @@
+import { useState, useEffect, useMemo } from 'react';
+import { Link } from 'react-router-dom';
+import { MapPin, Users, ArrowRight, Car, Clock, ChevronLeft, ChevronRight, Euro, Shield, Plus, User, LogOut, MessageCircle, Menu, X } from 'lucide-react';
+import { eventsApi, authApi } from '../services/api';
+import type { Event } from '../types';
+import logoFLR from '../assets/Logo_FLR.png';
+
+// ── Cloudinary ──────────────────────────────────────────────
+const CLOUD = 'dk93ledz2';
+function cloudUrl(publicId: string, w: number) {
+  return `https://res.cloudinary.com/${CLOUD}/image/upload/f_auto,q_auto,w_${w}/v2/${publicId}`;
+}
+
+// ── Gallery images ──────────────────────────────────────────
+const HERO_IMAGE = 'gallery/Photo_Liste_Fuelers_pbu5ry.png';
+
+const LANDSCAPE_IMAGES = [
+  'gallery/image3_o2j1gv.jpg',
+  'gallery/image16_zrtj5e.jpg',
+  'gallery/image2_somuya.jpg',
+  'gallery/image1_gpl2ak.jpg',
+  'gallery/image15_utrler.jpg',
+];
+
+const PORTRAIT_IMAGES = [
+  'gallery/image5_eccxpt.jpg',
+  'gallery/image4_pcgi9y.jpg',
+  'gallery/image13_eqzwds.jpg',
+  'gallery/image19_qjd5n0.jpg',
+  'gallery/image17_tncw5n.jpg',
+  'gallery/image18_rq1iug.jpg',
+  'gallery/image12_qfrs82.jpg',
+  'gallery/image14_nznai5.jpg',
+  'gallery/image7_ggdz6m.jpg',
+  'gallery/image8_hmk3h1.jpg',
+];
+
+// ── Navbar ──────────────────────────────────────────────────
+function LandingNav({ isAdmin }: { isAdmin: boolean }) {
+  const [scrolled, setScrolled] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 50);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  const handleLogout = async () => {
+    try { await authApi.logout(); } catch {}
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.href = '/login';
+  };
+
+  return (
+    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+      scrolled
+        ? 'bg-[#060a18]/95 backdrop-blur-xl shadow-lg shadow-black/20'
+        : 'bg-gradient-to-b from-[#060a18]/80 via-[#060a18]/40 to-transparent'
+    }`}>
+      <div className="max-w-7xl mx-auto px-6 flex items-center justify-between h-16">
+        {/* Logo */}
+        <Link to="/" className="flex items-center gap-2.5 group">
+          <img src={logoFLR} alt="Fuelers" className="w-9 h-9 rounded-full ring-2 ring-blue-400/20 group-hover:ring-blue-400/40 transition-all" />
+          <span className="font-syne font-bold text-lg bg-gradient-to-r from-blue-300 to-indigo-400 bg-clip-text text-transparent hidden sm:inline">
+            Fuelers
+          </span>
+        </Link>
+
+        {/* Desktop links */}
+        <div className="hidden md:flex items-center gap-1">
+          <button onClick={() => document.getElementById('events')?.scrollIntoView({ behavior: 'smooth' })} className="px-4 py-2 text-sm text-white/50 hover:text-white font-medium rounded-xl hover:bg-white/5 transition-all">
+            Evenements
+          </button>
+          <Link to="/my-rides" className="px-4 py-2 text-sm text-white/50 hover:text-white font-medium rounded-xl hover:bg-white/5 transition-all flex items-center gap-1.5">
+            <Car className="w-3.5 h-3.5" />
+            Trajets
+          </Link>
+          <Link to="/support" className="px-4 py-2 text-sm text-white/50 hover:text-white font-medium rounded-xl hover:bg-white/5 transition-all flex items-center gap-1.5">
+            <MessageCircle className="w-3.5 h-3.5" />
+            Support
+          </Link>
+          {isAdmin && (
+            <Link to="/admin" className="px-4 py-2 text-sm text-white/50 hover:text-white font-medium rounded-xl hover:bg-white/5 transition-all flex items-center gap-1.5">
+              <Shield className="w-3.5 h-3.5" />
+              Admin
+            </Link>
+          )}
+        </div>
+
+        {/* Right side */}
+        <div className="flex items-center gap-2">
+          <Link
+            to="/profile"
+            className="hidden md:flex items-center gap-1.5 px-3 py-2 text-sm text-white/50 hover:text-white rounded-xl hover:bg-white/5 transition-all"
+          >
+            <User className="w-4 h-4" />
+            Profil
+          </Link>
+          <button
+            onClick={handleLogout}
+            className="hidden md:flex items-center gap-1.5 px-3 py-2 text-sm text-white/30 hover:text-red-400 rounded-xl hover:bg-red-500/5 transition-all"
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
+
+          {/* Mobile burger */}
+          <button
+            onClick={() => setMobileOpen(!mobileOpen)}
+            className="md:hidden p-2 text-white/60 hover:text-white rounded-xl hover:bg-white/5 transition-all"
+          >
+            {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile menu */}
+      {mobileOpen && (
+        <div className="md:hidden bg-[#060a18]/95 backdrop-blur-xl border-t border-white/5 px-6 py-4 space-y-1">
+          <button onClick={() => { setMobileOpen(false); document.getElementById('events')?.scrollIntoView({ behavior: 'smooth' }); }} className="block w-full text-left px-4 py-3 text-sm text-white/60 hover:text-white rounded-xl hover:bg-white/5 transition-all">
+            Evenements
+          </button>
+          <Link to="/my-rides" onClick={() => setMobileOpen(false)} className="block px-4 py-3 text-sm text-white/60 hover:text-white rounded-xl hover:bg-white/5 transition-all">
+            Mes trajets
+          </Link>
+          <Link to="/support" onClick={() => setMobileOpen(false)} className="block px-4 py-3 text-sm text-white/60 hover:text-white rounded-xl hover:bg-white/5 transition-all">
+            Support
+          </Link>
+          {isAdmin && (
+            <Link to="/admin" onClick={() => setMobileOpen(false)} className="block px-4 py-3 text-sm text-white/60 hover:text-white rounded-xl hover:bg-white/5 transition-all">
+              Admin
+            </Link>
+          )}
+          <Link to="/profile" onClick={() => setMobileOpen(false)} className="block px-4 py-3 text-sm text-white/60 hover:text-white rounded-xl hover:bg-white/5 transition-all">
+            Profil
+          </Link>
+          <button onClick={handleLogout} className="w-full text-left px-4 py-3 text-sm text-red-400/60 hover:text-red-400 rounded-xl hover:bg-red-500/5 transition-all">
+            Deconnexion
+          </button>
+        </div>
+      )}
+    </nav>
+  );
+}
+
+// ── Component ───────────────────────────────────────────────
+export default function LandingPage() {
+  const [events, setEvents] = useState<Event[]>([]);
+  const [calendarDate, setCalendarDate] = useState(new Date());
+  const [showCalendar, setShowCalendar] = useState(false);
+
+  useEffect(() => {
+    eventsApi.getAll().then((data: Event[]) => setEvents(data)).catch(() => {});
+  }, []);
+
+  // Check admin from localStorage
+  const isAdmin = useMemo(() => {
+    try {
+      const u = localStorage.getItem('user');
+      return u ? JSON.parse(u).isAdmin : false;
+    } catch { return false; }
+  }, []);
+
+  // Calendar helpers
+  const calendarDays = useMemo(() => {
+    const year = calendarDate.getFullYear();
+    const month = calendarDate.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const startPad = (firstDay.getDay() + 6) % 7;
+    const days: (number | null)[] = [];
+    for (let i = 0; i < startPad; i++) days.push(null);
+    for (let d = 1; d <= lastDay.getDate(); d++) days.push(d);
+    return days;
+  }, [calendarDate]);
+
+  const eventDateCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    events.forEach(e => {
+      const d = new Date(e.startDate);
+      const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+      counts.set(key, (counts.get(key) || 0) + 1);
+    });
+    return counts;
+  }, [events]);
+
+  const eventCountForDay = (day: number) =>
+    eventDateCounts.get(`${calendarDate.getFullYear()}-${calendarDate.getMonth()}-${day}`) || 0;
+
+  const upcomingEvents = events
+    .filter(e => new Date(e.startDate) >= new Date())
+    .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
+    .slice(0, 3);
+
+  const monthNames = ['Janvier', 'Fevrier', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Aout', 'Septembre', 'Octobre', 'Novembre', 'Decembre'];
+  const dayNames = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+
+  const formatDate = (dateStr: string) =>
+    new Date(dateStr).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+
+  const daysUntil = (dateStr: string) => {
+    const diff = Math.ceil((new Date(dateStr).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+    if (diff <= 0) return "Aujourd'hui";
+    if (diff === 1) return 'Demain';
+    return `Dans ${diff} jours`;
+  };
+
+  return (
+    <div className="landing-page font-dm-sans text-white overflow-hidden">
+      {/* ═══════════════════════════════════════════════════════════ */}
+      {/*  NAVBAR                                                     */}
+      {/* ═══════════════════════════════════════════════════════════ */}
+      <LandingNav isAdmin={isAdmin} />
+
+      {/* ═══════════════════════════════════════════════════════════ */}
+      {/*  HERO SECTION                                              */}
+      {/* ═══════════════════════════════════════════════════════════ */}
+      <section className="relative min-h-screen flex flex-col items-center justify-center px-6">
+        {/* Background: hero photo */}
+        <div className="absolute inset-0">
+          <img
+            src={cloudUrl(HERO_IMAGE, 1920)}
+            alt=""
+            className="w-full h-full object-cover object-top"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#060a18]/60 via-[#060a18]/40 to-[#060a18]" />
+        </div>
+
+        {/* Grain */}
+        <div className="landing-grain" />
+
+        {/* Blue glow accents */}
+        <div className="absolute top-1/4 left-1/6 w-96 h-96 bg-blue-600/8 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-indigo-500/6 rounded-full blur-[100px] pointer-events-none" />
+
+        {/* Content */}
+        <div className="relative z-10 text-center max-w-5xl mx-auto">
+          <div className="landing-fade-up mb-6">
+            <img
+              src={logoFLR}
+              alt="Fuelers"
+              className="w-28 h-28 md:w-36 md:h-36 rounded-full mx-auto shadow-2xl shadow-blue-500/30 ring-4 ring-blue-400/20"
+            />
+          </div>
+
+          <h1 className="landing-fade-up landing-delay-1 font-syne font-extrabold text-5xl sm:text-6xl md:text-8xl lg:text-9xl tracking-tight leading-[0.9] mb-6">
+            <span className="block bg-gradient-to-r from-blue-200 via-blue-400 to-indigo-400 bg-clip-text text-transparent drop-shadow-lg">
+              FUELERS
+            </span>
+          </h1>
+
+          <p className="landing-fade-up landing-delay-2 font-syne text-lg sm:text-xl md:text-2xl text-white/70 font-medium tracking-wide mb-4">
+            On the road.{' '}
+            <span className="text-blue-400">Together.</span>
+          </p>
+
+          <p className="landing-fade-up landing-delay-3 text-sm sm:text-base text-white/40 max-w-lg mx-auto mb-12 leading-relaxed">
+            Evenements et retours partages entre etudiants.
+            Trouve des gens avec qui rentrer, partage les frais, profite a fond.
+          </p>
+
+          <div className="landing-fade-up landing-delay-4 flex flex-col sm:flex-row items-center justify-center gap-4">
+            <button
+              onClick={() => document.getElementById('events')?.scrollIntoView({ behavior: 'smooth' })}
+              className="group relative inline-flex items-center gap-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-syne font-bold text-base sm:text-lg px-8 py-4 rounded-full hover:scale-105 transition-all duration-300 shadow-xl shadow-blue-600/25"
+            >
+              Voir les evenements
+              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            </button>
+            {isAdmin && (
+              <Link
+                to="/create-event"
+                className="inline-flex items-center gap-2 text-white/60 hover:text-blue-300 font-medium text-sm sm:text-base px-6 py-4 rounded-full border border-white/10 hover:border-blue-400/30 transition-all duration-300"
+              >
+                <Plus className="w-4 h-4" />
+                Creer un evenement
+              </Link>
+            )}
+          </div>
+        </div>
+
+        {/* Scroll indicator */}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 landing-fade-up landing-delay-5">
+          <div className="w-6 h-10 border-2 border-blue-400/30 rounded-full flex items-start justify-center p-1.5">
+            <div className="w-1.5 h-3 bg-blue-400/50 rounded-full landing-scroll-dot" />
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════ */}
+      {/*  PHOTO MARQUEE                                             */}
+      {/* ═══════════════════════════════════════════════════════════ */}
+      <section className="relative py-8 overflow-hidden bg-[#060a18]">
+        {/* Row 1 — landscape, scroll left */}
+        <div className="landing-marquee mb-4">
+          <div className="landing-marquee-track landing-marquee-left">
+            {[...LANDSCAPE_IMAGES, ...LANDSCAPE_IMAGES].map((img, i) => (
+              <div key={i} className="flex-shrink-0 w-72 h-44 rounded-2xl overflow-hidden">
+                <img
+                  src={cloudUrl(img, 640)}
+                  alt=""
+                  className="w-full h-full object-cover hover:scale-110 transition-transform duration-700"
+                  loading="lazy"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+        {/* Row 2 — portrait, scroll right */}
+        <div className="landing-marquee">
+          <div className="landing-marquee-track landing-marquee-right">
+            {[...PORTRAIT_IMAGES, ...PORTRAIT_IMAGES].map((img, i) => (
+              <div key={i} className="flex-shrink-0 w-36 h-48 rounded-2xl overflow-hidden">
+                <img
+                  src={cloudUrl(img, 400)}
+                  alt=""
+                  className="w-full h-full object-cover hover:scale-110 transition-transform duration-700"
+                  loading="lazy"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+        {/* Edge fades */}
+        <div className="absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-[#060a18] to-transparent pointer-events-none z-10" />
+        <div className="absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-[#060a18] to-transparent pointer-events-none z-10" />
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════ */}
+      {/*  EVENTS SECTION                                            */}
+      {/* ═══════════════════════════════════════════════════════════ */}
+      <section id="events" className="relative py-24 md:py-32 px-6">
+        <div className="absolute inset-0 bg-gradient-to-b from-[#060a18] via-[#0a1025] to-[#060a18]" />
+
+        <div className="relative max-w-7xl mx-auto">
+          <div className="flex items-end justify-between mb-16 md:mb-20">
+            <div>
+              <p className="font-syne text-blue-400 font-bold text-sm tracking-[0.3em] uppercase mb-4">
+                Prochainement
+              </p>
+              <h2 className="font-syne font-extrabold text-4xl sm:text-5xl md:text-7xl tracking-tight text-white">
+                Les soirees
+                <br />
+                <span className="bg-gradient-to-r from-blue-400 via-indigo-400 to-blue-300 bg-clip-text text-transparent">
+                  qui arrivent.
+                </span>
+              </h2>
+            </div>
+            {isAdmin && (
+              <Link
+                to="/create-event"
+                className="hidden md:inline-flex items-center gap-2 bg-blue-600/10 border border-blue-500/20 text-blue-300 hover:bg-blue-600/20 font-syne font-bold text-sm px-5 py-3 rounded-2xl transition-all"
+              >
+                <Plus className="w-4 h-4" />
+                Creer
+              </Link>
+            )}
+          </div>
+
+          <div className="landing-view-transition">
+          {!showCalendar ? (
+            <div key="cards" className="landing-view-enter">
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8">
+                {/* Featured event card */}
+                {upcomingEvents[0] ? (
+                  <Link to={`/events/${upcomingEvents[0].id}`} className="md:col-span-7 group block">
+                    <div className="relative h-[380px] md:h-[480px] rounded-3xl overflow-hidden bg-gradient-to-br from-blue-600/20 via-indigo-600/10 to-blue-900/30 border border-blue-500/10 hover:border-blue-400/30 transition-all duration-500">
+                      {upcomingEvents[0].imageUrl ? (
+                        <>
+                          <img src={cloudUrl(upcomingEvents[0].imageUrl, 1200)} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-[#060a18] via-[#060a18]/40 to-transparent" />
+                        </>
+                      ) : (
+                        <>
+                          <div className="absolute inset-0 bg-gradient-to-t from-[#060a18] via-transparent to-transparent" />
+                          <div className="absolute top-0 right-0 w-72 h-72 bg-gradient-to-br from-blue-500/15 to-transparent rounded-full blur-3xl" />
+                          <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-indigo-600/15 to-transparent rounded-full blur-3xl" />
+                        </>
+                      )}
+
+                      <div className="absolute bottom-0 left-0 right-0 p-8 md:p-10">
+                        <div className="flex items-center gap-3 mb-4">
+                          <span className="px-3 py-1 bg-blue-500/20 border border-blue-400/30 rounded-full text-blue-300 text-xs font-bold tracking-wider uppercase">
+                            A venir
+                          </span>
+                          <span className="text-white/40 text-sm flex items-center gap-1.5">
+                            <Clock className="w-3.5 h-3.5" />
+                            {daysUntil(upcomingEvents[0].startDate)}
+                          </span>
+                        </div>
+                        <h3 className="font-syne font-bold text-2xl md:text-4xl text-white mb-3 group-hover:text-blue-200 transition-colors">
+                          {upcomingEvents[0].name}
+                        </h3>
+                        <div className="flex flex-wrap items-center gap-4 text-white/50 text-sm">
+                          {upcomingEvents[0].location && (
+                            <span className="flex items-center gap-1.5">
+                              <MapPin className="w-4 h-4" />
+                              {upcomingEvents[0].location}
+                            </span>
+                          )}
+                          <span className="flex items-center gap-1.5">
+                            <Clock className="w-4 h-4" />
+                            {formatDate(upcomingEvents[0].startDate)}
+                          </span>
+                          {upcomingEvents[0].capacity > 0 && (
+                            <span className="flex items-center gap-1.5">
+                              <Users className="w-4 h-4" />
+                              {upcomingEvents[0].capacity} places
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                ) : (
+                  <div className="md:col-span-7 rounded-3xl overflow-hidden bg-gradient-to-br from-blue-600/10 to-indigo-600/5 border border-dashed border-white/10 h-[380px] md:h-[480px] flex items-center justify-center">
+                    <p className="text-white/20 font-syne text-lg">Aucun evenement a venir</p>
+                  </div>
+                )}
+
+                {/* Stacked cards */}
+                <div className="md:col-span-5 flex flex-col gap-6 md:gap-8">
+                  {upcomingEvents.slice(1, 3).map((event, i) => (
+                    <Link to={`/events/${event.id}`} key={event.id} className="group flex-1 block">
+                      <div className={`relative h-full min-h-[200px] rounded-3xl overflow-hidden border border-white/5 hover:border-blue-400/20 transition-all duration-500 ${
+                        i === 0
+                          ? 'bg-gradient-to-br from-indigo-600/15 to-blue-900/20'
+                          : 'bg-gradient-to-br from-blue-600/15 to-indigo-900/20'
+                      }`}>
+                        {event.imageUrl ? (
+                          <>
+                            <img src={cloudUrl(event.imageUrl, 640)} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-[#060a18] via-[#060a18]/50 to-transparent" />
+                          </>
+                        ) : (
+                          <div className={`absolute top-4 right-4 w-32 h-32 rounded-full blur-2xl ${
+                            i === 0 ? 'bg-indigo-500/10' : 'bg-blue-500/10'
+                          }`} />
+                        )}
+                        <div className="relative p-8">
+                          <div className="flex items-center gap-2 mb-3">
+                            <span className="px-3 py-1 rounded-full text-xs font-bold tracking-wider uppercase border bg-blue-500/20 border-blue-400/30 text-blue-300">
+                              {formatDate(event.startDate)}
+                            </span>
+                            <span className="text-white/30 text-xs">{daysUntil(event.startDate)}</span>
+                          </div>
+                          <h3 className="font-syne font-bold text-xl md:text-2xl text-white mt-2 mb-2 group-hover:text-blue-200 transition-colors">
+                            {event.name}
+                          </h3>
+                          {event.location && (
+                            <p className="text-white/40 text-sm flex items-center gap-1.5">
+                              <MapPin className="w-3.5 h-3.5" />
+                              {event.location}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                  {upcomingEvents.length < 2 && (
+                    <div className="flex-1 rounded-3xl bg-gradient-to-br from-white/5 to-white/[0.02] border border-dashed border-white/10 p-8 flex items-center justify-center min-h-[200px]">
+                      <p className="text-white/20 font-syne text-center">D'autres evenements arrivent bientot...</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="mt-16 text-center">
+                <button
+                  onClick={() => setShowCalendar(true)}
+                  className="inline-flex items-center gap-2 text-blue-400 hover:text-blue-300 font-syne font-bold text-lg group transition-colors"
+                >
+                  Voir le calendrier complet
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
+                </button>
+              </div>
+            </div>
+          ) : (
+            /* ══════ CALENDAR VIEW ══════ */
+            <div key="calendar" className="landing-view-enter">
+              <button
+                onClick={() => setShowCalendar(false)}
+                className="mb-8 inline-flex items-center gap-2 text-white/50 hover:text-blue-400 font-syne font-medium transition-colors"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                Retour
+              </button>
+
+              <div className="max-w-3xl mx-auto">
+                <div className="flex items-center justify-between mb-8">
+                  <button
+                    onClick={() => setCalendarDate(new Date(calendarDate.getFullYear(), calendarDate.getMonth() - 1))}
+                    className="p-2 rounded-xl hover:bg-white/5 text-white/50 hover:text-blue-400 transition-colors"
+                  >
+                    <ChevronLeft className="w-6 h-6" />
+                  </button>
+                  <h3 className="font-syne font-bold text-2xl md:text-3xl text-white">
+                    {monthNames[calendarDate.getMonth()]}{' '}
+                    <span className="text-blue-400">{calendarDate.getFullYear()}</span>
+                  </h3>
+                  <button
+                    onClick={() => setCalendarDate(new Date(calendarDate.getFullYear(), calendarDate.getMonth() + 1))}
+                    className="p-2 rounded-xl hover:bg-white/5 text-white/50 hover:text-blue-400 transition-colors"
+                  >
+                    <ChevronRight className="w-6 h-6" />
+                  </button>
+                </div>
+
+                <div className="rounded-3xl border border-white/10 bg-white/[0.03] backdrop-blur-sm overflow-hidden p-4 md:p-6">
+                  <div className="grid grid-cols-7 gap-1 mb-2">
+                    {dayNames.map(d => (
+                      <div key={d} className="text-center text-xs font-syne font-bold text-white/30 uppercase tracking-wider py-2">
+                        {d}
+                      </div>
+                    ))}
+                  </div>
+                  <div className="grid grid-cols-7 gap-1">
+                    {calendarDays.map((day, i) => {
+                      const isToday = day !== null &&
+                        new Date().getDate() === day &&
+                        new Date().getMonth() === calendarDate.getMonth() &&
+                        new Date().getFullYear() === calendarDate.getFullYear();
+                      const evtCount = day !== null ? eventCountForDay(day) : 0;
+
+                      return (
+                        <div
+                          key={i}
+                          className={`relative aspect-square flex items-center justify-center rounded-xl text-sm font-medium transition-all duration-200 ${
+                            day === null
+                              ? ''
+                              : evtCount > 0
+                                ? 'bg-gradient-to-br from-blue-500/30 to-indigo-500/20 text-blue-200 border border-blue-400/20 hover:scale-105 cursor-pointer shadow-lg shadow-blue-500/10'
+                                : isToday
+                                  ? 'bg-white/10 text-white border border-white/20'
+                                  : 'text-white/40 hover:bg-white/5 hover:text-white/60'
+                          }`}
+                        >
+                          {day}
+                          {evtCount > 0 && (
+                            <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-0.5">
+                              {Array.from({ length: Math.min(evtCount, 3) }).map((_, di) => (
+                                <div key={di} className="w-1 h-1 bg-blue-400 rounded-full" />
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="mt-8 space-y-3">
+                  <h4 className="font-syne font-bold text-lg text-white/60 mb-4">
+                    Evenements en {monthNames[calendarDate.getMonth()]}
+                  </h4>
+                  {events
+                    .filter(e => {
+                      const d = new Date(e.startDate);
+                      return d.getMonth() === calendarDate.getMonth() && d.getFullYear() === calendarDate.getFullYear();
+                    })
+                    .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
+                    .map(event => (
+                      <Link
+                        to={`/events/${event.id}`}
+                        key={event.id}
+                        className="group flex items-center gap-4 p-4 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-blue-400/20 hover:bg-blue-500/5 transition-all"
+                      >
+                        <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-500/20 to-indigo-500/10 border border-blue-400/20 flex flex-col items-center justify-center flex-shrink-0">
+                          <span className="text-blue-300 font-syne font-bold text-lg leading-none">
+                            {new Date(event.startDate).getDate()}
+                          </span>
+                          <span className="text-blue-400/60 text-[10px] uppercase font-bold">
+                            {new Date(event.startDate).toLocaleDateString('fr-FR', { month: 'short' })}
+                          </span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h5 className="font-syne font-bold text-white group-hover:text-blue-200 transition-colors truncate">
+                            {event.name}
+                          </h5>
+                          {event.location && (
+                            <p className="text-white/30 text-sm flex items-center gap-1 mt-0.5">
+                              <MapPin className="w-3 h-3" />
+                              {event.location}
+                            </p>
+                          )}
+                        </div>
+                        <ArrowRight className="w-4 h-4 text-white/20 group-hover:text-blue-400 group-hover:translate-x-1 transition-all flex-shrink-0" />
+                      </Link>
+                    ))}
+                  {events.filter(e => {
+                    const d = new Date(e.startDate);
+                    return d.getMonth() === calendarDate.getMonth() && d.getFullYear() === calendarDate.getFullYear();
+                  }).length === 0 && (
+                    <p className="text-white/20 text-center py-8 font-syne">Aucun evenement ce mois-ci</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════ */}
+      {/*  RETOUR PARTAGE SECTION                                    */}
+      {/* ═══════════════════════════════════════════════════════════ */}
+      <section className="relative py-24 md:py-32 px-6">
+        <div className="absolute inset-0 bg-gradient-to-b from-[#060a18] via-[#080e20] to-[#060a18]" />
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-950/10 via-transparent to-indigo-950/10" />
+
+        <div className="relative max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+            <div>
+              <p className="font-syne text-blue-400 font-bold text-sm tracking-[0.3em] uppercase mb-4">
+                Retour partage
+              </p>
+              <h2 className="font-syne font-extrabold text-4xl sm:text-5xl md:text-6xl tracking-tight text-white mb-6">
+                Rentre
+                <br />
+                <span className="bg-gradient-to-r from-blue-400 via-indigo-400 to-blue-300 bg-clip-text text-transparent">
+                  accompagne.
+                </span>
+              </h2>
+              <p className="text-white/50 text-lg leading-relaxed mb-10 max-w-md">
+                Apres chaque soiree, trouve des gens qui rentrent dans la meme direction.
+                Partagez un trajet, divisez les frais. C'est aussi simple que ca.
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                <div className="text-center sm:text-left">
+                  <div className="w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-400/20 flex items-center justify-center mb-3 mx-auto sm:mx-0">
+                    <Euro className="w-6 h-6 text-blue-400" />
+                  </div>
+                  <h4 className="font-syne font-bold text-white text-sm mb-1">Moins cher</h4>
+                  <p className="text-white/30 text-xs leading-relaxed">Divise le prix du retour</p>
+                </div>
+                <div className="text-center sm:text-left">
+                  <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-400/20 flex items-center justify-center mb-3 mx-auto sm:mx-0">
+                    <Shield className="w-6 h-6 text-indigo-400" />
+                  </div>
+                  <h4 className="font-syne font-bold text-white text-sm mb-1">Plus sur</h4>
+                  <p className="text-white/30 text-xs leading-relaxed">Entre etudiants verifies</p>
+                </div>
+                <div className="text-center sm:text-left">
+                  <div className="w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-400/20 flex items-center justify-center mb-3 mx-auto sm:mx-0">
+                    <Car className="w-6 h-6 text-blue-400" />
+                  </div>
+                  <h4 className="font-syne font-bold text-white text-sm mb-1">Depuis la soiree</h4>
+                  <p className="text-white/30 text-xs leading-relaxed">Demande un retour sur l'evenement</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Route illustration: 1 depart (soiree) → multiple drop-offs */}
+            <div className="relative">
+              <div className="relative h-[400px] md:h-[480px] rounded-3xl overflow-hidden border border-white/5 bg-gradient-to-br from-[#0a1025] to-[#060a18]">
+                {/* Grid background */}
+                <div className="absolute inset-0 opacity-[0.07]" style={{
+                  backgroundImage: `
+                    linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)
+                  `,
+                  backgroundSize: '40px 40px'
+                }} />
+
+                <svg className="absolute inset-0 w-full h-full" viewBox="0 0 500 480" fill="none">
+                  <defs>
+                    <linearGradient id="routeMain" x1="250" y1="60" x2="250" y2="440" gradientUnits="userSpaceOnUse">
+                      <stop stopColor="#3b82f6" />
+                      <stop offset="1" stopColor="#818cf8" />
+                    </linearGradient>
+                  </defs>
+
+                  {/* Main route: soiree (top center) going south */}
+                  <path
+                    d="M250 60 C250 100, 240 140, 230 180 S210 240, 200 280 S180 340, 160 400"
+                    stroke="url(#routeMain)" strokeWidth="3" strokeLinecap="round"
+                    strokeDasharray="8 6" className="landing-route-draw"
+                  />
+                  {/* Branch 1: passenger drops off east-side mid-route */}
+                  <path
+                    d="M230 180 C260 190, 300 200, 340 210"
+                    stroke="#60a5fa" strokeWidth="2" strokeLinecap="round"
+                    strokeDasharray="5 5" opacity="0.6" className="landing-route-draw-delay1"
+                  />
+                  {/* Branch 2: passenger drops off west */}
+                  <path
+                    d="M200 280 C170 290, 120 300, 80 310"
+                    stroke="#818cf8" strokeWidth="2" strokeLinecap="round"
+                    strokeDasharray="5 5" opacity="0.6" className="landing-route-draw-delay2"
+                  />
+                  {/* Branch 3: passenger drops off east-south */}
+                  <path
+                    d="M180 340 C220 355, 280 370, 350 380"
+                    stroke="#a78bfa" strokeWidth="2" strokeLinecap="round"
+                    strokeDasharray="5 5" opacity="0.6" className="landing-route-draw-delay3"
+                  />
+
+                  {/* Start: soiree (blue) */}
+                  <circle cx="250" cy="60" r="10" fill="#3b82f6" className="landing-pulse-dot" />
+                  <circle cx="250" cy="60" r="5" fill="white" />
+
+                  {/* Drop-off 1 (green) */}
+                  <circle cx="340" cy="210" r="7" fill="#22c55e" className="landing-pulse-dot" />
+                  <circle cx="340" cy="210" r="3.5" fill="white" />
+
+                  {/* Drop-off 2 (green) */}
+                  <circle cx="80" cy="310" r="7" fill="#22c55e" className="landing-pulse-dot" />
+                  <circle cx="80" cy="310" r="3.5" fill="white" />
+
+                  {/* Drop-off 3 (green) */}
+                  <circle cx="350" cy="380" r="7" fill="#22c55e" className="landing-pulse-dot" />
+                  <circle cx="350" cy="380" r="3.5" fill="white" />
+
+                  {/* Final destination: driver (green) */}
+                  <circle cx="160" cy="400" r="7" fill="#22c55e" className="landing-pulse-dot" />
+                  <circle cx="160" cy="400" r="3.5" fill="white" />
+                </svg>
+
+                {/* Labels */}
+                <div className="absolute top-3 left-1/2 -translate-x-1/2 bg-blue-500/15 backdrop-blur-md border border-blue-400/20 rounded-2xl px-4 py-2">
+                  <p className="text-blue-300 text-xs font-bold font-syne text-center">La soiree 🎉</p>
+                </div>
+
+                {/* Passenger labels */}
+                <div className="absolute top-[40%] right-[18%] bg-green-500/10 backdrop-blur-sm border border-green-400/20 rounded-xl px-3 py-1.5">
+                  <p className="text-green-300 text-[10px] font-bold">Maxime depose</p>
+                </div>
+                <div className="absolute top-[61%] left-[6%] bg-green-500/10 backdrop-blur-sm border border-green-400/20 rounded-xl px-3 py-1.5">
+                  <p className="text-green-300 text-[10px] font-bold">Lea depose</p>
+                </div>
+                <div className="absolute bottom-[16%] right-[18%] bg-green-500/10 backdrop-blur-sm border border-green-400/20 rounded-xl px-3 py-1.5">
+                  <p className="text-green-300 text-[10px] font-bold">Hugo depose</p>
+                </div>
+                <div className="absolute bottom-[10%] left-[22%] bg-indigo-500/10 backdrop-blur-sm border border-indigo-400/20 rounded-xl px-3 py-1.5">
+                  <p className="text-indigo-300 text-[10px] font-bold">Toi 🏠</p>
+                </div>
+
+                {/* Glow effects */}
+                <div className="absolute top-8 left-1/2 -translate-x-1/2 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl" />
+                <div className="absolute bottom-12 left-20 w-32 h-32 bg-indigo-500/8 rounded-full blur-3xl" />
+                <div className="absolute bottom-20 right-20 w-32 h-32 bg-green-500/5 rounded-full blur-3xl" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════ */}
+      {/*  FOOTER                                                    */}
+      {/* ═══════════════════════════════════════════════════════════ */}
+      <footer className="relative py-16 px-6 border-t border-blue-500/10 bg-[#050810]">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+            <div className="flex items-center gap-3">
+              <img src={logoFLR} alt="Fuelers" className="w-10 h-10 rounded-full ring-2 ring-blue-400/20" />
+              <span className="font-syne font-bold text-xl bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
+                Fuelers
+              </span>
+            </div>
+
+            <div className="flex items-center gap-6">
+              <a href="https://www.instagram.com/listebde.fuelers" target="_blank" rel="noopener noreferrer" className="text-white/30 hover:text-blue-400 transition-colors duration-300" aria-label="Instagram">
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+              </a>
+              <a href="https://www.tiktok.com/@listebde.fuelers" target="_blank" rel="noopener noreferrer" className="text-white/30 hover:text-white transition-colors duration-300" aria-label="TikTok">
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-5.2 1.74 2.89 2.89 0 012.31-4.64 2.93 2.93 0 01.88.13V9.4a6.84 6.84 0 00-.88-.05A6.33 6.33 0 005 20.1a6.34 6.34 0 0010.86-4.43v-7a8.16 8.16 0 004.77 1.52v-3.4a4.85 4.85 0 01-1-.1z"/></svg>
+              </a>
+            </div>
+
+            <p className="text-white/20 text-sm">&copy; {new Date().getFullYear()} Fuelers. Tous droits reserves.</p>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}

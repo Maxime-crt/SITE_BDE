@@ -176,6 +176,18 @@ export default function EventDetail({ user }: EventDetailProps) {
             )}
           </div>
 
+          {/* Image bannière */}
+          {event.imageUrl && (
+            <div className="relative h-64 md:h-80 rounded-2xl overflow-hidden mb-8">
+              <img
+                src={`https://res.cloudinary.com/dk93ledz2/image/upload/f_auto,q_auto,w_1200/${event.imageUrl}`}
+                alt={event.name}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
+            </div>
+          )}
+
           {/* Événement */}
           <Card className="shadow-2xl mb-8">
             <CardHeader>

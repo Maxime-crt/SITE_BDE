@@ -39,6 +39,9 @@ services:
       AUTO_ADMIN_EMAILS: ${AUTO_ADMIN_EMAILS:-}
       BCRYPT_ROUNDS: ${BCRYPT_ROUNDS:-12}
       RESEND_API_KEY: ${RESEND_API_KEY:-}
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME:-}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY:-}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET:-}
     volumes:
       - ./backend/src:/app/backend/src
       - ./backend/prisma:/app/backend/prisma

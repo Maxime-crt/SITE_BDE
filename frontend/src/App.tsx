@@ -17,6 +17,7 @@ import RideDetail from './pages/RideDetail';
 import RateEvent from './pages/RateEvent';
 import Support from './pages/Support';
 import NotFound from './pages/NotFound';
+import LandingPage from './pages/LandingPage';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -47,6 +48,9 @@ function AppContent() {
 
   // Détecter les pages d'authentification pour le thème
   useAuthPageDetection();
+
+  const location = useLocation();
+  const isLandingRoute = location.pathname === '/' && !!user;
 
   // Vérification initiale au chargement de l'app
   useEffect(() => {
@@ -147,8 +151,8 @@ function AppContent() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground transition-colors flex flex-col">
-      <Navbar user={user} onLogout={logout} />
+    <div className={`min-h-screen ${isLandingRoute ? '' : 'bg-background text-foreground'} transition-colors flex flex-col`}>
+      {!isLandingRoute && <Navbar user={user} onLogout={logout} />}
 
       <main className="flex-1">
         <Routes>
@@ -176,7 +180,7 @@ function AppContent() {
             path="/"
             element={
               <ProtectedRoute>
-                <Dashboard />
+                <LandingPage />
               </ProtectedRoute>
             }
           />
@@ -265,7 +269,7 @@ function AppContent() {
         </Routes>
       </main>
 
-      <Footer />
+      {!isLandingRoute && <Footer />}
 
       <Toaster
         position="top-center"

@@ -127,8 +127,15 @@ export const eventsApi = {
     endDate: string;
     capacity: number;
     publishedAt?: string;
-  }): Promise<Event> => {
-    const response = await api.post('/events', data);
+  }, image?: File): Promise<Event> => {
+    const formData = new FormData();
+    Object.entries(data).forEach(([key, value]) => {
+      if (value !== undefined) formData.append(key, String(value));
+    });
+    if (image) formData.append('image', image);
+    const response = await api.post('/events', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
     return response.data;
   },
 
@@ -142,8 +149,16 @@ export const eventsApi = {
     endDate: string;
     capacity?: number;
     publishedAt?: string | null;
-  }): Promise<Event> => {
-    const response = await api.put(`/events/${id}`, data);
+  }, image?: File, removeImage?: boolean): Promise<Event> => {
+    const formData = new FormData();
+    Object.entries(data).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) formData.append(key, String(value));
+    });
+    if (image) formData.append('image', image);
+    if (removeImage) formData.append('removeImage', 'true');
+    const response = await api.put(`/events/${id}`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
     return response.data;
   },
 

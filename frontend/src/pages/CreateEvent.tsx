@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Calendar, MapPin, Clock, ArrowLeft, CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import { Calendar, MapPin, Clock, ArrowLeft, CheckCircle, XCircle, Loader2, ImagePlus, X } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
@@ -26,6 +26,10 @@ export default function CreateEvent() {
   const [addressSuggestions, setAddressSuggestions] = useState<AddressSuggestion[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [addressTimer, setAddressTimer] = useState<NodeJS.Timeout | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [existingImageUrl, setExistingImageUrl] = useState<string | null>(null);
+  const [removeImage, setRemoveImage] = useState(false);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -67,6 +71,9 @@ export default function CreateEvent() {
             publishMode,
             publishedAt: event.publishedAt ? utcToParisLocal(event.publishedAt) : ''
           });
+          if (event.imageUrl) {
+            setExistingImageUrl(`https://res.cloudinary.com/dk93ledz2/image/upload/w_600,q_auto,f_auto/${event.imageUrl}`);
+          }
           setAddressValid(true); // L'adresse est déjà validée
         } catch (error: any) {
           handleApiErrorWithLog(error, 'Erreur lors du chargement de l\'événement', 'CreateEvent.loadEvent');
@@ -151,6 +158,29 @@ export default function CreateEvent() {
     setAddressSuggestions([]);
   };
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('L\'image ne doit pas dépasser 5 Mo');
+        return;
+      }
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
+      setRemoveImage(false);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setImageFile(null);
+    if (imagePreview) URL.revokeObjectURL(imagePreview);
+    setImagePreview(null);
+    if (existingImageUrl) {
+      setRemoveImage(true);
+      setExistingImageUrl(null);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -194,10 +224,10 @@ export default function CreateEvent() {
       };
 
       if (isEditMode && id) {
-        await eventsApi.update(id, eventData);
+        await eventsApi.update(id, eventData, imageFile || undefined, removeImage);
         toast.success('Événement modifié avec succès !');
       } else {
-        await eventsApi.create(eventData);
+        await eventsApi.create(eventData, imageFile || undefined);
         toast.success('Événement créé avec succès !');
       }
       navigate('/');
@@ -295,6 +325,45 @@ export default function CreateEvent() {
                     onChange={handleChange}
                     rows={3}
                     className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium leading-none flex items-center">
+                    <ImagePlus className="w-4 h-4 mr-2" />
+                    Image de l'événement
+                  </label>
+                  {(imagePreview || existingImageUrl) ? (
+                    <div className="relative rounded-lg overflow-hidden border border-border">
+                      <img
+                        src={imagePreview || existingImageUrl || ''}
+                        alt="Aperçu"
+                        className="w-full h-48 object-cover"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleRemoveImage}
+                        className="absolute top-2 right-2 p-1.5 bg-black/60 hover:bg-black/80 rounded-full text-white transition-colors"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <label
+                      htmlFor="image-upload"
+                      className="flex flex-col items-center justify-center w-full h-36 border-2 border-dashed border-muted-foreground/30 rounded-lg cursor-pointer hover:border-primary/50 hover:bg-muted/50 transition-colors"
+                    >
+                      <ImagePlus className="w-8 h-8 text-muted-foreground mb-2" />
+                      <span className="text-sm text-muted-foreground">Cliquez pour ajouter une image</span>
+                      <span className="text-xs text-muted-foreground/70 mt-1">JPG, PNG, WebP — max 5 Mo</span>
+                    </label>
+                  )}
+                  <input
+                    id="image-upload"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="hidden"
                   />
                 </div>
 
