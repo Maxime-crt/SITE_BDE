@@ -50,7 +50,7 @@ function AppContent() {
   useAuthPageDetection();
 
   const location = useLocation();
-  const isLandingRoute = location.pathname === '/' && !!user;
+  const isLandingRoute = (location.pathname === '/' || location.pathname.startsWith('/events/')) && !!user;
 
   // Vérification initiale au chargement de l'app
   useEffect(() => {

@@ -459,6 +459,34 @@
     background-color: rgb(251 146 60); /* orange-400 en dark */
   }
 
+  /* Scrollbar globale */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(99, 140, 255, 0.2) transparent;
+  }
+
+  *::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background: rgba(99, 140, 255, 0.2);
+    border-radius: 9999px;
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background: rgba(99, 140, 255, 0.4);
+  }
+
+  *::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+
   /* Styles personnalisés pour la scrollbar du chat */
   .chat-scrollbar::-webkit-scrollbar {
     width: 8px;

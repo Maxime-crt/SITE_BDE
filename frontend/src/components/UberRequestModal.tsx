@@ -29,7 +29,6 @@ export default function UberRequestModal({
   userHomeLongitude,
   userGender
 }: UberRequestModalProps) {
-  // État pour la complétion du profil
   const [showProfileCompletion, setShowProfileCompletion] = useState(false);
   const [profileGender, setProfileGender] = useState<'MALE' | 'FEMALE' | 'OTHER' | 'PREFER_NOT_SAY'>('PREFER_NOT_SAY');
   const [profileAddress, setProfileAddress] = useState('');
@@ -58,7 +57,6 @@ export default function UberRequestModal({
   const [isDragging, setIsDragging] = useState(false);
   const [isTimeDropdownOpen, setIsTimeDropdownOpen] = useState(false);
 
-  // Vérifier si le profil est complet à l'ouverture
   useEffect(() => {
     if (isOpen) {
       const needsGender = !userGender || userGender === 'PREFER_NOT_SAY';
@@ -68,7 +66,6 @@ export default function UberRequestModal({
         setShowProfileCompletion(true);
         if (userGender) setProfileGender(userGender);
         if (userHomeAddress) {
-          // Composer l'adresse complète avec ville et code postal si disponibles
           const fullAddress = [userHomeAddress, userHomePostcode, userHomeCity]
             .filter(Boolean)
             .join(', ');
@@ -88,7 +85,6 @@ export default function UberRequestModal({
     }
   }, [isOpen, userGender, userHomeAddress, userHomeLatitude, userHomeLongitude]);
 
-  // Fonction helper pour formater une date en string local YYYY-MM-DDTHH:mm
   const formatDateToLocalString = (date: Date): string => {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -98,86 +94,59 @@ export default function UberRequestModal({
     return `${year}-${month}-${day}T${hours}:${minutes}`;
   };
 
-  // Générer les créneaux horaires (toutes les 15 minutes)
   const generateTimeSlots = () => {
     const slots = [];
     const eventStart = new Date(event.startDate);
     const eventEnd = new Date(event.endDate);
     const now = new Date();
-
-    // RÈGLE ABSOLUE: Les trajets de retour commencent 15 min APRÈS le début de la soirée
     const earliestDeparture = new Date(eventStart.getTime() + 15 * 60 * 1000);
-
-    // Ne pas proposer de créneaux passés de plus de 30 minutes
     const minTime = new Date(now.getTime() - 30 * 60 * 1000);
-
-    // Terminer 1h après la fin de l'événement (max)
     const end = new Date(eventEnd.getTime() + 1 * 60 * 60 * 1000);
-
-    // Commencer à générer à partir de earliestDeparture (arrondi au créneau de 15 min)
     const startMinutes = earliestDeparture.getMinutes();
     const roundedMinutes = Math.ceil(startMinutes / 15) * 15;
     let current = new Date(earliestDeparture);
     current.setMinutes(roundedMinutes, 0, 0);
-
-    // Si l'arrondi nous fait passer à l'heure suivante, ajuster
     if (roundedMinutes >= 60) {
       current.setHours(current.getHours() + 1);
       current.setMinutes(0, 0, 0);
     }
-
-    // Générer tous les créneaux de 15 minutes
     while (current <= end) {
-      // FILTRER: N'ajouter que si le créneau est >= earliestDeparture ET >= minTime
       if (current >= earliestDeparture && current >= minTime) {
         slots.push(formatDateToLocalString(current));
       }
       current = new Date(current.getTime() + 15 * 60 * 1000);
     }
-
     return slots;
   };
 
   const timeSlots = generateTimeSlots();
-
-  // Vérifier si l'événement a commencé (pour activer "Partir maintenant")
   const eventHasStarted = new Date() >= new Date(event.startDate);
 
-  // Initialiser l'heure par défaut
   useEffect(() => {
     if (timeSlots.length > 0 && !maxDepartureTime) {
       setMaxDepartureTime(timeSlots[0]);
     }
   }, [timeSlots, maxDepartureTime]);
 
-  // Bloquer le scroll du body quand le modal est ouvert
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'unset';
     }
-
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
+    return () => { document.body.style.overflow = 'unset'; };
   }, [isOpen]);
 
-  // Fonction pour sauvegarder le profil (genre + adresse)
   const handleSaveProfile = async () => {
-    // Validation
     if (!profileGender || profileGender === 'PREFER_NOT_SAY') {
       toast.error('Veuillez sélectionner votre genre');
       return;
     }
-
     if (!profileAddress || !profileAddressCoords) {
       toast.error('Veuillez renseigner une adresse valide');
       return;
     }
-
     setSavingProfile(true);
-
     try {
       await api.put('/users/profile', {
         gender: profileGender,
@@ -187,13 +156,8 @@ export default function UberRequestModal({
         homeLatitude: profileAddressCoords.lat,
         homeLongitude: profileAddressCoords.lng
       });
-
       toast.success('Profil mis à jour avec succès !');
-
-      // Recharger la page pour mettre à jour les props
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
+      setTimeout(() => { window.location.reload(); }, 1000);
     } catch (error: any) {
       console.error('Erreur sauvegarde profil:', error);
       toast.error(error.response?.data?.error || 'Erreur lors de la mise à jour du profil');
@@ -204,8 +168,6 @@ export default function UberRequestModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Déterminer l'adresse à utiliser
     let destinationAddress = '';
     let destinationCity = '';
     let destinationPostcode = '';
@@ -240,7 +202,6 @@ export default function UberRequestModal({
     }
 
     setLoading(true);
-
     try {
       const response = await api.post('/uber-rides/request', {
         eventId: event.id,
@@ -253,14 +214,9 @@ export default function UberRequestModal({
         femaleOnly,
         departNow
       });
-
       toast.success(response.data.message || 'Demande créée ! Nous recherchons des personnes allant dans votre direction...');
       onClose();
-
-      // Rediriger vers mes trajets après 2 secondes
-      setTimeout(() => {
-        window.location.href = '/my-rides';
-      }, 2000);
+      setTimeout(() => { window.location.href = '/my-rides'; }, 2000);
     } catch (error: any) {
       console.error('Erreur création demande:', error);
       toast.error(error.response?.data?.error || 'Erreur lors de la création de la demande');
@@ -272,62 +228,67 @@ export default function UberRequestModal({
   if (!isOpen) return null;
 
   const handleBackdropMouseDown = (e: React.MouseEvent) => {
-    // Si le clic commence sur le backdrop
-    if (e.target === e.currentTarget) {
-      setIsDragging(true);
-    }
+    if (e.target === e.currentTarget) setIsDragging(true);
   };
 
   const handleBackdropMouseUp = (e: React.MouseEvent) => {
-    // Seulement fermer si le clic a commencé ET fini sur le backdrop
-    if (e.target === e.currentTarget && isDragging) {
-      onClose();
-    }
+    if (e.target === e.currentTarget && isDragging) onClose();
     setIsDragging(false);
   };
 
+  const genderBtn = (value: typeof profileGender, label: string) => (
+    <button
+      type="button"
+      onClick={() => setProfileGender(value)}
+      className={`p-4 rounded-xl border transition-all font-medium ${
+        profileGender === value
+          ? 'border-blue-500 bg-blue-500/10 text-blue-300'
+          : 'border-white/10 bg-white/[0.03] text-white/60 hover:border-white/20 hover:text-white/80'
+      }`}
+    >
+      {label}
+    </button>
+  );
+
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto"
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto"
       onMouseDown={handleBackdropMouseDown}
       onMouseUp={handleBackdropMouseUp}
     >
       <div
-        className="bg-white dark:bg-gray-800 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto my-8"
+        className="bg-[#0d1530] border border-white/10 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto my-8 shadow-2xl shadow-black/40"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between p-6 border-b border-white/10">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
-              <Car className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+            <div className="w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-400/20 flex items-center justify-center">
+              <Car className="w-6 h-6 text-blue-400" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+              <h2 className="text-xl font-syne font-bold text-white">
                 {showProfileCompletion ? 'Compléter mon profil' : 'Rentrer en Uber'}
               </h2>
-              <p className="text-sm text-gray-600 dark:text-gray-400">{event.name}</p>
+              <p className="text-sm text-white/40">{event.name}</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition"
+            className="p-2 rounded-xl text-white/30 hover:text-white hover:bg-white/5 transition-all"
           >
-            <X className="w-6 h-6" />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Écran de complétion du profil */}
         {showProfileCompletion ? (
           <div className="p-6 space-y-6">
-            {/* Message d'information */}
-            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 flex gap-3">
-              <AlertCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+            <div className="rounded-xl bg-blue-500/10 border border-blue-400/20 p-4 flex gap-3">
+              <AlertCircle className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
               <div>
-                <h3 className="font-medium text-blue-900 dark:text-blue-100 mb-1">
-                  Informations manquantes
-                </h3>
-                <p className="text-sm text-blue-700 dark:text-blue-300">
+                <h3 className="font-medium text-white mb-1">Informations manquantes</h3>
+                <p className="text-sm text-white/50">
                   Pour utiliser le covoiturage, nous avons besoin de connaître votre genre et votre adresse de domicile.
                 </p>
               </div>
@@ -335,56 +296,16 @@ export default function UberRequestModal({
 
             {/* Genre */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+              <label className="block text-sm font-medium text-white/60 mb-3">
                 <Users className="inline w-4 h-4 mr-1" />
                 Genre
-                <span className="text-red-500 dark:text-red-400 ml-1">*</span>
+                <span className="text-red-400 ml-1">*</span>
               </label>
               <div className="grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => setProfileGender('MALE')}
-                  className={`p-4 rounded-lg border-2 transition ${
-                    profileGender === 'MALE'
-                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
-                      : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
-                  }`}
-                >
-                  Homme
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setProfileGender('FEMALE')}
-                  className={`p-4 rounded-lg border-2 transition ${
-                    profileGender === 'FEMALE'
-                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
-                      : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
-                  }`}
-                >
-                  Femme
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setProfileGender('OTHER')}
-                  className={`p-4 rounded-lg border-2 transition ${
-                    profileGender === 'OTHER'
-                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
-                      : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
-                  }`}
-                >
-                  Autre
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setProfileGender('PREFER_NOT_SAY')}
-                  className={`p-4 rounded-lg border-2 transition ${
-                    profileGender === 'PREFER_NOT_SAY'
-                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
-                      : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
-                  }`}
-                >
-                  Ne pas préciser
-                </button>
+                {genderBtn('MALE', 'Homme')}
+                {genderBtn('FEMALE', 'Femme')}
+                {genderBtn('OTHER', 'Autre')}
+                {genderBtn('PREFER_NOT_SAY', 'Ne pas préciser')}
               </div>
             </div>
 
@@ -401,18 +322,18 @@ export default function UberRequestModal({
                 required
                 initiallyValidated={!!profileAddressCoords}
               />
-              <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+              <p className="mt-2 text-xs text-white/30">
                 Cette adresse sera proposée par défaut pour vos trajets de retour.
               </p>
             </div>
 
-            {/* Boutons */}
-            <div className="flex gap-3 pt-4">
+            {/* Bouton */}
+            <div className="pt-2">
               <button
                 type="button"
                 onClick={handleSaveProfile}
                 disabled={savingProfile}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-xl font-syne font-bold transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {savingProfile ? (
                   <>Sauvegarde en cours...</>
@@ -428,238 +349,242 @@ export default function UberRequestModal({
         ) : (
           /* Form de demande de trajet */
           <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          {/* Choix adresse */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-              <MapPin className="inline w-4 h-4 mr-1" />
-              Où souhaitez-vous aller ?
-            </label>
+            {/* Choix adresse */}
+            <div>
+              <label className="block text-sm font-medium text-white/60 mb-3">
+                <MapPin className="inline w-4 h-4 mr-1" />
+                Où souhaitez-vous aller ?
+              </label>
 
-            <div className="space-y-3">
-              {/* Option: Adresse domicile */}
-              {userHomeAddress && (
-                <label className="flex items-start gap-3 p-4 border-2 border-gray-200 dark:border-gray-700 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+              <div className="space-y-3">
+                {userHomeAddress && (
+                  <label className={`flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-all ${
+                    useHomeAddress
+                      ? 'border-blue-500 bg-blue-500/10'
+                      : 'border-white/10 bg-white/[0.03] hover:border-white/20'
+                  }`}>
+                    <input
+                      type="radio"
+                      name="addressChoice"
+                      checked={useHomeAddress}
+                      onChange={() => setUseHomeAddress(true)}
+                      className="mt-1 accent-blue-500"
+                    />
+                    <div className="flex-1">
+                      <div className="font-medium text-white">Mon adresse d&apos;inscription</div>
+                      <div className="text-sm text-white/40 mt-1">{userHomeAddress}</div>
+                    </div>
+                  </label>
+                )}
+
+                <label className={`flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-all ${
+                  !useHomeAddress
+                    ? 'border-blue-500 bg-blue-500/10'
+                    : 'border-white/10 bg-white/[0.03] hover:border-white/20'
+                }`}>
                   <input
                     type="radio"
                     name="addressChoice"
-                    checked={useHomeAddress}
-                    onChange={() => setUseHomeAddress(true)}
-                    className="mt-1"
+                    checked={!useHomeAddress}
+                    onChange={() => setUseHomeAddress(false)}
+                    className="mt-1 accent-blue-500"
                   />
                   <div className="flex-1">
-                    <div className="font-medium text-gray-900 dark:text-white">Mon adresse d&apos;inscription</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">{userHomeAddress}</div>
+                    <div className="font-medium text-white">Autre adresse</div>
+                    {!useHomeAddress && (
+                      <div className="mt-3">
+                        <AddressInput
+                          value={customAddress}
+                          onChange={(address, coords) => {
+                            setCustomAddress(address);
+                            if (coords) {
+                              setAddressCoordinates(coords);
+                              setIsAddressValidated(true);
+                            } else {
+                              setAddressCoordinates(null);
+                              setIsAddressValidated(false);
+                            }
+                          }}
+                          placeholder="Saisissez une adresse en France"
+                          required
+                          initiallyValidated={isAddressValidated && !!addressCoordinates}
+                        />
+                      </div>
+                    )}
                   </div>
                 </label>
-              )}
-
-              {/* Option: Autre adresse */}
-              <label className="flex items-start gap-3 p-4 border-2 border-gray-200 dark:border-gray-700 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition">
-                <input
-                  type="radio"
-                  name="addressChoice"
-                  checked={!useHomeAddress}
-                  onChange={() => setUseHomeAddress(false)}
-                  className="mt-1"
-                />
-                <div className="flex-1">
-                  <div className="font-medium text-gray-900 dark:text-white">Autre adresse</div>
-                  {!useHomeAddress && (
-                    <div className="mt-3">
-                      <AddressInput
-                        value={customAddress}
-                        onChange={(address, coords) => {
-                          setCustomAddress(address);
-                          if (coords) {
-                            setAddressCoordinates(coords);
-                            setIsAddressValidated(true);
-                          } else {
-                            setAddressCoordinates(null);
-                            setIsAddressValidated(false);
-                          }
-                        }}
-                        placeholder="Saisissez une adresse en France"
-                        required
-                        initiallyValidated={isAddressValidated && !!addressCoordinates}
-                      />
-                    </div>
-                  )}
-                </div>
-              </label>
+              </div>
             </div>
-          </div>
 
-          {/* Horaire de départ */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-              <Clock className="inline w-4 h-4 mr-1" />
-              Quand souhaitez-vous partir ?
-            </label>
-
-            <div className="space-y-3">
-              {/* Option: Partir maintenant (seulement si l'événement a commencé) */}
-              <label className={`flex items-center gap-3 p-4 border-2 rounded-lg transition ${
-                eventHasStarted
-                  ? 'border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700'
-                  : 'border-gray-100 dark:border-gray-800 cursor-not-allowed opacity-50'
-              }`}>
-                <input
-                  type="radio"
-                  name="departureChoice"
-                  checked={departNow}
-                  onChange={() => eventHasStarted && setDepartNow(true)}
-                  disabled={!eventHasStarted}
-                  className="mt-1"
-                />
-                <div>
-                  <div className={`font-medium ${eventHasStarted ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-500'}`}>
-                    Partir maintenant
-                  </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">
-                    {eventHasStarted
-                      ? "Trouver d'autres personnes qui veulent partir tout de suite"
-                      : "Disponible uniquement pendant la soirée"
-                    }
-                  </div>
-                </div>
+            {/* Horaire de départ */}
+            <div>
+              <label className="block text-sm font-medium text-white/60 mb-3">
+                <Clock className="inline w-4 h-4 mr-1" />
+                Quand souhaitez-vous partir ?
               </label>
 
-              {/* Option: Heure précise */}
-              <div className="p-4 border-2 border-gray-200 dark:border-gray-700 rounded-lg">
-                <label className="flex items-start gap-3 cursor-pointer">
+              <div className="space-y-3">
+                <label className={`flex items-center gap-3 p-4 rounded-xl border transition-all ${
+                  eventHasStarted
+                    ? departNow
+                      ? 'border-blue-500 bg-blue-500/10 cursor-pointer'
+                      : 'border-white/10 bg-white/[0.03] cursor-pointer hover:border-white/20'
+                    : 'border-white/5 bg-white/[0.01] cursor-not-allowed opacity-40'
+                }`}>
                   <input
                     type="radio"
                     name="departureChoice"
-                    checked={!departNow}
-                    onChange={() => {
-                      setDepartNow(false);
-                      setIsTimeDropdownOpen(true);
-                    }}
-                    className="mt-1"
+                    checked={departNow}
+                    onChange={() => eventHasStarted && setDepartNow(true)}
+                    disabled={!eventHasStarted}
+                    className="mt-1 accent-blue-500"
                   />
-                  <div className="flex-1">
-                    <div className="font-medium text-gray-900 dark:text-white">Heure de départ souhaitée</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                      Vous partirez au plus tard à cette heure (ou 30 min avant si match trouvé)
+                  <div>
+                    <div className="font-medium text-white">Partir maintenant</div>
+                    <div className="text-sm text-white/40">
+                      {eventHasStarted
+                        ? "Trouver d'autres personnes qui veulent partir tout de suite"
+                        : "Disponible uniquement pendant la soirée"
+                      }
                     </div>
                   </div>
                 </label>
 
-                {!departNow && (
-                  <>
-                    {/* Bouton pour afficher l'heure sélectionnée et ouvrir la liste */}
-                    <button
-                      type="button"
-                      onClick={() => setIsTimeDropdownOpen(!isTimeDropdownOpen)}
-                      className="mt-3 w-full px-4 py-2.5 text-left bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                    >
-                      {maxDepartureTime ? (
-                        <span className="text-gray-900 dark:text-white font-medium">
-                          {formatParisDate(maxDepartureTime, {
-                            weekday: 'short',
-                            day: 'numeric',
-                            month: 'short',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
-                        </span>
-                      ) : (
-                        <span className="text-gray-500 dark:text-gray-400">Sélectionner une heure</span>
-                      )}
-                    </button>
-
-                    {/* Liste déroulante */}
-                    {isTimeDropdownOpen && (
-                      <div className="mt-2 border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
-                        <div className="max-h-48 overflow-y-auto bg-white dark:bg-gray-800">
-                          {timeSlots.map((slot) => {
-                            const isSelected = maxDepartureTime === slot;
-                            return (
-                              <button
-                                key={slot}
-                                type="button"
-                                onClick={() => {
-                                  setMaxDepartureTime(slot);
-                                  setIsTimeDropdownOpen(false);
-                                }}
-                                className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
-                                  isSelected
-                                    ? 'bg-blue-600 text-white font-medium'
-                                    : 'text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700'
-                                }`}
-                              >
-                                {formatParisDate(slot, {
-                                  weekday: 'short',
-                                  day: 'numeric',
-                                  month: 'short',
-                                  hour: '2-digit',
-                                  minute: '2-digit'
-                                })}
-                              </button>
-                            );
-                          })}
-                        </div>
+                <div className={`p-4 rounded-xl border transition-all ${
+                  !departNow
+                    ? 'border-blue-500 bg-blue-500/10'
+                    : 'border-white/10 bg-white/[0.03]'
+                }`}>
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="departureChoice"
+                      checked={!departNow}
+                      onChange={() => {
+                        setDepartNow(false);
+                        setIsTimeDropdownOpen(true);
+                      }}
+                      className="mt-1 accent-blue-500"
+                    />
+                    <div className="flex-1">
+                      <div className="font-medium text-white">Heure de départ souhaitée</div>
+                      <div className="text-sm text-white/40 mb-3">
+                        Vous partirez au plus tard à cette heure (ou 30 min avant si match trouvé)
                       </div>
-                    )}
-                  </>
-                )}
+                    </div>
+                  </label>
+
+                  {!departNow && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => setIsTimeDropdownOpen(!isTimeDropdownOpen)}
+                        className="mt-1 w-full px-4 py-2.5 text-left bg-white/[0.05] border border-white/10 rounded-xl hover:border-white/20 transition-colors"
+                      >
+                        {maxDepartureTime ? (
+                          <span className="text-white font-medium">
+                            {formatParisDate(maxDepartureTime, {
+                              weekday: 'short',
+                              day: 'numeric',
+                              month: 'short',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </span>
+                        ) : (
+                          <span className="text-white/30">Sélectionner une heure</span>
+                        )}
+                      </button>
+
+                      {isTimeDropdownOpen && (
+                        <div className="mt-2 border border-white/10 rounded-xl overflow-hidden">
+                          <div className="max-h-48 overflow-y-auto bg-[#0a1128]">
+                            {timeSlots.map((slot) => {
+                              const isSelected = maxDepartureTime === slot;
+                              return (
+                                <button
+                                  key={slot}
+                                  type="button"
+                                  onClick={() => {
+                                    setMaxDepartureTime(slot);
+                                    setIsTimeDropdownOpen(false);
+                                  }}
+                                  className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
+                                    isSelected
+                                      ? 'bg-blue-600 text-white font-medium'
+                                      : 'text-white/70 hover:bg-white/5 hover:text-white'
+                                  }`}
+                                >
+                                  {formatParisDate(slot, {
+                                    weekday: 'short',
+                                    day: 'numeric',
+                                    month: 'short',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  })}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Préférence genre (uniquement pour les femmes) */}
-          {userGender === 'FEMALE' && (
-            <div className="bg-pink-50 dark:bg-pink-900/20 border border-pink-200 dark:border-pink-800 rounded-lg p-4">
-              <label className="flex items-start gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={femaleOnly}
-                  onChange={(e) => setFemaleOnly(e.target.checked)}
-                  className="mt-1"
-                />
-                <div>
-                  <div className="font-medium text-gray-900 dark:text-white">
-                    <Users className="inline w-4 h-4 mr-1" />
-                    Uniquement avec d&apos;autres femmes
+            {/* Préférence genre */}
+            {userGender === 'FEMALE' && (
+              <div className="rounded-xl bg-pink-500/10 border border-pink-500/20 p-4">
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={femaleOnly}
+                    onChange={(e) => setFemaleOnly(e.target.checked)}
+                    className="mt-1 accent-pink-500"
+                  />
+                  <div>
+                    <div className="font-medium text-white">
+                      <Users className="inline w-4 h-4 mr-1" />
+                      Uniquement avec d&apos;autres femmes
+                    </div>
+                    <div className="text-sm text-white/40 mt-1">
+                      Vous ne serez mise en contact qu&apos;avec des femmes
+                    </div>
                   </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                    Vous ne serez mise en contact qu&apos;avec des femmes
-                  </div>
-                </div>
-              </label>
+                </label>
+              </div>
+            )}
+
+            {/* Info pratiques */}
+            <div className="rounded-xl bg-blue-500/5 border border-blue-400/10 p-4 text-sm">
+              <h3 className="font-syne font-bold text-white mb-2">Comment ça marche ?</h3>
+              <ul className="space-y-1.5 text-white/40">
+                <li>• Nous recherchons des personnes allant dans votre direction</li>
+                <li>• Maximum 4 personnes par trajet (type UberX)</li>
+                <li>• Vous pourrez discuter via le chat du groupe</li>
+              </ul>
             </div>
-          )}
 
-          {/* Info pratiques */}
-          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 text-sm">
-            <h3 className="font-semibold text-blue-900 dark:text-blue-300 mb-2">Comment ça marche ?</h3>
-            <ul className="space-y-1 text-blue-800 dark:text-blue-400">
-              <li>• Nous recherchons des personnes allant dans votre direction</li>
-              <li>• Maximum 4 personnes par trajet (type UberX)</li>
-              <li>• Vous pourrez discuter via le chat du groupe</li>
-              <li>• Le premier à créer le trajet appellera l&apos;Uber et paiera la course</li>
-              <li>• Les autres paieront leur part via l&apos;application (divisée équitablement)</li>
-            </ul>
-          </div>
-
-          {/* Actions */}
-          <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 px-6 py-3 border border-gray-300 dark:border-gray-600 rounded-lg font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition"
-            >
-              Annuler
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? 'Recherche en cours...' : 'Rechercher un trajet'}
-            </button>
-          </div>
-        </form>
+            {/* Actions */}
+            <div className="flex gap-3 pt-2 border-t border-white/10">
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 px-6 py-3 border border-white/10 rounded-xl font-medium text-white/60 hover:text-white hover:bg-white/5 transition-all"
+              >
+                Annuler
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-syne font-bold transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? 'Recherche en cours...' : 'Rechercher un trajet'}
+              </button>
+            </div>
+          </form>
         )}
       </div>
     </div>
