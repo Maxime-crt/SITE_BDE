@@ -307,7 +307,7 @@ export default function LandingPage() {
     const diffDays = Math.ceil(msUntilStart / (1000 * 60 * 60 * 24));
 
     if (now > end + 60 * 60 * 1000) return null; // terminé depuis +1h
-    if (now > end) return { label: 'Terminé', color: 'text-white/80' };
+    if (now > end) return { label: 'Terminé', color: 'text-red-400' };
     if (now >= start) return { label: 'En cours', color: 'text-green-400' };
     if (hoursUntilStart <= 2) return { label: 'Commence bientôt', color: 'text-yellow-400' };
     if (diffDays === 0) return { label: "Aujourd'hui", color: 'text-white/80' };
