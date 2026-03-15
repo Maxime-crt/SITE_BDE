@@ -77,7 +77,7 @@
 
 /* Dark full-bleed background for landing — force Dark Reader to skip */
 .landing-page {
-  background: #060a18;
+  background: #0a1128;
   color-scheme: dark;
 }
 
@@ -90,7 +90,7 @@
     radial-gradient(ellipse 60% 60% at 75% 20%, rgba(99, 102, 241, 0.10) 0%, transparent 60%),
     radial-gradient(ellipse 50% 50% at 50% 70%, rgba(37, 99, 235, 0.06) 0%, transparent 60%),
     radial-gradient(ellipse 40% 40% at 80% 80%, rgba(79, 70, 229, 0.05) 0%, transparent 50%),
-    linear-gradient(180deg, #060a18 0%, #0a1025 50%, #060a18 100%);
+    linear-gradient(180deg, #0a1128 0%, #0a1025 50%, #0a1128 100%);
   animation: landing-mesh-shift 12s ease-in-out infinite alternate;
 }
 

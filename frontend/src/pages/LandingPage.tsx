@@ -146,8 +146,8 @@ function LandingNav({ isAdmin }: { isAdmin: boolean }) {
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
       scrolled
-        ? 'bg-[#060a18]/95 backdrop-blur-xl shadow-lg shadow-black/20'
-        : 'bg-gradient-to-b from-[#060a18]/80 via-[#060a18]/40 to-transparent'
+        ? 'bg-[#0a1128]/95 backdrop-blur-xl shadow-lg shadow-black/20'
+        : 'bg-gradient-to-b from-[#0a1128]/80 via-[#0a1128]/40 to-transparent'
     }`}>
       <div className="max-w-7xl mx-auto px-6 py-2 flex items-center justify-between h-20">
         {/* Logo */}
@@ -207,7 +207,7 @@ function LandingNav({ isAdmin }: { isAdmin: boolean }) {
 
       {/* Mobile menu */}
       {mobileOpen && (
-        <div className="md:hidden bg-[#060a18]/95 backdrop-blur-xl border-t border-white/5 px-6 py-4 space-y-1">
+        <div className="md:hidden bg-[#0a1128]/95 backdrop-blur-xl border-t border-white/5 px-6 py-4 space-y-1">
           <button onClick={() => { setMobileOpen(false); document.getElementById('events')?.scrollIntoView({ behavior: 'smooth' }); }} className="block w-full text-left px-4 py-3 text-sm text-white/60 hover:text-white rounded-xl hover:bg-white/5 transition-all">
             Evenements
           </button>
@@ -324,7 +324,7 @@ export default function LandingPage() {
             alt=""
             className="w-full h-full object-cover object-top"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#060a18]/60 via-[#060a18]/40 to-[#060a18]" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#0a1128]/60 via-[#0a1128]/40 to-[#0a1128]" />
         </div>
 
         {/* Grain */}
@@ -355,7 +355,7 @@ export default function LandingPage() {
             <span className="text-blue-400">Together.</span>
           </p>
 
-          <p className="landing-fade-up landing-delay-3 text-base sm:text-lg text-white/40 max-w-lg mx-auto mb-12 leading-relaxed">
+          <p className="landing-fade-up landing-delay-3 text-base sm:text-lg text-white/70 max-w-lg mx-auto mb-12 leading-relaxed">
             Evenements et retours partages entre etudiants.
             Trouve des gens avec qui rentrer, partage les frais, profite a fond.
           </p>
@@ -391,7 +391,7 @@ export default function LandingPage() {
       {/* ═══════════════════════════════════════════════════════════ */}
       {/*  PHOTO MARQUEE                                             */}
       {/* ═══════════════════════════════════════════════════════════ */}
-      <section className="relative py-8 bg-[#060a18]">
+      <section className="relative py-8 bg-[#0a1128]">
         <div className="relative max-w-7xl mx-auto overflow-hidden rounded-3xl">
           {/* Row 1 — landscape, drag + auto-scroll left */}
           <div
@@ -444,8 +444,8 @@ export default function LandingPage() {
             ))}
           </div>
           {/* Edge fades */}
-          <div className="absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-[#060a18] to-transparent pointer-events-none z-10" />
-          <div className="absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-[#060a18] to-transparent pointer-events-none z-10" />
+          <div className="absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-[#0a1128] to-transparent pointer-events-none z-10" />
+          <div className="absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-[#0a1128] to-transparent pointer-events-none z-10" />
         </div>
       </section>
 
@@ -491,7 +491,7 @@ export default function LandingPage() {
       {/*  EVENTS SECTION                                            */}
       {/* ═══════════════════════════════════════════════════════════ */}
       <section id="events" className="relative py-24 md:py-32 px-6">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#060a18] via-[#0a1025] to-[#060a18]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0a1128] via-[#0a1025] to-[#0a1128]" />
 
         <div className="relative max-w-7xl mx-auto">
           <div className="flex items-end justify-between mb-16 md:mb-20">
@@ -529,11 +529,11 @@ export default function LandingPage() {
                       {upcomingEvents[0].imageUrl ? (
                         <>
                           <img src={cloudUrl(upcomingEvents[0].imageUrl, 1200)} alt="" className="absolute inset-0 w-full h-full object-cover" />
-                          <div className="absolute inset-0 bg-gradient-to-t from-[#060a18] via-[#060a18]/40 to-transparent" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-[#0a1128] via-[#0a1128]/40 to-transparent" />
                         </>
                       ) : (
                         <>
-                          <div className="absolute inset-0 bg-gradient-to-t from-[#060a18] via-transparent to-transparent" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-[#0a1128] via-transparent to-transparent" />
                           <div className="absolute top-0 right-0 w-72 h-72 bg-gradient-to-br from-blue-500/15 to-transparent rounded-full blur-3xl" />
                           <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-indigo-600/15 to-transparent rounded-full blur-3xl" />
                         </>
@@ -544,7 +544,7 @@ export default function LandingPage() {
                           <span className="px-3 py-1 bg-blue-500/20 border border-blue-400/30 rounded-full text-blue-300 text-xs font-bold tracking-wider uppercase">
                             A venir
                           </span>
-                          <span className="text-white/40 text-sm flex items-center gap-1.5">
+                          <span className="text-white/50 text-sm flex items-center gap-1.5">
                             <Clock className="w-3.5 h-3.5" />
                             {daysUntil(upcomingEvents[0].startDate)}
                           </span>
@@ -591,7 +591,7 @@ export default function LandingPage() {
                         {event.imageUrl ? (
                           <>
                             <img src={cloudUrl(event.imageUrl, 640)} alt="" className="absolute inset-0 w-full h-full object-cover" />
-                            <div className="absolute inset-0 bg-gradient-to-t from-[#060a18] via-[#060a18]/50 to-transparent" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-[#0a1128] via-[#0a1128]/50 to-transparent" />
                           </>
                         ) : (
                           <div className={`absolute top-4 right-4 w-32 h-32 rounded-full blur-2xl ${
@@ -609,7 +609,7 @@ export default function LandingPage() {
                             {event.name}
                           </h3>
                           {event.location && (
-                            <p className="text-white/40 text-sm flex items-center gap-1.5">
+                            <p className="text-white/50 text-sm flex items-center gap-1.5">
                               <MapPin className="w-3.5 h-3.5" />
                               {event.location}
                             </p>
@@ -693,7 +693,7 @@ export default function LandingPage() {
                                 ? 'bg-gradient-to-br from-blue-500/30 to-indigo-500/20 text-blue-200 border border-blue-400/20 hover:scale-105 cursor-pointer shadow-lg shadow-blue-500/10'
                                 : isToday
                                   ? 'bg-white/10 text-white border border-white/20'
-                                  : 'text-white/40 hover:bg-white/5 hover:text-white/60'
+                                  : 'text-white/50 hover:bg-white/5 hover:text-white/60'
                           }`}
                         >
                           {day}
@@ -766,7 +766,7 @@ export default function LandingPage() {
       {/*  RETOUR PARTAGE SECTION                                    */}
       {/* ═══════════════════════════════════════════════════════════ */}
       <section className="relative py-24 md:py-32 px-6">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#060a18] via-[#080e20] to-[#060a18]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0a1128] via-[#080e20] to-[#0a1128]" />
         <div className="absolute inset-0 bg-gradient-to-r from-blue-950/10 via-transparent to-indigo-950/10" />
 
         <div className="relative max-w-7xl mx-auto">
@@ -792,29 +792,29 @@ export default function LandingPage() {
                   <div className="w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-400/20 flex items-center justify-center mb-3 mx-auto sm:mx-0">
                     <Euro className="w-6 h-6 text-blue-400" />
                   </div>
-                  <h4 className="font-syne font-bold text-white text-sm mb-1">Moins cher</h4>
-                  <p className="text-white/30 text-xs leading-relaxed">Divise le prix du retour</p>
+                  <h4 className="font-syne font-bold text-white text-base mb-1">Moins cher</h4>
+                  <p className="text-white/50 text-sm leading-relaxed">Divise le prix du retour</p>
                 </div>
                 <div className="text-center sm:text-left">
                   <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-400/20 flex items-center justify-center mb-3 mx-auto sm:mx-0">
                     <Shield className="w-6 h-6 text-indigo-400" />
                   </div>
-                  <h4 className="font-syne font-bold text-white text-sm mb-1">Plus sur</h4>
-                  <p className="text-white/30 text-xs leading-relaxed">Entre etudiants verifies</p>
+                  <h4 className="font-syne font-bold text-white text-base mb-1">Plus sur</h4>
+                  <p className="text-white/50 text-sm leading-relaxed">Entre etudiants verifies</p>
                 </div>
                 <div className="text-center sm:text-left">
                   <div className="w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-400/20 flex items-center justify-center mb-3 mx-auto sm:mx-0">
                     <Car className="w-6 h-6 text-blue-400" />
                   </div>
-                  <h4 className="font-syne font-bold text-white text-sm mb-1">Depuis la soiree</h4>
-                  <p className="text-white/30 text-xs leading-relaxed">Demande un retour sur l'evenement</p>
+                  <h4 className="font-syne font-bold text-white text-base mb-1">Depuis la soiree</h4>
+                  <p className="text-white/50 text-sm leading-relaxed">Demande un retour sur l'evenement</p>
                 </div>
               </div>
             </div>
 
             {/* Route illustration: 1 depart (soiree) → multiple drop-offs */}
             <div className="relative">
-              <div className="relative h-[400px] md:h-[480px] rounded-3xl overflow-hidden border border-white/5 bg-gradient-to-br from-[#0a1025] to-[#060a18]">
+              <div className="relative h-[400px] md:h-[480px] rounded-3xl overflow-hidden border border-white/5 bg-gradient-to-br from-[#0a1025] to-[#0a1128]">
                 {/* Grid background */}
                 <div className="absolute inset-0 opacity-[0.07]" style={{
                   backgroundImage: `
