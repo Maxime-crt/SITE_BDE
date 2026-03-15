@@ -6,7 +6,7 @@ import toast from 'react-hot-toast';
 import { useState } from 'react';
 import { handleApiErrorWithLog } from '../utils/errorHandler';
 import { formatParisDate } from '../utils/dateUtils';
-import { Calendar, MapPin, Star, ArrowLeft, Edit, Trash2, ExternalLink, Car, Users, Shield } from 'lucide-react';
+import { Calendar, MapPin, Star, ArrowLeft, Edit, Trash2, ExternalLink, Car, Users, Shield, Clock } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import ConfirmDialog from '../components/ConfirmDialog';
@@ -21,6 +21,23 @@ const ASSO_LOGOS: Record<string, string> = {
   "Spotl'eye't": 'Logo-Assos/SET_sfembi.jpg',
   "Cash in S'eye'ght": 'Logo-Assos/CIS_frfhly.jpg',
 };
+
+function eventStatus(startStr: string, endStr: string) {
+  const now = Date.now();
+  const start = new Date(startStr).getTime();
+  const end = new Date(endStr).getTime();
+  const msUntilStart = start - now;
+  const hoursUntilStart = msUntilStart / (1000 * 60 * 60);
+  const diffDays = Math.ceil(msUntilStart / (1000 * 60 * 60 * 24));
+
+  if (now > end + 60 * 60 * 1000) return null;
+  if (now > end) return { label: 'Terminé', color: 'text-red-500', bg: 'bg-red-500/10 border-red-500/30' };
+  if (now >= start) return { label: 'En cours', color: 'text-green-500', bg: 'bg-green-500/10 border-green-500/30' };
+  if (hoursUntilStart <= 2) return { label: 'Commence bientôt', color: 'text-yellow-500', bg: 'bg-yellow-500/10 border-yellow-500/30' };
+  if (diffDays === 0) return { label: "Aujourd'hui", color: 'text-primary', bg: 'bg-primary/10 border-primary/30' };
+  if (diffDays === 1) return { label: 'Demain', color: 'text-primary', bg: 'bg-primary/10 border-primary/30' };
+  return { label: `Dans ${diffDays} jours`, color: 'text-muted-foreground', bg: 'bg-muted border-muted' };
+}
 
 interface EventDetailProps {
   user: User | null;
@@ -221,6 +238,15 @@ export default function EventDetail({ user }: EventDetailProps) {
                         <span className="text-sm font-medium">{event.association || 'Fuelers'}</span>
                       </div>
                     )}
+                    {(() => {
+                      const s = eventStatus(event.startDate, event.endDate);
+                      return s && (
+                        <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium border ${s.bg} ${s.color}`}>
+                          <Clock className="w-3.5 h-3.5" />
+                          {s.label}
+                        </div>
+                      );
+                    })()}
                   </div>
                   <CardTitle className="text-3xl mb-4">{event.name}</CardTitle>
                   {event.description && (
