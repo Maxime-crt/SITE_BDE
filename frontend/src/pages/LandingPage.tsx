@@ -288,7 +288,7 @@ export default function LandingPage() {
 
 
   const upcomingEvents = events
-    .filter(e => new Date(e.startDate) >= new Date())
+    .filter(e => new Date(e.endDate).getTime() + 60 * 60 * 1000 >= Date.now())
     .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
     .slice(0, 3);
 
@@ -298,11 +298,21 @@ export default function LandingPage() {
   const formatDate = (dateStr: string) =>
     new Date(dateStr).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
 
-  const daysUntil = (dateStr: string) => {
-    const diff = Math.ceil((new Date(dateStr).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-    if (diff <= 0) return "Aujourd'hui";
-    if (diff === 1) return 'Demain';
-    return `Dans ${diff} jours`;
+  const eventStatus = (startStr: string, endStr: string) => {
+    const now = Date.now();
+    const start = new Date(startStr).getTime();
+    const end = new Date(endStr).getTime();
+    const msUntilStart = start - now;
+    const hoursUntilStart = msUntilStart / (1000 * 60 * 60);
+    const diffDays = Math.ceil(msUntilStart / (1000 * 60 * 60 * 24));
+
+    if (now > end + 60 * 60 * 1000) return null; // terminé depuis +1h
+    if (now > end) return { label: 'Terminé', color: 'text-white/80' };
+    if (now >= start) return { label: 'En cours', color: 'text-green-400' };
+    if (hoursUntilStart <= 2) return { label: 'Commence bientôt', color: 'text-yellow-400' };
+    if (diffDays === 0) return { label: "Aujourd'hui", color: 'text-white/80' };
+    if (diffDays === 1) return { label: 'Demain', color: 'text-white/80' };
+    return { label: `Dans ${diffDays} jours`, color: 'text-white/80' };
   };
 
   return (
@@ -499,7 +509,7 @@ export default function LandingPage() {
                 Prochainement
               </p>
               <h2 className="font-syne font-extrabold text-4xl sm:text-5xl md:text-7xl tracking-tight text-white">
-                Les soirées
+                Les events
                 <br />
                 <span className="bg-gradient-to-r from-blue-400 via-indigo-400 to-blue-300 bg-clip-text text-transparent">
                   qui arrivent.
@@ -543,10 +553,15 @@ export default function LandingPage() {
                           <span className="px-3 py-1 bg-blue-500/20 border border-blue-400/30 rounded-full text-blue-300 text-xs font-bold tracking-wider uppercase">
                             A venir
                           </span>
-                          <span className="text-white/50 text-sm flex items-center gap-1.5">
-                            <Clock className="w-3.5 h-3.5" />
-                            {daysUntil(upcomingEvents[0].startDate)}
-                          </span>
+                          {(() => {
+                            const s = eventStatus(upcomingEvents[0].startDate, upcomingEvents[0].endDate);
+                            return s && (
+                              <span className={`px-3 py-1 bg-black/40 backdrop-blur-sm rounded-full text-sm flex items-center gap-1.5 ${s.color}`}>
+                                <Clock className="w-3.5 h-3.5" />
+                                {s.label}
+                              </span>
+                            );
+                          })()}
                         </div>
                         <h3 className="font-syne font-bold text-2xl md:text-4xl text-white mb-3 group-hover:text-blue-200 transition-colors">
                           {upcomingEvents[0].name}
@@ -602,7 +617,14 @@ export default function LandingPage() {
                             <span className="px-3 py-1 rounded-full text-xs font-bold tracking-wider uppercase border bg-blue-500/20 border-blue-400/30 text-blue-300">
                               {formatDate(event.startDate)}
                             </span>
-                            <span className="text-white/30 text-xs">{daysUntil(event.startDate)}</span>
+                            {(() => {
+                              const s = eventStatus(event.startDate, event.endDate);
+                              return s && (
+                                <span className={`px-2 py-0.5 bg-black/40 backdrop-blur-sm rounded-full text-xs flex items-center gap-1 ${s.color}`}>
+                                  <Clock className="w-3 h-3" />{s.label}
+                                </span>
+                              );
+                            })()}
                           </div>
                           <h3 className="font-syne font-bold text-xl md:text-2xl text-white mt-2 mb-2 group-hover:text-blue-200 transition-colors">
                             {event.name}
