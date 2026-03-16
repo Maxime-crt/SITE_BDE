@@ -4,7 +4,7 @@ import { body, validationResult } from 'express-validator';
 import { prisma } from '../utils/prisma';
 import { generateToken } from '../utils/jwt';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
-import { generateVerificationCode, sendVerificationEmail } from '../utils/email';
+import { generateVerificationCode, sendVerificationEmail, sendPasswordResetEmail } from '../utils/email';
 import { ADMIN_EMAILS, ALLOWED_EMAILS } from '../config/admins';
 
 const router = express.Router();
@@ -354,6 +354,107 @@ router.post('/logout', authenticateToken, async (req: AuthRequest, res: express.
   } catch (error) {
     console.error('Erreur déconnexion:', error);
     res.status(500).json({ error: 'Erreur serveur lors de la déconnexion' });
+  }
+});
+
+// POST /api/auth/forgot-password - Demander la réinitialisation du mot de passe
+router.post('/forgot-password', [
+  body('email').isEmail().withMessage('Email invalide')
+], async (req: express.Request, res: express.Response) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const email = req.body.email.toLowerCase().trim();
+    console.log('🔑 Forgot-password demandé pour:', email);
+
+    const user = await prisma.user.findUnique({ where: { email } });
+    console.log('🔑 Utilisateur trouvé:', user ? `${user.firstName} (${user.email})` : 'NON');
+
+    // Toujours répondre OK pour ne pas révéler si l'email existe
+    if (!user) {
+      return res.json({ message: 'Si un compte existe avec cet email, un lien de réinitialisation a été envoyé.' });
+    }
+
+    // Générer un token unique
+    const crypto = require('crypto');
+    const token = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date();
+    expiresAt.setMinutes(expiresAt.getMinutes() + 15);
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        verificationCode: token,
+        codeExpiresAt: expiresAt
+      }
+    });
+
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5000';
+    const resetLink = `${frontendUrl}/reset-password?token=${token}&email=${encodeURIComponent(email)}`;
+    console.log('🔑 Reset link généré:', resetLink);
+
+    // Envoi asynchrone
+    console.log('🔑 Envoi email de reset...');
+    sendPasswordResetEmail(email, user.firstName, resetLink)
+      .then(() => console.log('🔑 Email de reset envoyé avec succès'))
+      .catch(err => {
+        console.error('🔑 Erreur envoi email reset:', err);
+      });
+
+    res.json({ message: 'Si un compte existe avec cet email, un lien de réinitialisation a été envoyé.' });
+  } catch (error) {
+    console.error('Erreur forgot-password:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// POST /api/auth/reset-password - Réinitialiser le mot de passe avec le token
+router.post('/reset-password', [
+  body('email').isEmail().withMessage('Email invalide'),
+  body('token').trim().notEmpty().withMessage('Token requis'),
+  body('password').isLength({ min: 6 }).withMessage('Mot de passe minimum 6 caractères')
+], async (req: express.Request, res: express.Response) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { token, password } = req.body;
+    const email = req.body.email.toLowerCase().trim();
+
+    const user = await prisma.user.findUnique({ where: { email } });
+
+    if (!user || !user.verificationCode || !user.codeExpiresAt) {
+      return res.status(400).json({ error: 'Lien invalide ou expiré' });
+    }
+
+    if (user.verificationCode !== token) {
+      return res.status(400).json({ error: 'Lien invalide' });
+    }
+
+    if (new Date() > user.codeExpiresAt) {
+      return res.status(400).json({ error: 'Le lien a expiré. Veuillez en demander un nouveau.' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 12);
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        password: hashedPassword,
+        verificationCode: null,
+        codeExpiresAt: null
+      }
+    });
+
+    res.json({ message: 'Mot de passe réinitialisé avec succès' });
+  } catch (error) {
+    console.error('Erreur reset-password:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
   }
 });
 

@@ -5,7 +5,7 @@
 export function checkAuthGuard(): boolean {
   const token = localStorage.getItem('token');
   const savedUser = localStorage.getItem('user');
-  const publicPaths = ['/login', '/register', '/verify-email', '/accept-charter'];
+  const publicPaths = ['/login', '/register', '/verify-email', '/accept-charter', '/forgot-password', '/reset-password'];
   const currentPath = window.location.pathname;
   const isPublicPath = publicPaths.includes(currentPath);
 

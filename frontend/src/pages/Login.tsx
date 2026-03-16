@@ -117,6 +117,11 @@ export default function Login({ onLogin }: LoginProps) {
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
+              <div className="flex justify-end">
+                <Link to="/forgot-password" className="text-xs text-blue-400/70 hover:text-blue-300 transition-colors">
+                  Mot de passe oublié ?
+                </Link>
+              </div>
             </div>
 
             <button

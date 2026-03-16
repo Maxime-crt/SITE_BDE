@@ -13,6 +13,72 @@ export function generateVerificationCode(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
+// Envoyer l'email de réinitialisation de mot de passe
+export async function sendPasswordResetEmail(email: string, firstName: string, resetLink: string): Promise<void> {
+  if (!resend) {
+    console.log(`📧 [SIMULATION] Email de réinitialisation pour ${email}`);
+    console.log(`   Lien: ${resetLink}`);
+    return;
+  }
+
+  try {
+    const { data, error } = await resend.emails.send({
+      from: 'Fuelers <noreply@fuelers.fr>',
+      to: email,
+      subject: 'Réinitialisation de votre mot de passe Fuelers',
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <style>
+            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
+            .container { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 10px; }
+            .content { background: white; padding: 30px; border-radius: 8px; margin-top: 20px; }
+            .btn { display: inline-block; background: #667eea; color: white; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: bold; font-size: 16px; margin: 20px 0; }
+            .header { color: white; text-align: center; margin: 0; }
+            .footer { text-align: center; color: #888; font-size: 12px; margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <img src="https://res.cloudinary.com/dk93ledz2/image/upload/v1773527791/gallery/Logo_FLR_d91qt0.jpg" alt="Fuelers" width="120" height="120" style="border-radius: 50%; display: block; margin: 0 auto 10px;" />
+            </div>
+            <div class="content">
+              <h2>Bonjour ${firstName} !</h2>
+              <p>Vous avez demandé la réinitialisation de votre mot de passe.</p>
+              <p>Cliquez sur le bouton ci-dessous pour choisir un nouveau mot de passe :</p>
+              <div style="text-align: center;">
+                <a href="${resetLink}" class="btn">Réinitialiser mon mot de passe</a>
+              </div>
+              <p>Ce lien est valable pendant <strong>15 minutes</strong>.</p>
+              <p style="font-size: 12px; color: #999;">Si le bouton ne fonctionne pas, copiez ce lien dans votre navigateur :<br/><a href="${resetLink}" style="color: #667eea; word-break: break-all;">${resetLink}</a></p>
+              <p>Si vous n'avez pas fait cette demande, vous pouvez ignorer cet email.</p>
+              <div class="footer">
+                <p>Cet email a été envoyé automatiquement, merci de ne pas y répondre.</p>
+                <p>&copy; ${new Date().getFullYear()} Fuelers. Tous droits réservés.</p>
+              </div>
+            </div>
+          </div>
+        </body>
+        </html>
+      `,
+      text: `Bonjour ${firstName},\n\nVous avez demandé la réinitialisation de votre mot de passe.\n\nCliquez sur ce lien : ${resetLink}\n\nCe lien est valable pendant 15 minutes.\n\nFuelers`
+    });
+
+    if (error) {
+      console.error('Erreur Resend:', error);
+      throw new Error("Impossible d'envoyer l'email de réinitialisation");
+    }
+
+    console.log(`Email de réinitialisation envoyé à ${email} - ID: ${data?.id}`);
+  } catch (error) {
+    console.error("Erreur lors de l'envoi de l'email:", error);
+    throw new Error("Impossible d'envoyer l'email de réinitialisation");
+  }
+}
+
 // Envoyer l'email de vérification
 export async function sendVerificationEmail(email: string, firstName: string, code: string): Promise<void> {
   // Mode simulation si pas de clé Resend

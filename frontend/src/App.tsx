@@ -16,6 +16,8 @@ import MyRides from './pages/MyRides';
 import RideDetail from './pages/RideDetail';
 import RateEvent from './pages/RateEvent';
 import Support from './pages/Support';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import NotFound from './pages/NotFound';
 import LandingPage from './pages/LandingPage';
 import Navbar from './components/Navbar';
@@ -50,7 +52,7 @@ function AppContent() {
   useAuthPageDetection();
 
   const location = useLocation();
-  const authPages = ['/login', '/register', '/verify-email', '/accept-charter'];
+  const authPages = ['/login', '/register', '/verify-email', '/accept-charter', '/forgot-password', '/reset-password'];
   const darkPages = ['/', '/my-rides', '/support', '/profile', '/admin', '/admin/support'];
   const isLandingRoute = authPages.includes(location.pathname) || ((darkPages.includes(location.pathname) || location.pathname.startsWith('/events/')) && !!user);
 
@@ -168,6 +170,18 @@ function AppContent() {
             path="/register"
             element={
               user ? <Navigate to="/" /> : <Register />
+            }
+          />
+          <Route
+            path="/forgot-password"
+            element={
+              user ? <Navigate to="/" /> : <ForgotPassword />
+            }
+          />
+          <Route
+            path="/reset-password"
+            element={
+              user ? <Navigate to="/" /> : <ResetPassword />
             }
           />
           <Route
