@@ -43,9 +43,12 @@ export async function findMatches(requestId: string): Promise<MatchResult> {
         eventId: request.eventId,
         status: 'ACCEPTED', // Chercher les demandes déjà acceptées (créées)
         id: { not: requestId },
-        // Horaires compatibles (max 30 min d'écart)
+        // Horaires compatibles (max 30 min d'écart) et pas déjà expirées (+ 10 min de marge)
         maxDepartureTime: {
-          gte: new Date(request.maxDepartureTime.getTime() - 30 * 60 * 1000), // 30 min avant
+          gte: new Date(Math.max(
+            request.maxDepartureTime.getTime() - 30 * 60 * 1000, // 30 min avant la demande
+            Date.now() - 10 * 60 * 1000                          // mais pas expiré depuis + de 10 min
+          )),
           lte: new Date(request.maxDepartureTime.getTime() + 30 * 60 * 1000)  // 30 min après
         }
       },

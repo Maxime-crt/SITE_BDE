@@ -268,7 +268,7 @@ export default function UberRequestModal({
             </div>
             <div>
               <h2 className="text-xl font-syne font-bold text-white">
-                {showProfileCompletion ? 'Compléter mon profil' : 'Rentrer en Uber'}
+                {showProfileCompletion ? 'Compléter mon profil' : 'Trajet retour partagé'}
               </h2>
               <p className="text-sm text-white/40">{event.name}</p>
             </div>
@@ -559,12 +559,21 @@ export default function UberRequestModal({
 
             {/* Info pratiques */}
             <div className="rounded-xl bg-blue-500/5 border border-blue-400/10 p-4 text-sm">
-              <h3 className="font-syne font-bold text-white mb-2">Comment ça marche ?</h3>
-              <ul className="space-y-1.5 text-white/40">
-                <li>• Nous recherchons des personnes allant dans votre direction</li>
-                <li>• Maximum 4 personnes par trajet (type UberX)</li>
-                <li>• Vous pourrez discuter via le chat du groupe</li>
-              </ul>
+              <h3 className="font-syne font-bold text-white mb-3">Comment ça marche ?</h3>
+              <ol className="space-y-2.5 text-white/50 list-none">
+                <li className="flex gap-2">
+                  <span className="text-blue-400 font-bold shrink-0">1.</span>
+                  <span>Vous choisissez votre <strong className="text-white/70">heure de départ souhaitée</strong>. L&apos;algorithme recherche des participants qui souhaitent partir dans un créneau d&apos;une heure autour de votre horaire (30 min avant ou après). Si vous choisissez l&apos;option « partir maintenant », les demandes dont l&apos;heure de départ est dépassée depuis plus de 10 minutes sont exclues afin d&apos;éviter de vous matcher avec des groupes déjà en route.</span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="text-blue-400 font-bold shrink-0">2.</span>
+                  <span>Vos <strong className="text-white/70">destinations sont comparées</strong> : chaque candidat doit habiter à moins de 15 km de votre adresse d&apos;arrivée (à vol d&apos;oiseau). Un second filtre vérifie ensuite que le détour réel sur route reste inférieur à 25 %.</span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="text-blue-400 font-bold shrink-0">3.</span>
+                  <span>Un groupe de <strong className="text-white/70">4 passagers maximum</strong> est formé. Vous verrez vos <strong className="text-white/70">numéro et Instagram</strong> pour vous organiser entre vous.</span>
+                </li>
+              </ol>
             </div>
 
             {/* Actions */}
@@ -581,7 +590,7 @@ export default function UberRequestModal({
                 disabled={loading}
                 className="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-syne font-bold transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? 'Recherche en cours...' : 'Rechercher un trajet'}
+                {loading ? 'Recherche en cours...' : 'Trouver des co-passagers'}
               </button>
             </div>
           </form>

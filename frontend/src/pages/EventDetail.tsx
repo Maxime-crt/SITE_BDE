@@ -176,7 +176,7 @@ export default function EventDetail({ user }: EventDetailProps) {
 
       {/* ── HERO BANNER ── */}
       <div className="relative pt-20">
-        <div className="relative h-56 md:h-72 overflow-hidden">
+        <div className="relative h-72 md:h-96 overflow-hidden">
           {event.imageUrl ? (
             <img
               src={cloudUrl(event.imageUrl, 1400)}
@@ -216,7 +216,7 @@ export default function EventDetail({ user }: EventDetailProps) {
                 </button>
                 <button
                   onClick={() => setDeleteConfirmOpen(true)}
-                  className="flex items-center gap-1.5 px-3 py-2 bg-red-500/20 backdrop-blur-sm rounded-full text-red-300 hover:text-red-200 hover:bg-red-500/30 transition-all text-xs sm:text-sm border border-red-500/20"
+                  className="flex items-center gap-1.5 px-3 py-2 bg-red-600 backdrop-blur-sm rounded-full text-white hover:bg-red-500 transition-all text-xs sm:text-sm border border-red-500"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                   <span className="hidden sm:inline">Supprimer</span>
@@ -349,15 +349,15 @@ export default function EventDetail({ user }: EventDetailProps) {
                       <Car className="w-6 h-6 text-blue-400" />
                     </div>
                     <div className="flex-1">
-                      <h3 className="font-syne font-bold text-white text-lg">Rentrer en Uber partagé</h3>
-                      <p className="text-white/40 text-sm mt-1">Partagez votre trajet retour avec d'autres participants et divisez le prix</p>
+                      <h3 className="font-syne font-bold text-white text-lg">Trajet retour partagé</h3>
+                      <p className="text-white/40 text-sm mt-1">Trouvez des participants qui rentrent dans la même direction et partagez les frais</p>
                     </div>
                     <button
                       onClick={() => setUberModalOpen(true)}
                       className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white font-syne font-bold text-sm rounded-xl transition-colors flex items-center gap-2"
                     >
                       <Car className="w-4 h-4" />
-                      Rechercher un trajet
+                      Trouver des co-passagers
                     </button>
                   </div>
                 )}
