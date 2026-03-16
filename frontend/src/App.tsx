@@ -50,7 +50,9 @@ function AppContent() {
   useAuthPageDetection();
 
   const location = useLocation();
-  const isLandingRoute = (location.pathname === '/' || location.pathname.startsWith('/events/') || location.pathname === '/my-rides') && !!user;
+  const authPages = ['/login', '/register', '/verify-email', '/accept-charter'];
+  const darkPages = ['/', '/my-rides'];
+  const isLandingRoute = authPages.includes(location.pathname) || ((darkPages.includes(location.pathname) || location.pathname.startsWith('/events/')) && !!user);
 
   // Vérification initiale au chargement de l'app
   useEffect(() => {

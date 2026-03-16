@@ -1,10 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Eye, EyeOff, Calendar, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
+import logoFLR from '../assets/Logo_FLR.png';
 
 interface LoginProps {
   onLogin: (email: string, password: string) => Promise<any>;
@@ -38,14 +36,9 @@ export default function Login({ onLogin }: LoginProps) {
       });
       navigate(from, { replace: true });
     } catch (error: any) {
-      // Vérifier si l'email nécessite une vérification
       if (error.response?.data?.requiresVerification) {
         const userEmail = error.response.data.email;
-
-        // Sauvegarder l'email en attente de vérification
         localStorage.setItem('pendingVerificationEmail', userEmail);
-
-        // Redirection immédiate
         navigate('/verify-email', { state: { email: userEmail }, replace: true });
       } else {
         toast.error(error.response?.data?.error || 'Erreur de connexion', {
@@ -58,110 +51,97 @@ export default function Login({ onLogin }: LoginProps) {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <div className="w-full max-w-md space-y-8">
-        {/* Logo et titre */}
+    <div className="min-h-screen bg-[#0a1128] flex items-center justify-center px-6 py-12 font-dm-sans">
+      {/* Background effects */}
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-600/8 rounded-full blur-[120px]" />
+        <div className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-indigo-500/6 rounded-full blur-[100px]" />
+      </div>
+
+      <div className="relative w-full max-w-md space-y-8">
+        {/* Logo + titre */}
         <div className="text-center space-y-4">
-          <div className="mx-auto w-20 h-20 bg-primary rounded-2xl flex items-center justify-center shadow-lg">
-            <Calendar className="w-10 h-10 text-primary-foreground" />
-          </div>
-          <div className="space-y-2">
-            <h1 className="text-3xl font-bold tracking-tight">
-              Bienvenue
-            </h1>
-            <p className="text-muted-foreground">
-              Connectez-vous pour réserver votre créneau Uber
-            </p>
+          <img
+            src={logoFLR}
+            alt="Fuelers"
+            className="w-20 h-20 rounded-full mx-auto shadow-2xl shadow-blue-500/20 ring-4 ring-blue-400/20"
+          />
+          <div>
+            <h1 className="font-syne font-extrabold text-3xl text-white">Bienvenue</h1>
+            <p className="text-white/40 mt-2">Connectez-vous à votre compte Fuelers</p>
           </div>
         </div>
 
-        {/* Carte de connexion */}
-        <Card className="shadow-lg">
-          <CardHeader className="space-y-1 pb-4">
-            <CardTitle className="text-2xl font-semibold text-center">
-              Connexion
-            </CardTitle>
-            <CardDescription className="text-center">
-              Entrez vos identifiants IESEG
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <label htmlFor="email" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                  Email IESEG
-                </label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="prenom.nom@ieseg.fr"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+        {/* Card */}
+        <div className="rounded-2xl bg-white/[0.04] border border-white/10 p-8">
+          <div className="text-center mb-6">
+            <h2 className="font-syne font-bold text-xl text-white">Connexion</h2>
+            <p className="text-white/30 text-sm mt-1">Entrez vos identifiants IESEG</p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="space-y-2">
+              <label htmlFor="email" className="text-sm font-medium text-white/60">
+                Email IESEG
+              </label>
+              <input
+                id="email"
+                type="email"
+                placeholder="prenom.nom@ieseg.fr"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="w-full h-11 px-4 rounded-xl bg-white/[0.06] border border-white/10 text-white placeholder-white/20 text-sm focus:outline-none focus:border-blue-400/40 focus:ring-1 focus:ring-blue-400/20 transition-all"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="password" className="text-sm font-medium text-white/60">
+                Mot de passe
+              </label>
+              <div className="relative">
+                <input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Votre mot de passe"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="h-11"
+                  className="w-full h-11 px-4 pr-11 rounded-xl bg-white/[0.06] border border-white/10 text-white placeholder-white/20 text-sm focus:outline-none focus:border-blue-400/40 focus:ring-1 focus:ring-blue-400/20 transition-all"
                 />
+                <button
+                  type="button"
+                  className="absolute right-0 top-0 h-11 w-11 flex items-center justify-center text-white/30 hover:text-white/60 transition-colors"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
               </div>
+            </div>
 
-              <div className="space-y-2">
-                <label htmlFor="password" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                  Mot de passe
-                </label>
-                <div className="relative">
-                  <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Votre mot de passe"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    className="h-11 pr-10"
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="absolute right-0 top-0 h-11 w-10 hover:bg-transparent"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? (
-                      <EyeOff className="h-4 w-4 text-muted-foreground" />
-                    ) : (
-                      <Eye className="h-4 w-4 text-muted-foreground" />
-                    )}
-                  </Button>
-                </div>
-              </div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full h-11 bg-blue-600 hover:bg-blue-500 text-white font-syne font-bold text-sm rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Connexion en cours...
+                </>
+              ) : (
+                'Se connecter'
+              )}
+            </button>
 
-              <Button
-                type="submit"
-                disabled={loading}
-                className="w-full h-11 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-medium shadow-lg"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Connexion en cours...
-                  </>
-                ) : (
-                  'Se connecter'
-                )}
-              </Button>
-
-              <div className="text-center pt-2">
-                <p className="text-sm text-muted-foreground">
-                  Pas encore de compte ?{' '}
-                  <Link
-                    to="/register"
-                    className="font-medium text-primary hover:underline transition-colors"
-                  >
-                    S'inscrire
-                  </Link>
-                </p>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
-
+            <p className="text-center text-sm text-white/30 pt-2">
+              Pas encore de compte ?{' '}
+              <Link to="/register" className="text-blue-400 hover:text-blue-300 font-medium transition-colors">
+                S&apos;inscrire
+              </Link>
+            </p>
+          </form>
+        </div>
       </div>
     </div>
   );
