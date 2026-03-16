@@ -655,65 +655,103 @@ export default function LandingPage() {
                 </div>
 
                 <div className="mt-8 space-y-3">
-                  <h4 className="font-syne font-bold text-lg text-white/60 mb-4">
-                    Événements en {monthNames[calendarDate.getMonth()]}
-                  </h4>
-                  {events
-                    .filter(e => {
-                      const d = new Date(e.startDate);
-                      return d.getMonth() === calendarDate.getMonth() && d.getFullYear() === calendarDate.getFullYear();
-                    })
-                    .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
-                    .map(event => (
+                  {(() => {
+                    const now = new Date();
+                    const monthEvents = events
+                      .filter(e => {
+                        const d = new Date(e.startDate);
+                        return d.getMonth() === calendarDate.getMonth() && d.getFullYear() === calendarDate.getFullYear();
+                      })
+                      .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
+
+                    const upcomingEvents = monthEvents.filter(e => {
+                      const end = e.endDate ? new Date(e.endDate) : new Date(e.startDate);
+                      return end.getTime() + 60 * 60 * 1000 > now.getTime();
+                    });
+                    const pastEvents = monthEvents.filter(e => {
+                      const end = e.endDate ? new Date(e.endDate) : new Date(e.startDate);
+                      return end.getTime() + 60 * 60 * 1000 <= now.getTime();
+                    });
+
+                    const renderEventCard = (event: typeof events[0], isPast: boolean) => (
                       <Link
                         to={`/events/${event.id}`}
                         key={event.id}
                         id={`cal-event-${event.id}`}
-                        className="group block p-4 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-blue-400/20 hover:bg-blue-500/5 transition-all"
+                        className={`group block p-4 rounded-2xl border transition-all ${isPast ? 'bg-white/[0.02] border-white/5' : 'bg-white/[0.03] border-white/5 hover:border-blue-400/20 hover:bg-blue-500/5'}`}
                       >
                         <div className="flex items-center gap-3 sm:gap-4">
-                          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-gradient-to-br from-blue-500/20 to-indigo-500/10 border border-blue-400/20 flex flex-col items-center justify-center flex-shrink-0">
-                            <span className="text-blue-300 font-syne font-bold text-base sm:text-lg leading-none">
+                          <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex flex-col items-center justify-center flex-shrink-0 border ${isPast ? 'bg-white/5 border-white/10' : 'bg-gradient-to-br from-blue-500/20 to-indigo-500/10 border-blue-400/20'}`}>
+                            <span className={`font-syne font-bold text-base sm:text-lg leading-none ${isPast ? 'text-white/40' : 'text-blue-300'}`}>
                               {new Date(event.startDate).getDate()}
                             </span>
-                            <span className="text-blue-400/60 text-[9px] sm:text-[10px] uppercase font-bold">
+                            <span className={`text-[9px] sm:text-[10px] uppercase font-bold ${isPast ? 'text-white/20' : 'text-blue-400/60'}`}>
                               {new Date(event.startDate).toLocaleDateString('fr-FR', { month: 'short' })}
                             </span>
                           </div>
-                          {event.association && ASSO_LOGOS[event.association] && (
+                          {event.association && ASSO_LOGOS[event.association || 'Fuelers'] && (
                             <img
-                              src={cloudUrl(ASSO_LOGOS[event.association], 48, 'png')}
+                              src={cloudUrl(ASSO_LOGOS[event.association || 'Fuelers'], 48, 'png')}
                               alt={event.association}
-                              className="w-12 h-12 sm:w-14 sm:h-14 rounded-full object-cover flex-shrink-0 ring-1 ring-white/10"
+                              className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full object-cover flex-shrink-0 ring-1 ${isPast ? 'ring-white/5 grayscale' : 'ring-white/10'}`}
                             />
                           )}
                           <div className="flex-1 min-w-0 overflow-hidden">
-                            <h5 className="font-syne font-bold text-white group-hover:text-blue-200 transition-colors break-words line-clamp-2">
+                            <h5 className={`font-syne font-bold transition-colors break-words line-clamp-2 ${isPast ? 'text-white/40' : 'text-white group-hover:text-blue-200'}`}>
                               {event.name}
                             </h5>
                             {event.location && (
-                              <p className="hidden sm:flex text-white/30 text-sm items-center gap-1 mt-0.5">
+                              <p className={`hidden sm:flex text-sm items-center gap-1 mt-0.5 ${isPast ? 'text-white/15' : 'text-white/30'}`}>
                                 <MapPin className="w-3 h-3 flex-shrink-0" />
                                 <span className="truncate">{event.location}</span>
                               </p>
                             )}
                           </div>
-                          <ArrowRight className="w-4 h-4 text-white/20 group-hover:text-blue-400 group-hover:translate-x-1 transition-all flex-shrink-0" />
+                          {isPast ? (
+                            <span className="text-[10px] font-bold text-white/20 uppercase flex-shrink-0">Terminé</span>
+                          ) : (
+                            <ArrowRight className="w-4 h-4 text-white/20 group-hover:text-blue-400 group-hover:translate-x-1 transition-all flex-shrink-0" />
+                          )}
                         </div>
                         {event.location && (
-                          <p className="sm:hidden text-white/30 text-sm flex items-center gap-1.5 mt-2.5">
+                          <p className={`sm:hidden text-sm flex items-center gap-1.5 mt-2.5 ${isPast ? 'text-white/15' : 'text-white/30'}`}>
                             <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
                             <span>{event.location}</span>
                           </p>
                         )}
                       </Link>
-                    ))}
-                  {events.filter(e => {
-                    const d = new Date(e.startDate);
-                    return d.getMonth() === calendarDate.getMonth() && d.getFullYear() === calendarDate.getFullYear();
-                  }).length === 0 && (
-                    <p className="text-white/20 text-center py-8 font-syne">Aucun événement ce mois-ci</p>
-                  )}
+                    );
+
+                    if (monthEvents.length === 0) {
+                      return <p className="text-white/20 text-center py-8 font-syne">Aucun événement ce mois-ci</p>;
+                    }
+
+                    return (
+                      <>
+                        {upcomingEvents.length > 0 && (
+                          <>
+                            <h4 className="font-syne font-bold text-lg text-white mb-4">
+                              Événements à suivre en {monthNames[calendarDate.getMonth()]}
+                            </h4>
+                            {upcomingEvents.map(e => renderEventCard(e, false))}
+                          </>
+                        )}
+                        {pastEvents.length > 0 && (
+                          <>
+                            <h4 className="font-syne font-bold text-sm text-white/30 mt-8 mb-3 flex items-center gap-2">
+                              <span className="h-px flex-1 bg-white/10" />
+                              Événements passés
+                              <span className="h-px flex-1 bg-white/10" />
+                            </h4>
+                            {pastEvents.map(e => renderEventCard(e, true))}
+                          </>
+                        )}
+                        {upcomingEvents.length === 0 && pastEvents.length > 0 && (
+                          <p className="text-white/30 text-center py-4 font-syne text-sm">Aucun événement à venir ce mois-ci</p>
+                        )}
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
             </div>
