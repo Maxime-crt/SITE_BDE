@@ -47,7 +47,7 @@ export const authenticateToken = async (req: AuthRequest, res: Response, next: N
     // Mettre à jour la dernière activité (de façon asynchrone pour ne pas ralentir la requête)
     prisma.user.update({
       where: { id: decoded.userId },
-      data: { lastActivityAt: new Date() }
+      data: { lastActivityAt: new Date(), isOnline: true }
     }).catch(error => {
       console.error('Erreur mise à jour activité:', error);
     });

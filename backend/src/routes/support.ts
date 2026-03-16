@@ -100,22 +100,18 @@ router.put('/messages/:id', authenticateToken, [
     const { message } = req.body;
     const userId = req.user!.id;
 
-    // Vérifier que le message appartient à l'utilisateur
+    // Vérifier que le message appartient à l'utilisateur ou est un message BDE (admin)
+    const isAdmin = req.user!.isAdmin;
     const existingMessage = await prisma.supportMessage.findFirst({
-      where: {
-        id,
-        userId
-      }
+      where: isAdmin
+        ? { id, isFromBDE: true }
+        : { id, userId }
     });
 
     if (!existingMessage) {
       return res.status(404).json({ error: 'Message non trouvé' });
     }
 
-    // Vérifier que le message n'a pas été modifié plus de 2 fois
-    if (existingMessage.editCount >= 2) {
-      return res.status(400).json({ error: 'Vous avez atteint la limite de 2 modifications pour ce message' });
-    }
 
     const updatedMessage = await prisma.supportMessage.update({
       where: { id },
@@ -144,12 +140,12 @@ router.delete('/messages/:id', authenticateToken, async (req: AuthRequest, res: 
     const { id } = req.params;
     const userId = req.user!.id;
 
-    // Vérifier que le message appartient à l'utilisateur
+    // Vérifier que le message appartient à l'utilisateur ou est un message BDE (admin)
+    const isAdmin = req.user!.isAdmin;
     const existingMessage = await prisma.supportMessage.findFirst({
-      where: {
-        id,
-        userId
-      }
+      where: isAdmin
+        ? { id, isFromBDE: true }
+        : { id, userId }
     });
 
     if (!existingMessage) {

@@ -156,6 +156,7 @@ router.get('/admin/members', authenticateToken, requireAdmin, async (req: AuthRe
         email: true,
         phone: true,
         isAdmin: true,
+        instagram: true,
         isActive: true,
         isOnline: true,
         lastLoginAt: true,

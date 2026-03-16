@@ -1,12 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
-import { MessageCircle, Send, User, ArrowLeft } from 'lucide-react';
-import { Button } from '../components/ui/button';
-import { Card } from '../components/ui/card';
-import { Badge } from '../components/ui/badge';
-import { adminApi } from '../services/api';
+import { MessageCircle, Send, User, ArrowLeft, Pencil, Trash2, X, Check } from 'lucide-react';
+import { adminApi, supportApi } from '../services/api';
 import toast from 'react-hot-toast';
 import { Link } from 'react-router-dom';
 import { handleApiErrorWithLog } from '../utils/errorHandler';
+import LandingNav from '../components/LandingNav';
+import logoFLR from '../assets/Logo_FLR.png';
 
 interface SupportMessage {
   id: string;
@@ -41,6 +40,8 @@ export default function AdminSupport() {
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editText, setEditText] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -50,7 +51,6 @@ export default function AdminSupport() {
   useEffect(() => {
     if (selectedUser) {
       loadUserMessages(selectedUser.id).then(() => {
-        // Recharger les conversations pour mettre à jour le badge "Nouveau"
         loadConversations(false);
       });
     }
@@ -66,18 +66,13 @@ export default function AdminSupport() {
 
   const loadConversations = async (showLoading = true) => {
     try {
-      if (showLoading) {
-        setLoading(true);
-      }
+      if (showLoading) setLoading(true);
       const data = await adminApi.getAllConversations();
       setConversations(data);
     } catch (error: any) {
-      console.error('Erreur lors du chargement des conversations:', error);
       handleApiErrorWithLog(error, 'Erreur lors du chargement des conversations', 'AdminSupport.loadConversations');
     } finally {
-      if (showLoading) {
-        setLoading(false);
-      }
+      if (showLoading) setLoading(false);
     }
   };
 
@@ -86,7 +81,6 @@ export default function AdminSupport() {
       const data = await adminApi.getUserMessages(userId);
       setMessages(data);
     } catch (error: any) {
-      console.error('Erreur lors du chargement des messages:', error);
       handleApiErrorWithLog(error, 'Erreur lors du chargement des messages', 'AdminSupport.loadUserMessages');
     }
   };
@@ -100,24 +94,39 @@ export default function AdminSupport() {
 
     try {
       setSending(true);
-      setNewMessage(''); // Vider immédiatement le champ
-
-      await adminApi.replyToUser({
-        userId: currentUserId,
-        message: messageToSend
-      });
-
-      // Recharger uniquement les messages de l'utilisateur actuel
+      setNewMessage('');
+      await adminApi.replyToUser({ userId: currentUserId, message: messageToSend });
       await loadUserMessages(currentUserId);
-
-      // Mettre à jour les conversations en arrière-plan sans affecter le scroll
       loadConversations(false);
     } catch (error: any) {
-      console.error('Erreur lors de l\'envoi du message:', error);
       handleApiErrorWithLog(error, 'Erreur lors de l\'envoi du message', 'AdminSupport.handleSendMessage');
-      setNewMessage(messageToSend); // Restaurer le message en cas d'erreur
+      setNewMessage(messageToSend);
     } finally {
       setSending(false);
+    }
+  };
+
+  const handleEdit = async (msgId: string) => {
+    if (!editText.trim() || !selectedUser) return;
+    try {
+      await supportApi.updateMessage(msgId, editText.trim());
+      setEditingId(null);
+      setEditText('');
+      await loadUserMessages(selectedUser.id);
+      loadConversations(false);
+    } catch (error: any) {
+      handleApiErrorWithLog(error, 'Erreur lors de la modification', 'AdminSupport.handleEdit');
+    }
+  };
+
+  const handleDelete = async (msgId: string) => {
+    if (!selectedUser) return;
+    try {
+      await supportApi.deleteMessage(msgId);
+      await loadUserMessages(selectedUser.id);
+      loadConversations(false);
+    } catch (error: any) {
+      handleApiErrorWithLog(error, 'Erreur lors de la suppression', 'AdminSupport.handleDelete');
     }
   };
 
@@ -127,18 +136,9 @@ export default function AdminSupport() {
     const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
 
     if (diffInHours < 24) {
-      // Afficher seulement l'heure
-      return date.toLocaleTimeString('fr-FR', {
-        hour: '2-digit',
-        minute: '2-digit'
-      });
+      return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
     } else {
-      // Afficher la date au format JJ/MM/AAAA
-      return date.toLocaleDateString('fr-FR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
-      });
+      return date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
     }
   };
 
@@ -148,224 +148,268 @@ export default function AdminSupport() {
   };
 
   const hasUnreadMessages = (user: UserWithMessages) => {
-    // Vérifier s'il y a des messages de l'utilisateur (non-BDE) qui n'ont pas été lus
     return user.supportMessages.some(msg => !msg.isFromBDE && !msg.isRead);
   };
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
-        </div>
+      <div className="min-h-screen bg-[#0a1128] font-dm-sans text-white flex items-center justify-center">
+        <div className="animate-spin rounded-full h-16 w-16 border-2 border-blue-400/20 border-t-blue-400"></div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <Link
-          to="/admin"
-          className="inline-flex items-center text-blue-600 hover:text-blue-500 mb-4"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Retour au tableau de bord admin
-        </Link>
+    <div className="min-h-screen bg-[#0a1128] font-dm-sans text-white flex flex-col">
+      <LandingNav />
 
-        <div className="flex items-center space-x-3">
-          <MessageCircle className="w-8 h-8 text-blue-500" />
-          <h1 className="text-3xl font-bold">Support - Conversations</h1>
-        </div>
-        <p className="text-muted-foreground mt-2">
-          Gérez les demandes de support des utilisateurs
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Liste des conversations */}
-        <Card className="flex flex-col h-[600px]">
-          <div className="p-4 border-b flex-shrink-0">
-            <h2 className="text-lg font-semibold">Conversations</h2>
-          </div>
-          <div className="flex-1 overflow-y-auto p-4 min-h-0 chat-scrollbar">
-            {conversations.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <MessageCircle className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                <p>Aucune conversation</p>
+      <div className="pt-28 pb-16 px-6 flex-1">
+        <div className="max-w-6xl mx-auto">
+          {/* Header */}
+          <div className="mb-8">
+            <Link
+              to="/admin"
+              className="inline-flex items-center gap-2 text-blue-400 hover:text-blue-300 text-sm font-medium mb-4 transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Retour au tableau de bord
+            </Link>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-400/20 flex items-center justify-center">
+                <MessageCircle className="w-5 h-5 text-blue-400" />
               </div>
-            ) : (
-              <div className="space-y-2">
-                {conversations.map((user) => {
-                  const lastMessage = getLastMessage(user);
-                  const unread = hasUnreadMessages(user);
-                  return (
-                    <div
-                      key={user.id}
-                      onClick={() => setSelectedUser(user)}
-                      className={`p-3 rounded-lg cursor-pointer transition-colors ${
-                        selectedUser?.id === user.id
-                          ? 'bg-primary text-primary-foreground'
-                          : 'hover:bg-accent'
-                      }`}
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-2">
-                            <div className="relative">
-                              <p className="font-medium">
-                                {user.firstName} {user.lastName}
-                              </p>
-                            </div>
-                            {/* Indicateur en ligne */}
-                            <span
-                              className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                                user.isOnline
-                                  ? selectedUser?.id === user.id
-                                    ? 'bg-green-500/20 text-green-300'
-                                    : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                                  : selectedUser?.id === user.id
-                                    ? 'bg-primary-foreground/20 text-primary-foreground/70'
-                                    : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
-                              }`}
-                            >
-                              <span className={`w-1.5 h-1.5 rounded-full mr-1 ${
-                                user.isOnline ? 'bg-green-500' : 'bg-gray-400'
-                              }`}></span>
-                              {user.isOnline ? 'En ligne' : 'Hors ligne'}
-                            </span>
-                            {/* Badge nouveau message */}
-                            {unread && (
-                              <Badge variant="destructive" className="h-5 px-2 text-xs">
-                                Nouveau
-                              </Badge>
-                            )}
-                          </div>
-                          {lastMessage && (
-                            <p className={`text-sm truncate mt-1 ${
-                              selectedUser?.id === user.id
-                                ? 'text-primary-foreground/80'
-                                : 'text-muted-foreground'
-                            }`}>
-                              {lastMessage.isFromBDE ? 'Vous: ' : ''}
-                              {lastMessage.message}
-                            </p>
-                          )}
-                        </div>
-                        {lastMessage && (
-                          <span className={`text-xs ${
-                            selectedUser?.id === user.id
-                              ? 'text-primary-foreground/70'
-                              : 'text-muted-foreground'
-                          }`}>
-                            {formatDate(lastMessage.createdAt)}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        </Card>
-
-        {/* Messages */}
-        <Card className="lg:col-span-2 flex flex-col h-[600px]">
-          {selectedUser ? (
-            <>
-              {/* Header */}
-              <div className="p-4 border-b flex-shrink-0">
-                <div className="flex items-center space-x-3">
-                  <div className="flex items-center justify-center w-10 h-10 bg-primary rounded-full">
-                    <User className="w-5 h-5 text-primary-foreground" />
-                  </div>
-                  <div>
-                    <p className="font-semibold">
-                      {selectedUser.firstName} {selectedUser.lastName}
-                    </p>
-                    <p className="text-sm text-muted-foreground">{selectedUser.email}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0 chat-scrollbar">
-                {messages.map((msg) => (
-                  <div
-                    key={msg.id}
-                    className={`flex ${msg.isFromBDE ? 'justify-end' : 'justify-start'}`}
-                  >
-                    <div className={`flex flex-col ${msg.isFromBDE ? 'items-end' : 'items-start'}`}>
-                      <div
-                        className={`max-w-[70%] min-w-[200px] rounded-lg p-3 ${
-                          msg.isFromBDE
-                            ? 'bg-primary text-primary-foreground'
-                            : 'bg-muted'
-                        }`}
-                      >
-                        <p className="text-sm">{msg.message}</p>
-                        <div className="flex items-center justify-end space-x-2 mt-1">
-                          {msg.isEdited && (
-                            <span className={`text-xs ${
-                              msg.isFromBDE ? 'text-primary-foreground/70' : 'text-muted-foreground'
-                            }`}>
-                              modifié
-                            </span>
-                          )}
-                          <span className={`text-xs ${
-                            msg.isFromBDE ? 'text-primary-foreground/70' : 'text-muted-foreground'
-                          }`}>
-                            {formatDate(msg.createdAt)}
-                          </span>
-                        </div>
-                      </div>
-                      {/* WhatsApp style checks */}
-                      <div className={`flex items-center space-x-1 mt-0.5 px-1 ${msg.isFromBDE ? 'justify-end' : 'justify-start'}`}>
-                        <span
-                          className={`text-xs ${
-                            msg.isRead
-                              ? msg.isFromBDE ? 'text-blue-400' : 'text-blue-600'
-                              : msg.isFromBDE ? 'text-primary-foreground/50' : 'text-muted-foreground'
-                          }`}
-                          title={msg.isRead ? `Lu ${formatDate(msg.updatedAt)}` : 'Envoyé'}
-                        >
-                          {msg.isRead ? '✓✓' : '✓'}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                <div ref={messagesEndRef} />
-              </div>
-
-              {/* Input */}
-              <form onSubmit={handleSendMessage} className="p-4 border-t flex-shrink-0">
-                <div className="flex space-x-2">
-                  <input
-                    type="text"
-                    value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
-                    placeholder="Tapez votre réponse..."
-                    className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                    disabled={sending}
-                  />
-                  <Button type="submit" disabled={sending || !newMessage.trim()}>
-                    <Send className="w-4 h-4" />
-                  </Button>
-                </div>
-              </form>
-            </>
-          ) : (
-            <div className="flex-1 flex items-center justify-center text-muted-foreground">
-              <div className="text-center">
-                <MessageCircle className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                <p>Sélectionnez une conversation pour commencer</p>
+              <div>
+                <h1 className="font-syne font-bold text-3xl text-white">Support</h1>
+                <p className="text-white/40 text-sm">Gérez les demandes des utilisateurs</p>
               </div>
             </div>
-          )}
-        </Card>
+          </div>
+
+          {/* Chat layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-[600px]">
+            {/* Conversation list */}
+            <div className="rounded-2xl bg-white/[0.04] border border-white/10 flex flex-col overflow-hidden">
+              <div className="p-4 border-b border-white/10 flex-shrink-0">
+                <h2 className="font-syne font-bold text-white">Conversations</h2>
+              </div>
+              <div className="flex-1 overflow-y-auto p-2 min-h-0 chat-scrollbar">
+                {conversations.length === 0 ? (
+                  <div className="text-center py-12 text-white/30">
+                    <MessageCircle className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                    <p>Aucune conversation</p>
+                  </div>
+                ) : (
+                  <div className="space-y-1">
+                    {conversations.map((user) => {
+                      const lastMessage = getLastMessage(user);
+                      const unread = hasUnreadMessages(user);
+                      const isSelected = selectedUser?.id === user.id;
+                      return (
+                        <div
+                          key={user.id}
+                          onClick={() => setSelectedUser(user)}
+                          className={`p-3 rounded-xl cursor-pointer transition-all ${
+                            isSelected
+                              ? 'bg-blue-500/20 border border-blue-400/20'
+                              : 'hover:bg-white/[0.04] border border-transparent'
+                          }`}
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500/20 to-indigo-500/20 border border-blue-400/20 flex items-center justify-center flex-shrink-0">
+                              <span className="font-syne font-bold text-xs text-blue-300">
+                                {user.firstName[0]}{user.lastName[0]}
+                              </span>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between gap-2">
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <p className="font-bold text-sm text-white truncate">
+                                    {user.firstName} {user.lastName}
+                                  </p>
+                                  <span className={`w-2 h-2 rounded-full flex-shrink-0 ${user.isOnline ? 'bg-green-400' : 'bg-white/20'}`} />
+                                  {unread && (
+                                    <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-red-500 text-white flex-shrink-0">
+                                      Nouveau
+                                    </span>
+                                  )}
+                                </div>
+                                {lastMessage && (
+                                  <span className="text-[11px] text-white/30 flex-shrink-0">
+                                    {formatDate(lastMessage.createdAt)}
+                                  </span>
+                                )}
+                              </div>
+                              {lastMessage && (
+                                <p className="text-xs text-white/30 truncate mt-0.5">
+                                  {lastMessage.isFromBDE ? 'Vous : ' : ''}
+                                  {lastMessage.message}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Messages */}
+            <div className="lg:col-span-2 rounded-2xl bg-white/[0.04] border border-white/10 flex flex-col overflow-hidden">
+              {selectedUser ? (
+                <>
+                  {/* Chat header */}
+                  <div className="p-4 border-b border-white/10 flex-shrink-0">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500/20 to-indigo-500/20 border border-blue-400/20 flex items-center justify-center">
+                        <span className="font-syne font-bold text-sm text-blue-300">
+                          {selectedUser.firstName[0]}{selectedUser.lastName[0]}
+                        </span>
+                      </div>
+                      <div>
+                        <Link
+                          to={`/admin?search=${encodeURIComponent(selectedUser.firstName + ' ' + selectedUser.lastName)}`}
+                          className="font-syne font-bold text-white hover:text-blue-300 transition-colors"
+                        >
+                          {selectedUser.firstName} {selectedUser.lastName}
+                        </Link>
+                        <p className="text-xs text-white/30">{selectedUser.email}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Messages */}
+                  <div className="flex-1 overflow-y-auto p-4 space-y-1.5 min-h-0 chat-scrollbar">
+                    {messages.map((msg) => (
+                      <div
+                        key={msg.id}
+                        className={`flex ${msg.isFromBDE ? 'justify-end' : 'justify-start'}`}
+                      >
+                        <div className={`flex flex-col max-w-[75%] group ${msg.isFromBDE ? 'items-end' : 'items-start'}`}>
+                          {/* Action buttons for BDE messages */}
+                          {msg.isFromBDE && editingId !== msg.id && (
+                            <div className="flex gap-1 mb-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button
+                                onClick={() => { setEditingId(msg.id); setEditText(msg.message); }}
+                                className="p-1 rounded-md bg-white/5 hover:bg-white/10 text-white/40 hover:text-white transition-colors"
+                                title="Modifier"
+                              >
+                                <Pencil className="w-3 h-3" />
+                              </button>
+                              <button
+                                onClick={() => handleDelete(msg.id)}
+                                className="p-1 rounded-md bg-white/5 hover:bg-red-500/20 text-white/40 hover:text-red-400 transition-colors"
+                                title="Supprimer"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </button>
+                            </div>
+                          )}
+                          <div
+                            className={`rounded-xl px-3 py-2 ${
+                              msg.isFromBDE
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-white/[0.06] border border-white/10 text-white'
+                            }`}
+                          >
+                            {editingId === msg.id ? (
+                              <div className="flex items-center gap-2">
+                                <input
+                                  type="text"
+                                  value={editText}
+                                  onChange={(e) => setEditText(e.target.value)}
+                                  onKeyDown={(e) => { if (e.key === 'Enter') handleEdit(msg.id); if (e.key === 'Escape') setEditingId(null); }}
+                                  className="bg-white/10 text-white text-sm rounded-lg px-2 py-1 flex-1 focus:outline-none min-w-[150px]"
+                                  autoFocus
+                                />
+                                <button onClick={() => handleEdit(msg.id)} className="text-green-400 hover:text-green-300">
+                                  <Check className="w-4 h-4" />
+                                </button>
+                                <button onClick={() => setEditingId(null)} className="text-white/40 hover:text-white">
+                                  <X className="w-4 h-4" />
+                                </button>
+                              </div>
+                            ) : (
+                              <p className="text-sm break-words">{msg.message}</p>
+                            )}
+                            <div className="flex items-center justify-end gap-1.5 mt-0.5">
+                              {msg.isEdited && (
+                                <span className={`text-[10px] ${msg.isFromBDE ? 'text-white/50' : 'text-white/30'}`}>
+                                  modifié
+                                </span>
+                              )}
+                              <span className={`text-[10px] ${msg.isFromBDE ? 'text-white/50' : 'text-white/30'}`}>
+                                {formatDate(msg.createdAt)}
+                              </span>
+                              <span className={`text-[10px] ${msg.isRead ? 'text-green-400' : 'text-white/20'}`}>
+                                {msg.isRead ? '✓✓' : '✓'}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    <div ref={messagesEndRef} />
+                  </div>
+
+                  {/* Input */}
+                  <form onSubmit={handleSendMessage} className="p-4 border-t border-white/10 flex-shrink-0">
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={newMessage}
+                        onChange={(e) => setNewMessage(e.target.value)}
+                        placeholder="Tapez votre réponse..."
+                        className="flex-1 px-4 py-2.5 bg-white/[0.04] border border-white/10 rounded-xl text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/40 transition-all"
+                        disabled={sending}
+                      />
+                      <button
+                        type="submit"
+                        disabled={sending || !newMessage.trim()}
+                        className="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-30 disabled:cursor-not-allowed text-white rounded-xl transition-colors"
+                      >
+                        <Send className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </form>
+                </>
+              ) : (
+                <div className="flex-1 flex items-center justify-center text-white/20">
+                  <div className="text-center">
+                    <MessageCircle className="w-16 h-16 mx-auto mb-4 opacity-50" />
+                    <p>Sélectionnez une conversation</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
+
+      {/* Footer */}
+      <footer className="relative py-16 px-6 border-t border-white/10 bg-gradient-to-b from-[#0a1128] to-[#0d1530]">
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-950/20 via-transparent to-indigo-950/20" />
+        <div className="relative max-w-7xl mx-auto">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+            <div className="flex items-center gap-3">
+              <img src={logoFLR} alt="Fuelers" className="w-10 h-10 rounded-full ring-2 ring-blue-400/30 shadow-lg shadow-blue-500/10" />
+              <span className="font-syne font-bold text-xl bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
+                Fuelers
+              </span>
+            </div>
+            <div className="flex items-center gap-6">
+              <a href="https://www.instagram.com/listebde.fuelers" target="_blank" rel="noopener noreferrer" className="text-white/40 hover:text-blue-400 transition-colors duration-300" aria-label="Instagram">
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+              </a>
+              <a href="https://www.tiktok.com/@listebde.fuelers" target="_blank" rel="noopener noreferrer" className="text-white/40 hover:text-white transition-colors duration-300" aria-label="TikTok">
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-5.2 1.74 2.89 2.89 0 012.31-4.64 2.93 2.93 0 01.88.13V9.4a6.84 6.84 0 00-.88-.05A6.33 6.33 0 005 20.1a6.34 6.34 0 0010.86-4.43v-7a8.16 8.16 0 004.77 1.52v-3.4a4.85 4.85 0 01-1-.1z"/></svg>
+              </a>
+            </div>
+            <p className="text-white/60 text-sm font-medium">&copy; {new Date().getFullYear()} Fuelers. Tous droits réservés.</p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

@@ -5,10 +5,13 @@ import { authApi } from '../services/api';
 import logoFLR from '../assets/Logo_FLR.png';
 
 interface LandingNavProps {
-  isAdmin: boolean;
+  isAdmin?: boolean;
 }
 
-export default function LandingNav({ isAdmin }: LandingNavProps) {
+export default function LandingNav({ isAdmin: isAdminProp }: LandingNavProps) {
+  const isAdmin = isAdminProp ?? (() => {
+    try { return JSON.parse(localStorage.getItem('user') || '{}').isAdmin === true; } catch { return false; }
+  })();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   useEffect(() => {

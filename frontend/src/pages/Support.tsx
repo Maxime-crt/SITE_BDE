@@ -251,15 +251,13 @@ export default function Support({ user }: SupportProps) {
                                   )}
                                   {!msg.isFromBDE && (
                                     <>
-                                      {(msg as any).editCount < 2 && (
                                         <button
                                           onClick={() => startEditingMessage(msg)}
                                           className="p-1 hover:bg-white/10 rounded-lg transition-colors text-white/40 hover:text-white/80"
-                                          title={`Vous pouvez encore modifier ${2 - (msg as any).editCount} fois`}
+                                          title="Modifier"
                                         >
                                           <Edit2 className="w-3 h-3" />
                                         </button>
-                                      )}
                                       <button
                                         onClick={() => handleDeleteMessage(msg.id)}
                                         className="p-1 hover:bg-red-500/10 rounded-lg transition-colors text-white/40 hover:text-red-400"
