@@ -1,4 +1,5 @@
 import express from 'express';
+import { Prisma } from '@prisma/client';
 import { body, validationResult } from 'express-validator';
 import { prisma } from '../utils/prisma';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
@@ -469,7 +470,7 @@ router.delete('/request/:requestId', authenticateToken, async (req: AuthRequest,
         where: { id: request.rideId },
         data: {
           status: 'MATCHING',
-          route: null,
+          route: Prisma.DbNull,
           routePolyline: null
         }
       });
