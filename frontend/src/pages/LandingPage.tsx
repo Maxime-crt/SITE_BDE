@@ -242,7 +242,7 @@ export default function LandingPage() {
         <div className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-indigo-500/6 rounded-full blur-[100px] pointer-events-none" />
 
         {/* Content */}
-        <div className="relative z-10 text-center max-w-5xl mx-auto">
+        <div className="relative z-10 text-center max-w-5xl mx-auto w-full">
           <div className="landing-fade-up mb-6">
             <img
               src={logoFLR}
@@ -251,7 +251,7 @@ export default function LandingPage() {
             />
           </div>
 
-          <h1 className="landing-fade-up landing-delay-1 font-syne font-extrabold text-5xl sm:text-6xl md:text-8xl lg:text-9xl tracking-tight leading-[0.9] mb-6">
+          <h1 className="landing-fade-up landing-delay-1 font-syne font-extrabold text-4xl sm:text-6xl md:text-8xl lg:text-9xl tracking-tight leading-[0.9] mb-6">
             <span className="block bg-gradient-to-r from-blue-200 via-blue-400 to-indigo-400 bg-clip-text text-transparent drop-shadow-lg">
               FUELERS
             </span>
@@ -262,7 +262,7 @@ export default function LandingPage() {
             <span className="text-blue-400">Together.</span>
           </p>
 
-          <p className="landing-fade-up landing-delay-3 text-base sm:text-lg text-white/70 max-w-lg mx-auto mb-12 leading-relaxed">
+          <p className="landing-fade-up landing-delay-3 text-sm sm:text-lg text-white/70 max-w-lg mx-auto mb-12 leading-relaxed px-2">
             Événements et retours partagés entre étudiants.
             Trouve des gens avec qui rentrer, partage les frais, profite à fond.
           </p>
@@ -461,7 +461,7 @@ export default function LandingPage() {
                             );
                           })()}
                         </div>
-                        <h3 className="font-syne font-bold text-2xl md:text-4xl text-white mb-3 group-hover:text-blue-200 transition-colors">
+                        <h3 className="font-syne font-bold text-xl sm:text-2xl md:text-4xl text-white mb-3 group-hover:text-blue-200 transition-colors break-words line-clamp-2">
                           {upcomingEvents[0].name}
                         </h3>
                         <div className="flex flex-wrap items-center gap-4 text-white/50 text-sm">
@@ -524,7 +524,7 @@ export default function LandingPage() {
                               );
                             })()}
                           </div>
-                          <h3 className="font-syne font-bold text-xl md:text-2xl text-white mt-2 mb-2 group-hover:text-blue-200 transition-colors">
+                          <h3 className="font-syne font-bold text-lg sm:text-xl md:text-2xl text-white mt-2 mb-2 group-hover:text-blue-200 transition-colors break-words line-clamp-2">
                             {event.name}
                           </h3>
                           {event.location && (
@@ -669,35 +669,43 @@ export default function LandingPage() {
                         to={`/events/${event.id}`}
                         key={event.id}
                         id={`cal-event-${event.id}`}
-                        className="group flex items-center gap-4 p-4 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-blue-400/20 hover:bg-blue-500/5 transition-all"
+                        className="group block p-4 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-blue-400/20 hover:bg-blue-500/5 transition-all"
                       >
-                        <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-500/20 to-indigo-500/10 border border-blue-400/20 flex flex-col items-center justify-center flex-shrink-0">
-                          <span className="text-blue-300 font-syne font-bold text-lg leading-none">
-                            {new Date(event.startDate).getDate()}
-                          </span>
-                          <span className="text-blue-400/60 text-[10px] uppercase font-bold">
-                            {new Date(event.startDate).toLocaleDateString('fr-FR', { month: 'short' })}
-                          </span>
-                        </div>
-                        {event.association && ASSO_LOGOS[event.association] && (
-                          <img
-                            src={cloudUrl(ASSO_LOGOS[event.association], 48, 'png')}
-                            alt={event.association}
-                            className="w-14 h-14 rounded-full object-cover flex-shrink-0 ring-1 ring-white/10"
-                          />
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <h5 className="font-syne font-bold text-white group-hover:text-blue-200 transition-colors truncate">
-                            {event.name}
-                          </h5>
-                          {event.location && (
-                            <p className="text-white/30 text-sm flex items-center gap-1 mt-0.5">
-                              <MapPin className="w-3 h-3" />
-                              {event.location}
-                            </p>
+                        <div className="flex items-center gap-3 sm:gap-4">
+                          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-gradient-to-br from-blue-500/20 to-indigo-500/10 border border-blue-400/20 flex flex-col items-center justify-center flex-shrink-0">
+                            <span className="text-blue-300 font-syne font-bold text-base sm:text-lg leading-none">
+                              {new Date(event.startDate).getDate()}
+                            </span>
+                            <span className="text-blue-400/60 text-[9px] sm:text-[10px] uppercase font-bold">
+                              {new Date(event.startDate).toLocaleDateString('fr-FR', { month: 'short' })}
+                            </span>
+                          </div>
+                          {event.association && ASSO_LOGOS[event.association] && (
+                            <img
+                              src={cloudUrl(ASSO_LOGOS[event.association], 48, 'png')}
+                              alt={event.association}
+                              className="w-12 h-12 sm:w-14 sm:h-14 rounded-full object-cover flex-shrink-0 ring-1 ring-white/10"
+                            />
                           )}
+                          <div className="flex-1 min-w-0 overflow-hidden">
+                            <h5 className="font-syne font-bold text-white group-hover:text-blue-200 transition-colors break-words line-clamp-2">
+                              {event.name}
+                            </h5>
+                            {event.location && (
+                              <p className="hidden sm:flex text-white/30 text-sm items-center gap-1 mt-0.5">
+                                <MapPin className="w-3 h-3 flex-shrink-0" />
+                                <span className="truncate">{event.location}</span>
+                              </p>
+                            )}
+                          </div>
+                          <ArrowRight className="w-4 h-4 text-white/20 group-hover:text-blue-400 group-hover:translate-x-1 transition-all flex-shrink-0" />
                         </div>
-                        <ArrowRight className="w-4 h-4 text-white/20 group-hover:text-blue-400 group-hover:translate-x-1 transition-all flex-shrink-0" />
+                        {event.location && (
+                          <p className="sm:hidden text-white/30 text-sm flex items-center gap-1.5 mt-2.5">
+                            <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
+                            <span>{event.location}</span>
+                          </p>
+                        )}
                       </Link>
                     ))}
                   {events.filter(e => {
@@ -727,7 +735,7 @@ export default function LandingPage() {
               <p className="font-syne text-blue-400 font-bold text-sm tracking-[0.3em] uppercase mb-4">
                 Retour partage
               </p>
-              <h2 className="font-syne font-extrabold text-4xl sm:text-5xl md:text-6xl tracking-tight text-white mb-6">
+              <h2 className="font-syne font-extrabold text-3xl sm:text-5xl md:text-6xl tracking-tight text-white mb-6">
                 Rentre
                 <br />
                 <span className="bg-gradient-to-r from-blue-400 via-indigo-400 to-blue-300 bg-clip-text text-transparent">
