@@ -51,7 +51,7 @@ function AppContent() {
 
   const location = useLocation();
   const authPages = ['/login', '/register', '/verify-email', '/accept-charter'];
-  const darkPages = ['/', '/my-rides', '/support'];
+  const darkPages = ['/', '/my-rides', '/support', '/profile'];
   const isLandingRoute = authPages.includes(location.pathname) || ((darkPages.includes(location.pathname) || location.pathname.startsWith('/events/')) && !!user);
 
   // Vérification initiale au chargement de l'app
