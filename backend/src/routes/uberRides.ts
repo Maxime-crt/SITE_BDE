@@ -427,13 +427,6 @@ router.delete('/request/:requestId', authenticateToken, async (req: AuthRequest,
       });
     }
 
-    // Vérifier qu'on est avant l'heure de départ
-    if (new Date() > request.ride.departureTime) {
-      return res.status(400).json({
-        error: 'Impossible d\'annuler après l\'heure de départ prévue'
-      });
-    }
-
     // Marquer comme annulé
     await prisma.uberRideRequest.update({
       where: { id: requestId },
