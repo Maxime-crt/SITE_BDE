@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { Car, Calendar, MapPin, Users, Clock, Phone, ArrowLeft, Euro } from 'lucide-react';
+import { Car, Calendar, MapPin, Users, Clock, Phone, ArrowLeft, Euro, LogOut } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../services/api';
 import { Button } from '../components/ui/button';
 import RideMap from '../components/RideMap';
+import ConfirmDialog from '../components/ConfirmDialog';
 import { formatParisDate } from '../utils/dateUtils';
 
 interface RideMember {
@@ -54,6 +55,8 @@ export default function RideDetail() {
   const navigate = useNavigate();
   const [ride, setRide] = useState<RideDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [confirmLeaveOpen, setConfirmLeaveOpen] = useState(false);
+  const [leaving, setLeaving] = useState(false);
 
   useEffect(() => {
     if (rideId) {
@@ -72,6 +75,30 @@ export default function RideDetail() {
       navigate('/my-rides');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Trouver la request de l'utilisateur courant
+  const currentUserId = (() => {
+    const saved = localStorage.getItem('user');
+    if (!saved) return null;
+    try { return JSON.parse(saved).id; } catch { return null; }
+  })();
+
+  const myRequest = ride?.requests.find(r => r.userId === currentUserId && r.status === 'ACCEPTED');
+
+  const handleLeaveGroup = async () => {
+    if (!myRequest) return;
+    try {
+      setLeaving(true);
+      await api.delete(`/uber-rides/request/${myRequest.id}`);
+      toast.success('Vous avez quitté le groupe');
+      navigate('/my-rides');
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Erreur lors de la sortie du groupe');
+    } finally {
+      setLeaving(false);
+      setConfirmLeaveOpen(false);
     }
   };
 
@@ -367,9 +394,32 @@ export default function RideDetail() {
                 </div>
               </div>
             )}
+
+            {/* Quitter le groupe */}
+            {myRequest && ride.status !== 'COMPLETED' && ride.status !== 'CANCELLED' && (
+              <button
+                onClick={() => setConfirmLeaveOpen(true)}
+                disabled={leaving}
+                className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 font-semibold text-sm rounded-lg transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+                Quitter le groupe
+              </button>
+            )}
           </div>
         </div>
       </div>
+
+      <ConfirmDialog
+        isOpen={confirmLeaveOpen}
+        title="Quitter le groupe"
+        message="Êtes-vous sûr de vouloir quitter ce groupe ?"
+        confirmText="Oui, quitter"
+        cancelText="Non, rester"
+        type="danger"
+        onConfirm={handleLeaveGroup}
+        onCancel={() => setConfirmLeaveOpen(false)}
+      />
     </div>
   );
 }

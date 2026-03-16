@@ -256,8 +256,9 @@ router.get('/my-rides', authenticateToken, async (req: AuthRequest, res: express
                 endDate: true
               }
             },
-            _count: {
-              select: { requests: true }
+            requests: {
+              where: { status: { in: ['PENDING', 'ACCEPTED'] } },
+              select: { id: true }
             }
           }
         }
@@ -304,7 +305,7 @@ router.get('/my-rides', authenticateToken, async (req: AuthRequest, res: express
         group: ride ? {
           id: ride.id,
           estimatedCost: ride.estimatedCost,
-          memberCount: ride._count.requests
+          memberCount: ride.requests?.length || 0
         } : undefined
       };
 
@@ -457,10 +458,31 @@ router.delete('/request/:requestId', authenticateToken, async (req: AuthRequest,
     });
 
     if (updatedRide && updatedRide.requests.length === 0) {
+      // Plus aucun passager → annuler le ride
       await prisma.uberRide.update({
         where: { id: request.rideId },
         data: { status: 'CANCELLED' }
       });
+    } else if (updatedRide && updatedRide.requests.length === 1) {
+      // Plus qu'un seul passager → repasser en mode recherche
+      await prisma.uberRide.update({
+        where: { id: request.rideId },
+        data: {
+          status: 'MATCHING',
+          route: null,
+          routePolyline: null
+        }
+      });
+
+      // Relancer le matching pour le passager restant
+      try {
+        const { findMatches } = await import('../services/uberMatchingService');
+        findMatches(updatedRide.requests[0].id).catch(err => {
+          console.error('Erreur re-matching après départ:', err);
+        });
+      } catch (err) {
+        console.error('Erreur import matching service:', err);
+      }
     }
 
     // Notifier les autres passagers via socket

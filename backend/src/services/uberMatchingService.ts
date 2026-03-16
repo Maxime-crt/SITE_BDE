@@ -37,6 +37,17 @@ export async function findMatches(requestId: string): Promise<MatchResult> {
 
     console.log(`= Recherche de matches pour ${request.user.firstName}...`);
 
+    // Supprimer les anciennes requests CANCELLED de cet utilisateur pour cet événement
+    // afin d'éviter la contrainte unique (rideId, userId) lors du re-matching
+    await prisma.uberRideRequest.deleteMany({
+      where: {
+        userId: request.userId,
+        eventId: request.eventId,
+        status: 'CANCELLED',
+        id: { not: requestId }
+      }
+    });
+
     // 1. Récupérer toutes les demandes ACCEPTED (actives) pour le même événement
     const otherRequests = await prisma.uberRideRequest.findMany({
       where: {
@@ -65,6 +76,11 @@ export async function findMatches(requestId: string): Promise<MatchResult> {
     });
 
     console.log(`✅ ${otherRequests.length} demande(s) trouvée(s) avec horaires compatibles`);
+    if (otherRequests.length > 0) {
+      otherRequests.forEach(r => {
+        console.log(`   → ${r.user.firstName} (status: ${r.status}, rideId: ${r.rideId}, ride.status: ${r.ride?.status}, ride.currentPassengers: ${r.ride?.currentPassengers}, activeRequests: ${r.ride?.requests?.length})`);
+      });
+    }
 
     if (otherRequests.length === 0) {
       return {
@@ -168,6 +184,14 @@ export async function findMatches(requestId: string): Promise<MatchResult> {
           }
         });
 
+        // Annuler l'ancien ride orphelin de l'utilisateur
+        if (request.rideId !== existingRide.id) {
+          await prisma.uberRide.update({
+            where: { id: request.rideId },
+            data: { status: 'CANCELLED', currentPassengers: 0 }
+          });
+        }
+
         await prisma.uberRide.update({
           where: { id: existingRide.id },
           data: {
@@ -220,6 +244,14 @@ export async function findMatches(requestId: string): Promise<MatchResult> {
           status: 'ACCEPTED' // Match trouvé et accepté automatiquement
         }
       });
+
+        // Annuler l'ancien ride orphelin de l'utilisateur
+      if (request.rideId !== bestMatch.rideId) {
+        await prisma.uberRide.update({
+          where: { id: request.rideId },
+          data: { status: 'CANCELLED', currentPassengers: 0 }
+        });
+      }
 
       await prisma.uberRide.update({
         where: { id: bestMatch.rideId },
@@ -380,7 +412,7 @@ export async function runPeriodicMatching() {
 
     const pendingRequests = await prisma.uberRideRequest.findMany({
       where: {
-        status: 'PENDING',
+        status: { in: ['PENDING', 'ACCEPTED'] },
         ride: {
           status: 'MATCHING',
           currentPassengers: { lt: 4 }
@@ -390,8 +422,20 @@ export async function runPeriodicMatching() {
 
     console.log(`✅ ${pendingRequests.length} demande(s) en attente`);
 
+    const matchedRideIds = new Set<string>();
     for (const request of pendingRequests) {
-      await findMatches(request.id);
+      // Vérifier que cette request n'a pas déjà été matchée dans ce cycle
+      const freshRequest = await prisma.uberRideRequest.findUnique({
+        where: { id: request.id },
+        include: { ride: true }
+      });
+      if (!freshRequest || freshRequest.ride.currentPassengers > 1 || matchedRideIds.has(freshRequest.rideId)) {
+        continue;
+      }
+      const result = await findMatches(request.id);
+      if (result.matched && result.rideId) {
+        matchedRideIds.add(result.rideId);
+      }
     }
 
     console.log(' Matching périodique terminé');

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Car, Calendar, MapPin, Users, Clock, Check, AlertCircle, ArrowRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../services/api';
@@ -47,6 +47,9 @@ export default function MyRides() {
   const [activeTab, setActiveTab] = useState<'active' | 'past'>('active');
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [rideToCancel, setRideToCancel] = useState<string | null>(null);
+  const [cancelIsLeave, setCancelIsLeave] = useState(false);
+
+  const navigate = useNavigate();
 
   const isAdmin = (() => {
     const saved = localStorage.getItem('user');
@@ -92,8 +95,9 @@ export default function MyRides() {
     }
   };
 
-  const openCancelDialog = (requestId: string) => {
+  const openCancelDialog = (requestId: string, isLeave = false) => {
     setRideToCancel(requestId);
+    setCancelIsLeave(isLeave);
     setConfirmDialogOpen(true);
   };
 
@@ -216,13 +220,18 @@ export default function MyRides() {
                 : 'Vos trajets terminés apparaîtront ici'}
             </p>
             {activeTab === 'active' && (
-              <Link
-                to="/"
+              <button
+                onClick={() => {
+                  navigate('/');
+                  setTimeout(() => {
+                    document.getElementById('events')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }, 100);
+                }}
                 className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white font-syne font-bold text-sm rounded-xl transition-colors"
               >
                 Voir les événements
                 <ArrowRight className="w-4 h-4" />
-              </Link>
+              </button>
             )}
           </div>
         ) : (
@@ -329,14 +338,22 @@ export default function MyRides() {
                 )}
 
                 {ride.status === 'MATCHED' && (
-                  <div className="rounded-xl bg-blue-500/10 border border-blue-400/20 p-4">
-                    <div className="flex items-start gap-3">
-                      <AlertCircle className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
-                      <div>
-                        <p className="text-sm font-bold text-white">Un groupe a été trouvé !</p>
-                        <p className="text-sm text-white/40 mt-1">Vous recevrez une notification quand le groupe sera confirmé.</p>
+                  <div className="space-y-3">
+                    <div className="rounded-xl bg-blue-500/10 border border-blue-400/20 p-4">
+                      <div className="flex items-start gap-3">
+                        <AlertCircle className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-sm font-bold text-white">Un groupe a été trouvé !</p>
+                          <p className="text-sm text-white/40 mt-1">Vous recevrez une notification quand le groupe sera confirmé.</p>
+                        </div>
                       </div>
                     </div>
+                    <button
+                      onClick={() => openCancelDialog(ride.id)}
+                      className="w-full px-5 py-2.5 bg-white/[0.04] hover:bg-red-600/20 border border-white/10 hover:border-red-500/30 text-white/60 hover:text-red-400 font-syne font-bold text-sm rounded-xl transition-all"
+                    >
+                      Annuler la demande
+                    </button>
                   </div>
                 )}
 
@@ -379,6 +396,12 @@ export default function MyRides() {
                         >
                           Voir les détails du groupe
                         </Link>
+                        <button
+                          onClick={() => openCancelDialog(ride.id, true)}
+                          className="w-full px-5 py-2.5 bg-white/[0.04] hover:bg-red-600/20 border border-white/10 hover:border-red-500/30 text-white/60 hover:text-red-400 font-syne font-bold text-sm rounded-xl transition-all"
+                        >
+                          Quitter le groupe
+                        </button>
                       </div>
                     )}
                   </>
@@ -415,9 +438,12 @@ export default function MyRides() {
 
       <ConfirmDialog
         isOpen={confirmDialogOpen}
-        title="Annuler la demande de trajet"
-        message="Êtes-vous sûr de vouloir annuler cette demande ? Vous pourrez en refaire une nouvelle après."
-        confirmText="Oui, annuler"
+        title={cancelIsLeave ? "Quitter le groupe" : "Annuler la demande de trajet"}
+        message={cancelIsLeave
+          ? "Êtes-vous sûr de vouloir quitter ce groupe ?"
+          : "Êtes-vous sûr de vouloir annuler cette demande ? Vous pourrez en refaire une nouvelle après."
+        }
+        confirmText={cancelIsLeave ? "Oui, quitter" : "Oui, annuler"}
         cancelText="Non, garder"
         type="danger"
         onConfirm={handleCancelConfirm}
