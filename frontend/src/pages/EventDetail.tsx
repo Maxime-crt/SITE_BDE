@@ -34,7 +34,11 @@ function eventStatus(startStr: string, endStr: string) {
   const end = new Date(endStr).getTime();
   const msUntilStart = start - now;
   const hoursUntilStart = msUntilStart / (1000 * 60 * 60);
-  const diffDays = Math.ceil(msUntilStart / (1000 * 60 * 60 * 24));
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const startDay = new Date(startStr);
+  startDay.setHours(0, 0, 0, 0);
+  const diffDays = Math.round((startDay.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 
   if (now > end + 60 * 60 * 1000) return null;
   if (now > end) return { label: 'Terminé', color: 'text-red-400', bg: 'bg-red-500/10 border-red-500/30' };
