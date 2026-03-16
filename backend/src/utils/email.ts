@@ -50,7 +50,7 @@ export async function sendPasswordResetEmail(email: string, firstName: string, r
               <p>Vous avez demandé la réinitialisation de votre mot de passe.</p>
               <p>Cliquez sur le bouton ci-dessous pour choisir un nouveau mot de passe :</p>
               <div style="text-align: center;">
-                <a href="${resetLink}" class="btn">Réinitialiser mon mot de passe</a>
+                <a href="${resetLink}" class="btn" style="display: inline-block; background: #667eea; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: bold; font-size: 16px;">Réinitialiser mon mot de passe</a>
               </div>
               <p>Ce lien est valable pendant <strong>15 minutes</strong>.</p>
               <p style="font-size: 12px; color: #999;">Si le bouton ne fonctionne pas, copiez ce lien dans votre navigateur :<br/><a href="${resetLink}" style="color: #667eea; word-break: break-all;">${resetLink}</a></p>
