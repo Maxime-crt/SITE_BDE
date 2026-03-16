@@ -143,7 +143,7 @@ function useDragScroll(speed: number, direction: 'left' | 'right', onTap?: (targ
 export default function LandingPage() {
   const [events, setEvents] = useState<Event[]>([]);
   const [calendarDate, setCalendarDate] = useState(new Date());
-  const [showCalendar, setShowCalendar] = useState(false);
+  const [showCalendar, setShowCalendar] = useState(() => sessionStorage.getItem('showCalendar') === 'true');
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   const landscapeScroll = useDragScroll(30, 'left', (el) => {
@@ -547,7 +547,7 @@ export default function LandingPage() {
 
               <div className="mt-16 text-center">
                 <button
-                  onClick={() => setShowCalendar(true)}
+                  onClick={() => { setShowCalendar(true); sessionStorage.setItem('showCalendar', 'true'); }}
                   className="inline-flex items-center gap-2 text-blue-400 hover:text-blue-300 font-syne font-bold text-lg group transition-colors"
                 >
                   Voir le calendrier complet
@@ -559,7 +559,7 @@ export default function LandingPage() {
             /* ══════ CALENDAR VIEW ══════ */
             <div key="calendar" className="landing-view-enter">
               <button
-                onClick={() => setShowCalendar(false)}
+                onClick={() => { setShowCalendar(false); sessionStorage.setItem('showCalendar', 'false'); }}
                 className="mb-8 inline-flex items-center gap-2 text-white/50 hover:text-blue-400 font-syne font-medium transition-colors"
               >
                 <ChevronLeft className="w-4 h-4" />

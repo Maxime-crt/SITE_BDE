@@ -193,10 +193,14 @@ export default function EventDetail({ user }: EventDetailProps) {
           <div className="absolute top-8 inset-x-0 px-6 md:px-10 mx-auto max-w-4xl flex items-center justify-between gap-2 flex-wrap">
             <button
               onClick={() => {
-                navigate('/');
-                setTimeout(() => {
-                  document.getElementById('events')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }, 100);
+                if (window.history.length > 1) {
+                  navigate(-1);
+                } else {
+                  navigate('/');
+                  setTimeout(() => {
+                    document.getElementById('events')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }, 100);
+                }
               }}
               className="flex items-center gap-2 px-3 py-2 bg-blue-600/80 backdrop-blur-sm rounded-full text-white hover:bg-blue-500 transition-all text-xs sm:text-sm"
             >
