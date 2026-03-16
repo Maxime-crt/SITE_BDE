@@ -784,78 +784,174 @@ export default function LandingPage() {
                   backgroundSize: '28px 28px'
                 }} />
 
-                <svg className="absolute inset-0 w-full h-full" viewBox="0 0 500 480" fill="none">
+                {/* Desktop SVG */}
+                <svg className="absolute inset-0 w-full h-full hidden sm:block" viewBox="0 0 500 480" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <defs>
                     <linearGradient id="routeMain" x1="250" y1="60" x2="250" y2="440" gradientUnits="userSpaceOnUse">
                       <stop stopColor="#3b82f6" />
                       <stop offset="1" stopColor="#818cf8" />
                     </linearGradient>
+                    <filter id="glow">
+                      <feGaussianBlur stdDeviation="2" result="blur" />
+                      <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                    </filter>
                   </defs>
 
-                  {/* Main route: soirée (top center) going south */}
+                  {/* Main route */}
                   <path
-                    d="M250 60 C250 100, 240 140, 230 180 S210 240, 200 280 S180 340, 160 400"
+                    d="M280 60 C280 100, 270 140, 260 180 S240 240, 230 280 S210 340, 200 400"
                     stroke="url(#routeMain)" strokeWidth="3" strokeLinecap="round"
                     strokeDasharray="8 6" className="landing-route-draw"
                   />
-                  {/* Branch 1: passenger drops off east-side mid-route */}
+                  {/* Branch 1 → Maxime */}
                   <path
-                    d="M230 180 C260 190, 300 200, 340 210"
+                    d="M260 180 C290 190, 320 200, 370 210"
                     stroke="#60a5fa" strokeWidth="2" strokeLinecap="round"
                     strokeDasharray="5 5" opacity="0.6" className="landing-route-draw-delay1"
                   />
-                  {/* Branch 2: passenger drops off west */}
+                  {/* Branch 2 → Léa */}
                   <path
-                    d="M200 280 C170 290, 120 300, 80 310"
+                    d="M230 280 C200 290, 160 300, 130 310"
                     stroke="#818cf8" strokeWidth="2" strokeLinecap="round"
                     strokeDasharray="5 5" opacity="0.6" className="landing-route-draw-delay2"
                   />
-                  {/* Branch 3: passenger drops off east-south */}
+                  {/* Branch 3 → Hugo */}
                   <path
-                    d="M180 340 C220 355, 280 370, 350 380"
+                    d="M210 340 C250 355, 310 370, 380 380"
                     stroke="#a78bfa" strokeWidth="2" strokeLinecap="round"
                     strokeDasharray="5 5" opacity="0.6" className="landing-route-draw-delay3"
                   />
 
-                  {/* Start: soirée (blue) */}
-                  <circle cx="250" cy="60" r="10" fill="#3b82f6" className="landing-pulse-dot" />
-                  <circle cx="250" cy="60" r="5" fill="white" />
+                  {/* Start dot: soirée */}
+                  <circle cx="280" cy="60" r="10" fill="#3b82f6" className="landing-pulse-dot" />
+                  <circle cx="280" cy="60" r="5" fill="white" />
 
-                  {/* Drop-off 1 (green) */}
-                  <circle cx="340" cy="210" r="7" fill="#22c55e" className="landing-pulse-dot" />
-                  <circle cx="340" cy="210" r="3.5" fill="white" />
+                  {/* Drop-off dots */}
+                  <circle cx="370" cy="210" r="7" fill="#22c55e" className="landing-pulse-dot" />
+                  <circle cx="370" cy="210" r="3.5" fill="white" />
+                  <circle cx="130" cy="310" r="7" fill="#22c55e" className="landing-pulse-dot" />
+                  <circle cx="130" cy="310" r="3.5" fill="white" />
+                  <circle cx="380" cy="380" r="7" fill="#22c55e" className="landing-pulse-dot" />
+                  <circle cx="380" cy="380" r="3.5" fill="white" />
+                  <circle cx="200" cy="400" r="7" fill="#22c55e" className="landing-pulse-dot" />
+                  <circle cx="200" cy="400" r="3.5" fill="white" />
 
-                  {/* Drop-off 2 (green) */}
-                  <circle cx="80" cy="310" r="7" fill="#22c55e" className="landing-pulse-dot" />
-                  <circle cx="80" cy="310" r="3.5" fill="white" />
+                  {/* ── Labels inside SVG (scale with viewBox) ── */}
 
-                  {/* Drop-off 3 (green) */}
-                  <circle cx="350" cy="380" r="7" fill="#22c55e" className="landing-pulse-dot" />
-                  <circle cx="350" cy="380" r="3.5" fill="white" />
+                  {/* La soirée */}
+                  <foreignObject x="170" y="15" width="220" height="40">
+                    <div className="flex justify-center">
+                      <div className="bg-blue-500/15 backdrop-blur-md border border-blue-400/20 rounded-xl px-4 py-1.5 inline-block">
+                        <p className="text-blue-300 text-[15px] font-bold font-syne whitespace-nowrap">La soirée 🎉</p>
+                      </div>
+                    </div>
+                  </foreignObject>
 
-                  {/* Final destination: driver (green) */}
-                  <circle cx="160" cy="400" r="7" fill="#22c55e" className="landing-pulse-dot" />
-                  <circle cx="160" cy="400" r="3.5" fill="white" />
+                  {/* Maxime déposé — right of dot */}
+                  <foreignObject x="385" y="193" width="160" height="34">
+                    <div className="inline-block bg-green-500/10 backdrop-blur-sm border border-green-400/20 rounded-lg px-3 py-1">
+                      <p className="text-green-300 text-[14px] font-bold whitespace-nowrap">Maxime déposé</p>
+                    </div>
+                  </foreignObject>
+
+                  {/* Léa déposée — left of dot */}
+                  <foreignObject x="-50" y="293" width="165" height="34">
+                    <div className="flex justify-end">
+                      <div className="bg-green-500/10 backdrop-blur-sm border border-green-400/20 rounded-lg px-3 py-1 inline-block">
+                        <p className="text-green-300 text-[14px] font-bold whitespace-nowrap">Léa déposée</p>
+                      </div>
+                    </div>
+                  </foreignObject>
+
+                  {/* Hugo déposé — right of dot */}
+                  <foreignObject x="395" y="363" width="160" height="34">
+                    <div className="inline-block bg-green-500/10 backdrop-blur-sm border border-green-400/20 rounded-lg px-3 py-1">
+                      <p className="text-green-300 text-[14px] font-bold whitespace-nowrap">Hugo déposé</p>
+                    </div>
+                  </foreignObject>
+
+                  {/* Toi 🏠 — below dot */}
+                  <foreignObject x="145" y="412" width="120" height="34">
+                    <div className="flex justify-center">
+                      <div className="bg-indigo-500/10 backdrop-blur-sm border border-indigo-400/20 rounded-lg px-3 py-1 inline-block">
+                        <p className="text-indigo-300 text-[14px] font-bold whitespace-nowrap">Toi 🏠</p>
+                      </div>
+                    </div>
+                  </foreignObject>
                 </svg>
 
-                {/* Labels */}
-                <div className="absolute top-3 left-1/2 -translate-x-1/2 bg-blue-500/15 backdrop-blur-md border border-blue-400/20 rounded-2xl px-4 py-2">
-                  <p className="text-blue-300 text-xs font-bold font-syne text-center">La soirée 🎉</p>
-                </div>
+                {/* Mobile SVG — labels below dots, tighter viewBox */}
+                <svg className="absolute inset-0 w-full h-full sm:hidden" viewBox="40 5 440 455" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+                  <defs>
+                    <linearGradient id="routeMainM" x1="280" y1="60" x2="200" y2="440" gradientUnits="userSpaceOnUse">
+                      <stop stopColor="#3b82f6" />
+                      <stop offset="1" stopColor="#818cf8" />
+                    </linearGradient>
+                  </defs>
 
-                {/* Passenger labels — positioned next to dots, not on top */}
-                <div className="absolute top-[41%] right-[15%] bg-green-500/10 backdrop-blur-sm border border-green-400/20 rounded-xl px-3 py-1.5">
-                  <p className="text-green-300 text-[10px] font-bold">Maxime déposé</p>
-                </div>
-                <div className="absolute top-[62%] left-[4%] bg-green-500/10 backdrop-blur-sm border border-green-400/20 rounded-xl px-3 py-1.5">
-                  <p className="text-green-300 text-[10px] font-bold">Léa déposée</p>
-                </div>
-                <div className="absolute bottom-[18%] right-[16%] bg-green-500/10 backdrop-blur-sm border border-green-400/20 rounded-xl px-3 py-1.5">
-                  <p className="text-green-300 text-[10px] font-bold">Hugo déposé</p>
-                </div>
-                <div className="absolute bottom-[12%] left-[23%] bg-indigo-500/10 backdrop-blur-sm border border-indigo-400/20 rounded-xl px-3 py-1.5">
-                  <p className="text-indigo-300 text-[10px] font-bold">Toi 🏠</p>
-                </div>
+                  {/* Main route */}
+                  <path
+                    d="M280 60 C280 100, 270 140, 260 180 S240 240, 230 280 S210 340, 200 400"
+                    stroke="url(#routeMainM)" strokeWidth="3" strokeLinecap="round"
+                    strokeDasharray="8 6" className="landing-route-draw"
+                  />
+                  <path d="M260 180 C290 190, 320 200, 370 210" stroke="#60a5fa" strokeWidth="2" strokeLinecap="round" strokeDasharray="5 5" opacity="0.6" className="landing-route-draw-delay1" />
+                  <path d="M230 280 C200 290, 160 300, 130 310" stroke="#818cf8" strokeWidth="2" strokeLinecap="round" strokeDasharray="5 5" opacity="0.6" className="landing-route-draw-delay2" />
+                  <path d="M210 340 C250 355, 310 370, 380 380" stroke="#a78bfa" strokeWidth="2" strokeLinecap="round" strokeDasharray="5 5" opacity="0.6" className="landing-route-draw-delay3" />
+
+                  {/* Dots */}
+                  <circle cx="280" cy="60" r="10" fill="#3b82f6" className="landing-pulse-dot" />
+                  <circle cx="280" cy="60" r="5" fill="white" />
+                  <circle cx="370" cy="210" r="7" fill="#22c55e" className="landing-pulse-dot" />
+                  <circle cx="370" cy="210" r="3.5" fill="white" />
+                  <circle cx="130" cy="310" r="7" fill="#22c55e" className="landing-pulse-dot" />
+                  <circle cx="130" cy="310" r="3.5" fill="white" />
+                  <circle cx="380" cy="380" r="7" fill="#22c55e" className="landing-pulse-dot" />
+                  <circle cx="380" cy="380" r="3.5" fill="white" />
+                  <circle cx="200" cy="400" r="7" fill="#22c55e" className="landing-pulse-dot" />
+                  <circle cx="200" cy="400" r="3.5" fill="white" />
+
+                  {/* Labels — La soirée above, others below their dots */}
+                  <foreignObject x="200" y="10" width="160" height="36">
+                    <div className="flex justify-center">
+                      <div className="bg-blue-500/15 backdrop-blur-md border border-blue-400/20 rounded-xl px-3 py-1 inline-block">
+                        <p className="text-blue-300 text-[15px] font-bold font-syne whitespace-nowrap">La soirée 🎉</p>
+                      </div>
+                    </div>
+                  </foreignObject>
+
+                  <foreignObject x="295" y="222" width="160" height="34">
+                    <div className="flex justify-center">
+                      <div className="bg-green-500/10 backdrop-blur-sm border border-green-400/20 rounded-lg px-3 py-1 inline-block">
+                        <p className="text-green-300 text-[14px] font-bold whitespace-nowrap">Maxime déposé</p>
+                      </div>
+                    </div>
+                  </foreignObject>
+
+                  <foreignObject x="55" y="322" width="150" height="34">
+                    <div className="flex justify-center">
+                      <div className="bg-green-500/10 backdrop-blur-sm border border-green-400/20 rounded-lg px-3 py-1 inline-block">
+                        <p className="text-green-300 text-[14px] font-bold whitespace-nowrap">Léa déposée</p>
+                      </div>
+                    </div>
+                  </foreignObject>
+
+                  <foreignObject x="305" y="392" width="160" height="34">
+                    <div className="flex justify-center">
+                      <div className="bg-green-500/10 backdrop-blur-sm border border-green-400/20 rounded-lg px-3 py-1 inline-block">
+                        <p className="text-green-300 text-[14px] font-bold whitespace-nowrap">Hugo déposé</p>
+                      </div>
+                    </div>
+                  </foreignObject>
+
+                  <foreignObject x="130" y="414" width="140" height="34">
+                    <div className="flex justify-center">
+                      <div className="bg-indigo-500/10 backdrop-blur-sm border border-indigo-400/20 rounded-lg px-3 py-1 inline-block">
+                        <p className="text-indigo-300 text-[14px] font-bold whitespace-nowrap">Toi 🏠</p>
+                      </div>
+                    </div>
+                  </foreignObject>
+                </svg>
 
                 {/* Glow effects */}
                 <div className="absolute top-8 left-1/2 -translate-x-1/2 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl" />
