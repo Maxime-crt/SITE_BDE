@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { MapPin, Users, ArrowRight, Car, Clock, ChevronLeft, ChevronRight, Euro, Shield, Plus } from 'lucide-react';
+import { MapPin, Users, ArrowRight, Car, Clock, ChevronLeft, ChevronRight, Euro, Shield, Plus, X } from 'lucide-react';
 import { eventsApi } from '../services/api';
 import type { Event } from '../types';
 import logoFLR from '../assets/Logo_FLR.png';
