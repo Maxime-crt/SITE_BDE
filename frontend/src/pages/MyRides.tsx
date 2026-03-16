@@ -161,10 +161,10 @@ export default function MyRides() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a1128] font-dm-sans text-white">
+    <div className="min-h-screen bg-[#0a1128] font-dm-sans text-white flex flex-col">
       <LandingNav isAdmin={isAdmin} />
 
-      <div className="pt-28 pb-16 max-w-4xl mx-auto px-6 md:px-10">
+      <div className="flex-1 pt-28 pb-16 max-w-4xl mx-auto px-6 md:px-10 w-full">
         {/* Header */}
         <div className="mb-10">
           <div className="flex items-center gap-3 mb-2">
