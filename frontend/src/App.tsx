@@ -6,7 +6,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import VerifyEmail from './pages/VerifyEmail';
 import AcceptCharter from './pages/AcceptCharter';
-import Dashboard from './pages/Dashboard';
+
 import EventDetail from './pages/EventDetail';
 import CreateEvent from './pages/CreateEvent';
 import Profile from './pages/Profile';
@@ -25,8 +25,6 @@ import Footer from './components/Footer';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { authApi } from './services/api';
 import type { User } from './types';
-import { ThemeProvider } from './contexts/ThemeContext';
-import { useAuthPageDetection } from './hooks/useAuthPageDetection';
 import { checkAuthGuard } from './utils/authGuard';
 
 const queryClient = new QueryClient();
@@ -47,9 +45,6 @@ function ScrollToTop() {
 function AppContent() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-
-  // Détecter les pages d'authentification pour le thème
-  useAuthPageDetection();
 
   const location = useLocation();
   const authPages = ['/login', '/register', '/verify-email', '/accept-charter', '/forgot-password', '/reset-password'];
@@ -311,14 +306,12 @@ function App() {
   }
 
   return (
-    <ThemeProvider>
-      <QueryClientProvider client={queryClient}>
-        <Router>
-          <ScrollToTop />
-          <AppContent />
-        </Router>
-      </QueryClientProvider>
-    </ThemeProvider>
+    <QueryClientProvider client={queryClient}>
+      <Router>
+        <ScrollToTop />
+        <AppContent />
+      </Router>
+    </QueryClientProvider>
   );
 }
 

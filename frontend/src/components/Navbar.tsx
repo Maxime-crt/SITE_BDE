@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { User, LogOut, Menu, X, Shield, MessageCircle, Car } from 'lucide-react';
 import logoFLR from '../assets/Logo_FLR.png';
 import { Button } from './ui/button';
-import { ThemeToggle } from './ThemeToggle';
+
 import type { User as UserType } from '../types';
 
 interface NavbarProps {
@@ -59,7 +59,6 @@ export default function Navbar({ user, onLogout }: NavbarProps) {
               <>
                 {/* Boutons d'action - Tout dans le menu hamburger à partir de 900px */}
                 <div className="flex items-center space-x-2">
-                  <ThemeToggle />
 
                   {/* Menu hamburger */}
                   <Button
@@ -139,7 +138,6 @@ export default function Navbar({ user, onLogout }: NavbarProps) {
               <>
                 {/* Boutons pour utilisateurs non connectés */}
                 <div className="flex items-center space-x-2">
-                  <ThemeToggle />
 
                   {/* Menu hamburger */}
                   <Button
