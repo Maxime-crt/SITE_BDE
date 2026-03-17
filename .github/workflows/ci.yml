@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+
+jobs:
+  lint-build-test:
+    runs-on: ubuntu-latest
+
+    env:
+      CI: true
+      DATABASE_URL: "postgresql://test:test@localhost:5432/test"
+      JWT_SECRET: "ci-test-secret"
+      FRONTEND_URL: "http://localhost:5173"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/package-lock.json
+
+      - name: Install backend dependencies
+        run: cd backend && npm ci
+
+      - name: Install frontend dependencies
+        run: cd frontend && npm ci
+
+      - name: Generate Prisma client
+        run: cd backend && npx prisma generate
+
+      - name: Lint backend
+        run: cd backend && npm run lint
+
+      - name: Lint frontend
+        run: cd frontend && npm run lint
+
+      - name: Build backend
+        run: cd backend && npm run build
+
+      - name: Build frontend
+        run: cd frontend && npm run build
+
+      - name: Test backend
+        run: cd backend && npm test
+
+      - name: Test frontend
+        run: cd frontend && npm test -- --run

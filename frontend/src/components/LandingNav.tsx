@@ -21,7 +21,7 @@ export default function LandingNav({ isAdmin: isAdminProp }: LandingNavProps) {
   }, []);
 
   const handleLogout = async () => {
-    try { await authApi.logout(); } catch {}
+    try { await authApi.logout(); } catch { /* ignore */ }
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     window.location.href = '/login';

@@ -1,5 +1,6 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 import { body, validationResult } from 'express-validator';
 import { prisma } from '../utils/prisma';
 import { generateToken } from '../utils/jwt';
@@ -27,7 +28,7 @@ router.post('/register', [
       return res.status(400).json({ errors: errors.array() });
     }
 
-    let { email, firstName, lastName, phone, password, gender, address, city, postcode, instagram } = req.body;
+    const { email, firstName, lastName, phone, password, gender, address, city, postcode, instagram } = req.body;
 
     console.log('📧 EMAIL REÇU:', JSON.stringify(email));
     console.log('📧 Type:', typeof email);
@@ -379,7 +380,6 @@ router.post('/forgot-password', [
     }
 
     // Générer un token unique
-    const crypto = require('crypto');
     const token = crypto.randomBytes(32).toString('hex');
     const expiresAt = new Date();
     expiresAt.setMinutes(expiresAt.getMinutes() + 15);

@@ -7,6 +7,21 @@ import jwt from 'jsonwebtoken';
 import eventsRouter from '../routes/events';
 import { prisma } from '../utils/prisma';
 
+// Mock external services before importing router
+jest.mock('../services/cloudinaryService', () => ({
+  uploadToCloudinary: jest.fn(),
+  deleteFromCloudinary: jest.fn(),
+}));
+jest.mock('../services/geocodingService', () => ({
+  geocodeAddress: jest.fn().mockResolvedValue(null),
+}));
+jest.mock('../middleware/upload', () => ({
+  uploadImage: (req: any, res: any, next: any) => next(),
+}));
+jest.mock('../services/sessionManager', () => ({
+  sessionManager: { getConnectionStats: jest.fn() },
+}));
+
 // Mock Prisma
 jest.mock('../utils/prisma', () => ({
   prisma: {
@@ -27,7 +42,7 @@ jest.mock('../utils/prisma', () => ({
       findUnique: jest.fn(),
       update: jest.fn(),
     },
-    $transaction: jest.fn((callback) => callback(prisma)),
+    $transaction: jest.fn((callback: any) => callback(prisma)),
   },
 }));
 
@@ -60,11 +75,9 @@ describe('Events Routes', () => {
     startDate: new Date('2025-03-01T20:00:00Z'),
     endDate: new Date('2025-03-02T02:00:00Z'),
     capacity: 100,
-    ticketPrice: 15,
     publishedAt: new Date(),
     rating: null,
     ratingCount: 0,
-    tickets: [],
   };
 
   afterEach(() => {
@@ -127,7 +140,7 @@ describe('Events Routes', () => {
         .set('Authorization', `Bearer ${userToken}`);
 
       expect(response.status).toBe(404);
-      expect(response.body.error).toContain('introuvable');
+      expect(response.body.error).toContain('non trouvé');
     });
   });
 
@@ -140,7 +153,6 @@ describe('Events Routes', () => {
       startDate: '2025-04-01T10:00:00Z',
       endDate: '2025-04-01T18:00:00Z',
       capacity: 50,
-      ticketPrice: 10,
     };
 
     it('should create event as admin', async () => {
@@ -180,7 +192,7 @@ describe('Events Routes', () => {
         .send(newEventData);
 
       expect(response.status).toBe(403);
-      expect(response.body.error).toContain('admin');
+      expect(response.body.error).toContain('Admin');
     });
 
     it('should validate required fields', async () => {
@@ -202,8 +214,11 @@ describe('Events Routes', () => {
   describe('PUT /events/:id', () => {
     const updateData = {
       name: 'Soirée BDE Modifiée',
+      location: 'Paris',
+      type: 'PARTY',
+      startDate: '2025-03-01T20:00:00Z',
+      endDate: '2025-03-02T02:00:00Z',
       capacity: 150,
-      ticketPrice: 20,
     };
 
     it('should update event as admin', async () => {
@@ -223,10 +238,15 @@ describe('Events Routes', () => {
       expect(response.status).toBe(200);
       expect(response.body.name).toBe('Soirée BDE Modifiée');
       expect(response.body.capacity).toBe(150);
-      expect(prisma.event.update).toHaveBeenCalledWith({
-        where: { id: 'event-1' },
-        data: expect.objectContaining(updateData),
-      });
+      expect(prisma.event.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'event-1' },
+          data: expect.objectContaining({
+            name: 'Soirée BDE Modifiée',
+            capacity: 150,
+          }),
+        })
+      );
     });
 
     it('should reject update for non-admin users', async () => {
@@ -239,7 +259,7 @@ describe('Events Routes', () => {
         .send(updateData);
 
       expect(response.status).toBe(403);
-      expect(response.body.error).toContain('admin');
+      expect(response.body.error).toContain('Admin');
     });
 
     it('should return 404 if event does not exist', async () => {
@@ -283,7 +303,7 @@ describe('Events Routes', () => {
         .set('Authorization', `Bearer ${userToken}`);
 
       expect(response.status).toBe(403);
-      expect(response.body.error).toContain('admin');
+      expect(response.body.error).toContain('Admin');
     });
 
     it('should return 404 if event does not exist', async () => {

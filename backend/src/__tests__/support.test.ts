@@ -85,6 +85,7 @@ describe('Support Routes', () => {
       (prisma.user.findUnique as jest.Mock).mockResolvedValue(mockUser);
       (prisma.user.update as jest.Mock).mockResolvedValue(mockUser);
       (prisma.supportMessage.findMany as jest.Mock).mockResolvedValue([mockMessage]);
+      (prisma.supportMessage.updateMany as jest.Mock).mockResolvedValue({ count: 0 });
 
       const response = await request(app)
         .get('/support/messages')
@@ -95,8 +96,16 @@ describe('Support Routes', () => {
       expect(response.body[0].message).toBe('J\'ai un problème avec mon billet');
       expect(prisma.supportMessage.findMany).toHaveBeenCalledWith({
         where: { userId: 'user-1' },
+        include: {
+          replyTo: {
+            include: {
+              user: {
+                select: { firstName: true, lastName: true, isAdmin: true }
+              }
+            }
+          }
+        },
         orderBy: { createdAt: 'asc' },
-        include: { user: expect.any(Object) },
       });
     });
 
@@ -104,14 +113,14 @@ describe('Support Routes', () => {
       (prisma.user.findUnique as jest.Mock).mockResolvedValue(mockUser);
       (prisma.user.update as jest.Mock).mockResolvedValue(mockUser);
       (prisma.supportMessage.findMany as jest.Mock).mockResolvedValue([mockMessage, mockReply]);
-      (prisma.supportMessage.update as jest.Mock).mockResolvedValue({ ...mockReply, isRead: true });
+      (prisma.supportMessage.updateMany as jest.Mock).mockResolvedValue({ count: 1 });
 
       await request(app)
         .get('/support/messages')
         .set('Authorization', `Bearer ${userToken}`);
 
-      // Should mark BDE messages as read
-      expect(prisma.supportMessage.update).toHaveBeenCalled();
+      // Should mark BDE messages as read via updateMany
+      expect(prisma.supportMessage.updateMany).toHaveBeenCalled();
     });
   });
 
@@ -141,9 +150,21 @@ describe('Support Routes', () => {
         data: {
           userId: 'user-1',
           message: 'Aide nécessaire',
+          replyToId: null,
           isFromBDE: false,
         },
-        include: { user: expect.any(Object) },
+        include: {
+          user: {
+            select: { firstName: true, lastName: true, isAdmin: true }
+          },
+          replyTo: {
+            include: {
+              user: {
+                select: { firstName: true, lastName: true, isAdmin: true }
+              }
+            }
+          }
+        },
       });
     });
 
@@ -212,11 +233,11 @@ describe('Support Routes', () => {
   });
 
   describe('DELETE /support/messages/:id', () => {
-    it('should delete user own message', async () => {
+    it('should soft delete user own message', async () => {
       (prisma.user.findUnique as jest.Mock).mockResolvedValue(mockUser);
       (prisma.user.update as jest.Mock).mockResolvedValue(mockUser);
       (prisma.supportMessage.findFirst as jest.Mock).mockResolvedValue(mockMessage);
-      (prisma.supportMessage.delete as jest.Mock).mockResolvedValue(mockMessage);
+      (prisma.supportMessage.update as jest.Mock).mockResolvedValue({ ...mockMessage, isDeleted: true, message: '' });
 
       const response = await request(app)
         .delete('/support/messages/msg-1')
@@ -224,8 +245,9 @@ describe('Support Routes', () => {
 
       expect(response.status).toBe(200);
       expect(response.body.message).toContain('supprimé');
-      expect(prisma.supportMessage.delete).toHaveBeenCalledWith({
+      expect(prisma.supportMessage.update).toHaveBeenCalledWith({
         where: { id: 'msg-1' },
+        data: { isDeleted: true, message: '' },
       });
     });
 
