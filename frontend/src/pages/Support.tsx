@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supportApi } from '../services/api';
 import type { User, SupportMessage } from '../types';
-import { Send, MessageCircle, Edit2, X, AlertTriangle, Trash2, Loader2 } from 'lucide-react';
+import { Send, MessageCircle, Edit2, X, AlertTriangle, Trash2, Loader2, Reply } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { handleApiErrorWithLog } from '../utils/errorHandler';
 import LandingNav from '../components/LandingNav';
@@ -21,7 +21,12 @@ export default function Support({ user }: SupportProps) {
   const [pendingMessageId, setPendingMessageId] = useState<string | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [messageToDelete, setMessageToDelete] = useState<string | null>(null);
+  const [replyTo, setReplyTo] = useState<SupportMessage | null>(null);
+  const [pressingMsg, setPressingMsg] = useState<string | null>(null);
+  const [longPressMsg, setLongPressMsg] = useState<string | null>(null);
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const queryClient = useQueryClient();
 
   const isAdmin = user?.isAdmin === true;
@@ -38,8 +43,9 @@ export default function Support({ user }: SupportProps) {
 
     setSending(true);
     try {
-      await supportApi.sendMessage({ message: message.trim() });
+      await supportApi.sendMessage({ message: message.trim(), replyToId: replyTo?.id });
       setMessage('');
+      setReplyTo(null);
       queryClient.invalidateQueries({ queryKey: ['support-messages'] });
     } catch (error: any) {
       handleApiErrorWithLog(error, 'Erreur lors de l\'envoi du message', 'Support.handleSend');
@@ -183,7 +189,7 @@ export default function Support({ user }: SupportProps) {
             </div>
 
             {/* Messages */}
-            <div className="h-[450px] sm:h-[500px] overflow-y-auto p-4 sm:p-6 space-y-4 custom-scrollbar">
+            <div className="h-[450px] sm:h-[500px] overflow-y-auto p-4 sm:p-6 space-y-4 custom-scrollbar" onClick={() => longPressMsg && setLongPressMsg(null)}>
               {isLoading ? (
                 <div className="flex items-center justify-center h-full">
                   <div className="text-center">
@@ -198,80 +204,153 @@ export default function Support({ user }: SupportProps) {
                       key={msg.id}
                       className={`flex ${msg.isFromBDE ? 'justify-start' : 'justify-end'}`}
                     >
-                      <div className={`flex flex-col ${msg.isFromBDE ? 'items-start' : 'items-end'} max-w-[80%] sm:max-w-[70%]`}>
+                      <div className={`flex flex-col ${msg.isFromBDE ? 'items-start' : 'items-end'} max-w-[80%] sm:max-w-[70%] group relative`}>
                         <div
-                          className={`w-full rounded-2xl px-4 py-3 ${
+                          className={`w-full rounded-2xl px-4 py-3 transition-all duration-200 ${
                             msg.isFromBDE
                               ? 'bg-white/[0.06] border border-white/10'
                               : 'bg-blue-600/80 border border-blue-500/30'
-                          }`}
+                          } ${longPressMsg === msg.id ? 'ring-1 ring-blue-400/40 scale-[0.97]' : ''} ${pressingMsg === msg.id && longPressMsg !== msg.id ? (msg.isFromBDE ? 'bg-white/[0.12]' : 'bg-blue-600') + ' scale-[0.98]' : ''}`}
+                          onTouchStart={() => {
+                            setPressingMsg(msg.id);
+                            longPressTimer.current = setTimeout(() => {
+                              setLongPressMsg(msg.id);
+                              setPressingMsg(null);
+                            }, 500);
+                          }}
+                          onTouchEnd={() => {
+                            setPressingMsg(null);
+                            if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null; }
+                          }}
+                          onTouchMove={() => {
+                            setPressingMsg(null);
+                            if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null; }
+                          }}
                         >
-                          {msg.isFromBDE && (
-                            <p className="text-xs font-bold text-blue-400 mb-1.5 font-syne">Fuelers</p>
-                          )}
-
-                          {editingMessageId === msg.id ? (
-                            <div className="space-y-3">
-                              <textarea
-                                value={editedMessage}
-                                onChange={(e) => setEditedMessage(e.target.value)}
-                                className="w-full px-3 py-2 text-sm bg-[#0a1128] text-white border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 resize-none"
-                                autoFocus
-                                rows={Math.max(2, editedMessage.split('\n').length)}
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Escape') cancelEdit();
-                                }}
-                              />
-                              <div className="flex gap-2 justify-end">
-                                <button
-                                  onClick={cancelEdit}
-                                  className="px-3 py-1.5 text-xs text-white/50 hover:text-white rounded-lg hover:bg-white/5 transition-all flex items-center gap-1"
-                                >
-                                  <X className="w-3 h-3" />
-                                  Annuler
-                                </button>
-                                <button
-                                  onClick={() => saveEdit(msg.id)}
-                                  className="px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors"
-                                >
-                                  Enregistrer
-                                </button>
-                              </div>
-                            </div>
+                          {msg.isDeleted ? (
+                            <p className="text-sm italic text-white/30">message supprimé</p>
                           ) : (
                             <>
-                              <p className="text-sm whitespace-pre-wrap break-words text-white/90 mb-2">{msg.message}</p>
-                              <div className="flex items-center justify-between gap-2">
-                                <p className={`text-[10px] ${msg.isFromBDE ? 'text-white/25' : 'text-white/50'}`}>
-                                  {formatDate(msg.createdAt)}
-                                </p>
-                                <div className="flex items-center gap-1.5">
-                                  {msg.isEdited && (
-                                    <p className="text-[10px] italic text-white/30">modifié</p>
-                                  )}
-                                  {!msg.isFromBDE && (
-                                    <>
-                                        <button
-                                          onClick={() => startEditingMessage(msg)}
-                                          className="p-1 hover:bg-white/10 rounded-lg transition-colors text-white/40 hover:text-white/80"
-                                          title="Modifier"
-                                        >
-                                          <Edit2 className="w-3 h-3" />
-                                        </button>
-                                      <button
-                                        onClick={() => handleDeleteMessage(msg.id)}
-                                        className="p-1 hover:bg-red-500/10 rounded-lg transition-colors text-white/40 hover:text-red-400"
-                                        title="Supprimer ce message"
-                                      >
-                                        <Trash2 className="w-3 h-3" />
-                                      </button>
-                                    </>
-                                  )}
+                              {msg.isFromBDE && (
+                                <p className="text-xs font-bold text-blue-400 mb-1.5 font-syne">Fuelers</p>
+                              )}
+
+                              {/* Quoted message */}
+                              {msg.replyTo && (
+                                <div className="mb-2 px-3 py-2 rounded-xl bg-white/[0.06] border-l-2 border-blue-400/50">
+                                  <p className="text-[11px] font-bold text-blue-400/70 mb-0.5">
+                                    {msg.replyTo.isFromBDE ? 'Fuelers' : 'Vous'}
+                                  </p>
+                                  <p className="text-xs text-white/40 line-clamp-2">
+                                    {msg.replyTo.isDeleted ? 'message supprimé' : msg.replyTo.message}
+                                  </p>
                                 </div>
-                              </div>
+                              )}
+
+                              {editingMessageId === msg.id ? (
+                                <div className="space-y-3">
+                                  <textarea
+                                    value={editedMessage}
+                                    onChange={(e) => setEditedMessage(e.target.value)}
+                                    className="w-full px-3 py-2 text-sm bg-[#0a1128] text-white border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 resize-none"
+                                    autoFocus
+                                    rows={Math.max(2, editedMessage.split('\n').length)}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Escape') cancelEdit();
+                                    }}
+                                  />
+                                  <div className="flex gap-2 justify-end">
+                                    <button
+                                      onClick={cancelEdit}
+                                      className="px-3 py-1.5 text-xs text-white/50 hover:text-white rounded-lg hover:bg-white/5 transition-all flex items-center gap-1"
+                                    >
+                                      <X className="w-3 h-3" />
+                                      Annuler
+                                    </button>
+                                    <button
+                                      onClick={() => saveEdit(msg.id)}
+                                      className="px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors"
+                                    >
+                                      Enregistrer
+                                    </button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <>
+                                  <p className="text-sm whitespace-pre-wrap break-words text-white/90 mb-2">{msg.message}</p>
+                                  <div className="flex items-center justify-between gap-2">
+                                    <p className={`text-[10px] ${msg.isFromBDE ? 'text-white/25' : 'text-white/50'}`}>
+                                      {formatDate(msg.createdAt)}
+                                    </p>
+                                    <div className="flex items-center gap-1.5">
+                                      {msg.isEdited && (
+                                        <p className="text-[10px] italic text-white/30">modifié</p>
+                                      )}
+                                      {/* Desktop hover buttons */}
+                                      <button
+                                        onClick={() => { setReplyTo(msg); inputRef.current?.focus(); }}
+                                        className="p-1 hover:bg-white/10 rounded-lg transition-colors text-white/40 hover:text-white/80 opacity-0 group-hover:opacity-100 hidden sm:block"
+                                        title="Répondre"
+                                      >
+                                        <Reply className="w-3 h-3" />
+                                      </button>
+                                      {!msg.isFromBDE && (
+                                        <>
+                                          <button
+                                            onClick={() => startEditingMessage(msg)}
+                                            className="p-1 hover:bg-white/10 rounded-lg transition-colors text-white/40 hover:text-white/80 opacity-0 group-hover:opacity-100 hidden sm:block"
+                                            title="Modifier"
+                                          >
+                                            <Edit2 className="w-3 h-3" />
+                                          </button>
+                                          <button
+                                            onClick={() => handleDeleteMessage(msg.id)}
+                                            className="p-1 hover:bg-red-500/10 rounded-lg transition-colors text-white/40 hover:text-red-400 opacity-0 group-hover:opacity-100 hidden sm:block"
+                                            title="Supprimer ce message"
+                                          >
+                                            <Trash2 className="w-3 h-3" />
+                                          </button>
+                                        </>
+                                      )}
+                                    </div>
+                                  </div>
+                                </>
+                              )}
                             </>
                           )}
                         </div>
+
+                        {/* Mobile long-press context menu */}
+                        {longPressMsg === msg.id && !msg.isDeleted && (
+                          <div className={`absolute z-20 ${msg.isFromBDE ? 'left-0' : 'right-0'} -top-12 flex items-center gap-1 px-2 py-1.5 rounded-xl bg-[#0d1530] border border-white/15 shadow-xl shadow-black/40`}>
+                            <button
+                              onClick={() => { setReplyTo(msg); setLongPressMsg(null); inputRef.current?.focus(); }}
+                              className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-white/70 hover:text-white rounded-lg hover:bg-white/10 transition-colors"
+                            >
+                              <Reply className="w-3.5 h-3.5" />
+                              Répondre
+                            </button>
+                            {!msg.isFromBDE && (
+                              <>
+                                <button
+                                  onClick={() => { startEditingMessage(msg); setLongPressMsg(null); }}
+                                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-white/70 hover:text-white rounded-lg hover:bg-white/10 transition-colors"
+                                >
+                                  <Edit2 className="w-3.5 h-3.5" />
+                                  Modifier
+                                </button>
+                                <button
+                                  onClick={() => { handleDeleteMessage(msg.id); setLongPressMsg(null); }}
+                                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-red-400 hover:text-red-300 rounded-lg hover:bg-red-500/10 transition-colors"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                  Supprimer
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        )}
+
                         {/* Read checks */}
                         <div className={`flex items-center space-x-1 mt-0.5 px-1 ${msg.isFromBDE ? 'justify-start' : 'justify-end'}`}>
                           <span
@@ -299,8 +378,24 @@ export default function Support({ user }: SupportProps) {
 
             {/* Input */}
             <div className="px-4 sm:px-6 py-4 border-t border-white/10 bg-white/[0.02]">
+              {/* Reply preview */}
+              {replyTo && (
+                <div className="flex items-center gap-2 mb-3 px-3 py-2 rounded-xl bg-white/[0.04] border border-white/10">
+                  <Reply className="w-4 h-4 text-blue-400 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[11px] font-bold text-blue-400">
+                      {replyTo.isFromBDE ? 'Fuelers' : 'Vous'}
+                    </p>
+                    <p className="text-xs text-white/40 truncate">{replyTo.message}</p>
+                  </div>
+                  <button onClick={() => setReplyTo(null)} className="p-1 text-white/30 hover:text-white transition-colors flex-shrink-0">
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )}
               <form onSubmit={handleSend} className="flex gap-3 items-end">
                 <textarea
+                  ref={inputRef}
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   placeholder="Tapez votre message..."
@@ -396,7 +491,7 @@ export default function Support({ user }: SupportProps) {
               Êtes-vous sûr de vouloir supprimer ce message ?
             </p>
             <p className="text-white/30 text-xs">
-              Cette action est irréversible.
+              Le message sera remplacé par "message supprimé".
             </p>
             <div className="flex gap-3 justify-end">
               <button onClick={cancelDelete} className="px-4 py-2 text-sm text-white/50 hover:text-white rounded-xl hover:bg-white/5 transition-all border border-white/10">

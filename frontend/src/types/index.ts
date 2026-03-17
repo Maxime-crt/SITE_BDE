@@ -53,6 +53,7 @@ export interface SupportMessage {
   isEdited: boolean;
   replyToId?: string;
   isFromBDE: boolean;
+  isDeleted?: boolean;
   isRead: boolean;
   createdAt: string;
   updatedAt: string;

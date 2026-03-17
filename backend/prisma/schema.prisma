@@ -107,6 +107,7 @@ model SupportMessage {
   editCount Int      @default(0) // Nombre de modifications (max 2)
   replyToId String?
   isFromBDE Boolean  @default(false) // true si le message vient du BDE
+  isDeleted Boolean  @default(false)
   isRead    Boolean  @default(false) // true si le message a été lu par le destinataire
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

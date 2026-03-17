@@ -152,8 +152,9 @@ router.delete('/messages/:id', authenticateToken, async (req: AuthRequest, res: 
       return res.status(404).json({ error: 'Message non trouvé' });
     }
 
-    await prisma.supportMessage.delete({
-      where: { id }
+    await prisma.supportMessage.update({
+      where: { id },
+      data: { isDeleted: true, message: '' }
     });
 
     res.json({ message: 'Message supprimé avec succès' });

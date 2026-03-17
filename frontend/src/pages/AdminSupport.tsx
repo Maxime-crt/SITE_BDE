@@ -1,28 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
-import { MessageCircle, Send, User, ArrowLeft, Pencil, Trash2, X, Check } from 'lucide-react';
+import { MessageCircle, Send, User, ArrowLeft, Pencil, Trash2, X, Check, Reply } from 'lucide-react';
 import { adminApi, supportApi } from '../services/api';
+import type { SupportMessage } from '../types';
 import toast from 'react-hot-toast';
 import { Link } from 'react-router-dom';
 import { handleApiErrorWithLog } from '../utils/errorHandler';
 import LandingNav from '../components/LandingNav';
 import logoFLR from '../assets/Logo_FLR.png';
-
-interface SupportMessage {
-  id: string;
-  userId: string;
-  message: string;
-  isEdited: boolean;
-  isFromBDE: boolean;
-  isRead: boolean;
-  createdAt: string;
-  updatedAt: string;
-  user?: {
-    firstName: string;
-    lastName: string;
-    email?: string;
-    isAdmin: boolean;
-  };
-}
 
 interface UserWithMessages {
   id: string;
@@ -42,7 +26,14 @@ export default function AdminSupport() {
   const [sending, setSending] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editText, setEditText] = useState('');
+  const [replyTo, setReplyTo] = useState<SupportMessage | null>(null);
+  const [pressingMsg, setPressingMsg] = useState<string | null>(null);
+  const [longPressMsg, setLongPressMsg] = useState<string | null>(null);
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [messageToDelete, setMessageToDelete] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     loadConversations();
@@ -92,10 +83,13 @@ export default function AdminSupport() {
     const messageToSend = newMessage.trim();
     const currentUserId = selectedUser.id;
 
+    const replyToId = replyTo?.id;
+
     try {
       setSending(true);
       setNewMessage('');
-      await adminApi.replyToUser({ userId: currentUserId, message: messageToSend });
+      setReplyTo(null);
+      await adminApi.replyToUser({ userId: currentUserId, message: messageToSend, replyToId });
       await loadUserMessages(currentUserId);
       loadConversations(false);
     } catch (error: any) {
@@ -119,14 +113,23 @@ export default function AdminSupport() {
     }
   };
 
-  const handleDelete = async (msgId: string) => {
-    if (!selectedUser) return;
+  const openDeleteDialog = (msgId: string) => {
+    setMessageToDelete(msgId);
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!selectedUser || !messageToDelete) return;
     try {
-      await supportApi.deleteMessage(msgId);
+      await supportApi.deleteMessage(messageToDelete);
       await loadUserMessages(selectedUser.id);
       loadConversations(false);
+      toast.success('Message supprimé');
     } catch (error: any) {
-      handleApiErrorWithLog(error, 'Erreur lors de la suppression', 'AdminSupport.handleDelete');
+      handleApiErrorWithLog(error, 'Erreur lors de la suppression', 'AdminSupport.confirmDelete');
+    } finally {
+      setShowDeleteDialog(false);
+      setMessageToDelete(null);
     }
   };
 
@@ -280,72 +283,170 @@ export default function AdminSupport() {
                   </div>
 
                   {/* Messages */}
-                  <div className="flex-1 overflow-y-auto p-4 space-y-1.5 min-h-0 chat-scrollbar">
+                  <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 min-h-0 chat-scrollbar" onClick={() => longPressMsg && setLongPressMsg(null)}>
                     {messages.map((msg) => (
                       <div
                         key={msg.id}
                         className={`flex ${msg.isFromBDE ? 'justify-end' : 'justify-start'}`}
                       >
-                        <div className={`flex flex-col max-w-[75%] group ${msg.isFromBDE ? 'items-end' : 'items-start'}`}>
-                          {/* Action buttons for BDE messages */}
-                          {msg.isFromBDE && editingId !== msg.id && (
-                            <div className="flex gap-1 mb-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className={`flex flex-col ${msg.isFromBDE ? 'items-end' : 'items-start'} max-w-[80%] sm:max-w-[70%] group relative`}>
+                          <div
+                            className={`w-full rounded-2xl px-4 py-3 transition-all duration-200 ${
+                              msg.isFromBDE
+                                ? 'bg-blue-600/80 border border-blue-500/30'
+                                : 'bg-white/[0.06] border border-white/10'
+                            } ${longPressMsg === msg.id ? 'ring-1 ring-blue-400/40 scale-[0.97]' : ''} ${pressingMsg === msg.id && longPressMsg !== msg.id ? (msg.isFromBDE ? 'bg-blue-600' : 'bg-white/[0.12]') + ' scale-[0.98]' : ''}`}
+                            onTouchStart={() => {
+                              setPressingMsg(msg.id);
+                              longPressTimer.current = setTimeout(() => {
+                                setLongPressMsg(msg.id);
+                                setPressingMsg(null);
+                              }, 500);
+                            }}
+                            onTouchEnd={() => {
+                              setPressingMsg(null);
+                              if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null; }
+                            }}
+                            onTouchMove={() => {
+                              setPressingMsg(null);
+                              if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null; }
+                            }}
+                          >
+                            {msg.isDeleted ? (
+                              <p className="text-sm italic text-white/30">message supprimé</p>
+                            ) : (
+                              <>
+                                {!msg.isFromBDE && msg.user && (
+                                  <p className="text-xs font-bold text-blue-400 mb-1.5 font-syne">
+                                    {msg.user.firstName} {msg.user.lastName}
+                                  </p>
+                                )}
+
+                                {/* Quoted message */}
+                                {msg.replyTo && (
+                                  <div className="mb-2 px-3 py-2 rounded-xl bg-white/[0.06] border-l-2 border-blue-400/50">
+                                    <p className="text-[11px] font-bold text-blue-400/70 mb-0.5">
+                                      {msg.replyTo.isFromBDE ? 'Fuelers' : (msg.replyTo.user ? `${msg.replyTo.user.firstName}` : 'Utilisateur')}
+                                    </p>
+                                    <p className="text-xs text-white/40 line-clamp-2">
+                                      {msg.replyTo.isDeleted ? 'message supprimé' : msg.replyTo.message}
+                                    </p>
+                                  </div>
+                                )}
+
+                                {editingId === msg.id ? (
+                                  <div className="space-y-3">
+                                    <textarea
+                                      value={editText}
+                                      onChange={(e) => setEditText(e.target.value)}
+                                      className="w-full px-3 py-2 text-sm bg-[#0a1128] text-white border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 resize-none"
+                                      autoFocus
+                                      rows={Math.max(2, editText.split('\n').length)}
+                                      onKeyDown={(e) => {
+                                        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleEdit(msg.id); }
+                                        if (e.key === 'Escape') setEditingId(null);
+                                      }}
+                                    />
+                                    <div className="flex gap-2 justify-end">
+                                      <button
+                                        onClick={() => setEditingId(null)}
+                                        className="px-3 py-1.5 text-xs text-white/50 hover:text-white rounded-lg hover:bg-white/5 transition-all flex items-center gap-1"
+                                      >
+                                        <X className="w-3 h-3" />
+                                        Annuler
+                                      </button>
+                                      <button
+                                        onClick={() => handleEdit(msg.id)}
+                                        className="px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors"
+                                      >
+                                        Enregistrer
+                                      </button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <>
+                                    <p className="text-sm whitespace-pre-wrap break-words text-white/90 mb-2">{msg.message}</p>
+                                    <div className="flex items-center justify-between gap-2">
+                                      <p className={`text-[10px] ${msg.isFromBDE ? 'text-white/50' : 'text-white/25'}`}>
+                                        {formatDate(msg.createdAt)}
+                                      </p>
+                                      <div className="flex items-center gap-1.5">
+                                        {msg.isEdited && (
+                                          <p className="text-[10px] italic text-white/30">modifié</p>
+                                        )}
+                                        {/* Desktop hover buttons */}
+                                        <button
+                                          onClick={() => { setReplyTo(msg); inputRef.current?.focus(); }}
+                                          className="p-1 hover:bg-white/10 rounded-lg transition-colors text-white/40 hover:text-white/80 opacity-0 group-hover:opacity-100 hidden sm:block"
+                                          title="Répondre"
+                                        >
+                                          <Reply className="w-3 h-3" />
+                                        </button>
+                                        {msg.isFromBDE && (
+                                          <>
+                                            <button
+                                              onClick={() => { setEditingId(msg.id); setEditText(msg.message); }}
+                                              className="p-1 hover:bg-white/10 rounded-lg transition-colors text-white/40 hover:text-white/80 opacity-0 group-hover:opacity-100 hidden sm:block"
+                                              title="Modifier"
+                                            >
+                                              <Pencil className="w-3 h-3" />
+                                            </button>
+                                            <button
+                                              onClick={() => openDeleteDialog(msg.id)}
+                                              className="p-1 hover:bg-red-500/10 rounded-lg transition-colors text-white/40 hover:text-red-400 opacity-0 group-hover:opacity-100 hidden sm:block"
+                                              title="Supprimer"
+                                            >
+                                              <Trash2 className="w-3 h-3" />
+                                            </button>
+                                          </>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </>
+                                )}
+                              </>
+                            )}
+                          </div>
+
+                          {/* Mobile long-press context menu */}
+                          {longPressMsg === msg.id && !msg.isDeleted && (
+                            <div className={`absolute z-20 ${msg.isFromBDE ? 'right-0' : 'left-0'} -top-12 flex items-center gap-1 px-2 py-1.5 rounded-xl bg-[#0d1530] border border-white/15 shadow-xl shadow-black/40`}>
                               <button
-                                onClick={() => { setEditingId(msg.id); setEditText(msg.message); }}
-                                className="p-1 rounded-md bg-white/5 hover:bg-white/10 text-white/40 hover:text-white transition-colors"
-                                title="Modifier"
+                                onClick={() => { setReplyTo(msg); setLongPressMsg(null); inputRef.current?.focus(); }}
+                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-white/70 hover:text-white rounded-lg hover:bg-white/10 transition-colors"
                               >
-                                <Pencil className="w-3 h-3" />
+                                <Reply className="w-3.5 h-3.5" />
+                                Répondre
                               </button>
-                              <button
-                                onClick={() => handleDelete(msg.id)}
-                                className="p-1 rounded-md bg-white/5 hover:bg-red-500/20 text-white/40 hover:text-red-400 transition-colors"
-                                title="Supprimer"
-                              >
-                                <Trash2 className="w-3 h-3" />
-                              </button>
+                              {msg.isFromBDE && (
+                                <>
+                                  <button
+                                    onClick={() => { setEditingId(msg.id); setEditText(msg.message); setLongPressMsg(null); }}
+                                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-white/70 hover:text-white rounded-lg hover:bg-white/10 transition-colors"
+                                  >
+                                    <Pencil className="w-3.5 h-3.5" />
+                                    Modifier
+                                  </button>
+                                  <button
+                                    onClick={() => { openDeleteDialog(msg.id); setLongPressMsg(null); }}
+                                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-red-400 hover:text-red-300 rounded-lg hover:bg-red-500/10 transition-colors"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                    Supprimer
+                                  </button>
+                                </>
+                              )}
                             </div>
                           )}
-                          <div
-                            className={`rounded-xl px-3 py-2 ${
-                              msg.isFromBDE
-                                ? 'bg-blue-600 text-white'
-                                : 'bg-white/[0.06] border border-white/10 text-white'
-                            }`}
-                          >
-                            {editingId === msg.id ? (
-                              <div className="flex items-center gap-2">
-                                <input
-                                  type="text"
-                                  value={editText}
-                                  onChange={(e) => setEditText(e.target.value)}
-                                  onKeyDown={(e) => { if (e.key === 'Enter') handleEdit(msg.id); if (e.key === 'Escape') setEditingId(null); }}
-                                  className="bg-white/10 text-white text-sm rounded-lg px-2 py-1 flex-1 focus:outline-none min-w-[150px]"
-                                  autoFocus
-                                />
-                                <button onClick={() => handleEdit(msg.id)} className="text-green-400 hover:text-green-300">
-                                  <Check className="w-4 h-4" />
-                                </button>
-                                <button onClick={() => setEditingId(null)} className="text-white/40 hover:text-white">
-                                  <X className="w-4 h-4" />
-                                </button>
-                              </div>
-                            ) : (
-                              <p className="text-sm break-words">{msg.message}</p>
-                            )}
-                            <div className="flex items-center justify-end gap-1.5 mt-0.5">
-                              {msg.isEdited && (
-                                <span className={`text-[10px] ${msg.isFromBDE ? 'text-white/50' : 'text-white/30'}`}>
-                                  modifié
-                                </span>
-                              )}
-                              <span className={`text-[10px] ${msg.isFromBDE ? 'text-white/50' : 'text-white/30'}`}>
-                                {formatDate(msg.createdAt)}
-                              </span>
-                              <span className={`text-[10px] ${msg.isRead ? 'text-green-400' : 'text-white/20'}`}>
-                                {msg.isRead ? '✓✓' : '✓'}
-                              </span>
-                            </div>
+
+                          {/* Read checks */}
+                          <div className={`flex items-center space-x-1 mt-0.5 px-1 ${msg.isFromBDE ? 'justify-end' : 'justify-start'}`}>
+                            <span
+                              className={`text-[10px] ${msg.isRead ? 'text-blue-400' : 'text-white/20'}`}
+                              title={msg.isRead ? `Lu ${formatDate(msg.updatedAt)}` : 'Envoyé'}
+                            >
+                              {msg.isRead ? '✓✓' : '✓'}
+                            </span>
                           </div>
                         </div>
                       </div>
@@ -354,25 +455,47 @@ export default function AdminSupport() {
                   </div>
 
                   {/* Input */}
-                  <form onSubmit={handleSendMessage} className="p-4 border-t border-white/10 flex-shrink-0">
-                    <div className="flex gap-2">
+                  <div className="px-4 sm:px-6 py-4 border-t border-white/10 bg-white/[0.02] flex-shrink-0">
+                    {/* Reply preview */}
+                    {replyTo && (
+                      <div className="flex items-center gap-2 mb-3 px-3 py-2 rounded-xl bg-white/[0.04] border border-white/10">
+                        <Reply className="w-4 h-4 text-blue-400 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[11px] font-bold text-blue-400">
+                            {replyTo.isFromBDE ? 'Fuelers' : (replyTo.user ? `${replyTo.user.firstName} ${replyTo.user.lastName}` : 'Utilisateur')}
+                          </p>
+                          <p className="text-xs text-white/40 truncate">{replyTo.message}</p>
+                        </div>
+                        <button onClick={() => setReplyTo(null)} className="p-1 text-white/30 hover:text-white transition-colors flex-shrink-0">
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    )}
+                    <form onSubmit={handleSendMessage} className="flex gap-3 items-end">
                       <input
+                        ref={inputRef}
                         type="text"
                         value={newMessage}
                         onChange={(e) => setNewMessage(e.target.value)}
                         placeholder="Tapez votre réponse..."
-                        className="flex-1 px-4 py-2.5 bg-white/[0.04] border border-white/10 rounded-xl text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/40 transition-all"
+                        className="flex-1 px-4 py-2.5 bg-white/[0.04] border border-white/10 rounded-xl text-white text-sm placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400/30 transition-all"
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            handleSendMessage(e);
+                          }
+                        }}
                         disabled={sending}
                       />
                       <button
                         type="submit"
                         disabled={sending || !newMessage.trim()}
-                        className="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-30 disabled:cursor-not-allowed text-white rounded-xl transition-colors"
+                        className="h-11 px-5 bg-blue-600 hover:bg-blue-500 disabled:opacity-30 disabled:cursor-not-allowed text-white rounded-xl transition-colors flex items-center gap-2 flex-shrink-0"
                       >
                         <Send className="w-4 h-4" />
                       </button>
-                    </div>
-                  </form>
+                    </form>
+                  </div>
                 </>
               ) : (
                 <div className="flex-1 flex items-center justify-center text-white/20">
@@ -410,6 +533,34 @@ export default function AdminSupport() {
           </div>
         </div>
       </footer>
+
+      {/* Delete confirm dialog */}
+      {showDeleteDialog && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="max-w-md w-full rounded-2xl bg-[#0d1530] border border-white/10 p-6 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center">
+                <Trash2 className="w-5 h-5 text-red-400" />
+              </div>
+              <h3 className="font-syne font-bold text-white text-lg">Supprimer le message</h3>
+            </div>
+            <p className="text-white/60 text-sm">
+              Êtes-vous sûr de vouloir supprimer ce message ?
+            </p>
+            <p className="text-white/30 text-xs">
+              Le message sera remplacé par "message supprimé".
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button onClick={() => { setShowDeleteDialog(false); setMessageToDelete(null); }} className="px-4 py-2 text-sm text-white/50 hover:text-white rounded-xl hover:bg-white/5 transition-all border border-white/10">
+                Annuler
+              </button>
+              <button onClick={confirmDelete} className="px-4 py-2 text-sm bg-red-500/20 hover:bg-red-500/30 text-red-300 rounded-xl transition-colors border border-red-500/30">
+                Supprimer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
