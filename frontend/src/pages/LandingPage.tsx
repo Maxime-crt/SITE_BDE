@@ -50,16 +50,18 @@ const ASSO_LOGOS: Record<string, string> = {
 // ── Drag-to-scroll + auto-scroll hook ───────────────────────
 const ALL_GALLERY = [...LANDSCAPE_IMAGES, ...PORTRAIT_IMAGES];
 
-function useDragScroll(speed: number, direction: 'left' | 'right', onTap?: (target: HTMLElement) => void) {
+function useDragScroll(speed: number, direction: 'left' | 'right') {
   const ref = useRef<HTMLDivElement>(null);
   const isDragging = useRef(false);
   const startX = useRef(0);
+  const startY = useRef(0);
   const scrollStart = useRef(0);
-  const hasMoved = useRef(false);
+  const dragged = useRef(false);
+  const axisLocked = useRef<'horizontal' | 'vertical' | null>(null);
   const userInteracting = useRef(false);
   const resumeTimer = useRef<ReturnType<typeof setTimeout>>();
-  const downTarget = useRef<HTMLElement | null>(null);
 
+  // Auto-scroll animation
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
@@ -104,38 +106,92 @@ function useDragScroll(speed: number, direction: 'left' | 'right', onTap?: (targ
     resumeTimer.current = setTimeout(() => { userInteracting.current = false; }, 3000);
   }, []);
 
-  const onPointerDown = useCallback((e: React.PointerEvent) => {
+  // Touch events for mobile (no pointercancel issues)
+  useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    el.setPointerCapture(e.pointerId);
+
+    const onTouchStart = (e: TouchEvent) => {
+      const touch = e.touches[0];
+      isDragging.current = true;
+      dragged.current = false;
+      axisLocked.current = null;
+      startX.current = touch.clientX;
+      startY.current = touch.clientY;
+      scrollStart.current = el.scrollLeft;
+      pauseAutoScroll();
+    };
+
+    const onTouchMove = (e: TouchEvent) => {
+      if (!isDragging.current) return;
+      const touch = e.touches[0];
+      const dx = touch.clientX - startX.current;
+      const dy = touch.clientY - startY.current;
+
+      if (!axisLocked.current && (Math.abs(dx) > 5 || Math.abs(dy) > 5)) {
+        axisLocked.current = Math.abs(dx) > Math.abs(dy) ? 'horizontal' : 'vertical';
+      }
+
+      if (axisLocked.current === 'vertical') return;
+
+      if (axisLocked.current === 'horizontal') {
+        e.preventDefault();
+        dragged.current = true;
+        el.scrollLeft = scrollStart.current - dx;
+      }
+    };
+
+    const onTouchEnd = () => {
+      isDragging.current = false;
+      axisLocked.current = null;
+    };
+
+    el.addEventListener('touchstart', onTouchStart, { passive: true });
+    el.addEventListener('touchmove', onTouchMove, { passive: false });
+    el.addEventListener('touchend', onTouchEnd, { passive: true });
+
+    return () => {
+      el.removeEventListener('touchstart', onTouchStart);
+      el.removeEventListener('touchmove', onTouchMove);
+      el.removeEventListener('touchend', onTouchEnd);
+    };
+  }, [pauseAutoScroll]);
+
+  // Pointer events for desktop (mouse drag)
+  // Global mouseup listener to catch release even outside the container
+  useEffect(() => {
+    const onMouseUp = () => { isDragging.current = false; };
+    window.addEventListener('mouseup', onMouseUp);
+    return () => window.removeEventListener('mouseup', onMouseUp);
+  }, []);
+
+  const onPointerDown = useCallback((e: React.PointerEvent) => {
+    if (e.pointerType === 'touch') return;
+    if (!ref.current) return;
     isDragging.current = true;
-    hasMoved.current = false;
+    dragged.current = false;
     startX.current = e.clientX;
-    scrollStart.current = el.scrollLeft;
-    downTarget.current = e.target as HTMLElement;
+    scrollStart.current = ref.current.scrollLeft;
     pauseAutoScroll();
   }, [pauseAutoScroll]);
 
   const onPointerMove = useCallback((e: React.PointerEvent) => {
+    if (e.pointerType === 'touch') return;
     if (!isDragging.current || !ref.current) return;
     const dx = e.clientX - startX.current;
-    if (Math.abs(dx) > 5) hasMoved.current = true;
+    if (Math.abs(dx) > 5) dragged.current = true;
     ref.current.scrollLeft = scrollStart.current - dx;
   }, []);
 
   const onPointerUp = useCallback((e: React.PointerEvent) => {
-    const el = ref.current;
-    if (el) el.releasePointerCapture(e.pointerId);
+    if (e.pointerType === 'touch') return;
     isDragging.current = false;
-    if (!hasMoved.current && onTap && downTarget.current) {
-      // Find the closest clickable container with data-index
-      const item = (downTarget.current as HTMLElement).closest('[data-index]') as HTMLElement | null;
-      if (item) onTap(item);
-    }
-    downTarget.current = null;
-  }, [onTap]);
+  }, []);
 
-  return { ref, onPointerDown, onPointerMove, onPointerUp };
+  // Click gate: returns true if the click should be allowed (was not a drag)
+  const allowClick = useCallback(() => !dragged.current, []);
+
+  return { ref, onPointerDown, onPointerMove, onPointerUp, allowClick };
 }
 
 // ── Navbar ──────────────────────────────────────────────────
@@ -146,14 +202,8 @@ export default function LandingPage() {
   const [showCalendar, setShowCalendar] = useState(() => sessionStorage.getItem('showCalendar') === 'true');
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
-  const landscapeScroll = useDragScroll(30, 'left', (el) => {
-    const idx = el.getAttribute('data-index');
-    if (idx !== null) setLightboxIndex(parseInt(idx) % LANDSCAPE_IMAGES.length);
-  });
-  const portraitScroll = useDragScroll(25, 'right', (el) => {
-    const idx = el.getAttribute('data-index');
-    if (idx !== null) setLightboxIndex(LANDSCAPE_IMAGES.length + (parseInt(idx) % PORTRAIT_IMAGES.length));
-  });
+  const landscapeScroll = useDragScroll(30, 'left');
+  const portraitScroll = useDragScroll(25, 'right');
 
   useEffect(() => {
     eventsApi.getAll().then((data: Event[]) => setEvents(data)).catch(() => {});
@@ -312,8 +362,8 @@ export default function LandingPage() {
             {[...LANDSCAPE_IMAGES, ...LANDSCAPE_IMAGES, ...LANDSCAPE_IMAGES].map((img, i) => (
               <div
                 key={`land-${i}`}
-                data-index={i}
                 className="flex-shrink-0 w-72 h-44 rounded-2xl overflow-hidden group cursor-pointer"
+                onClick={() => { if (landscapeScroll.allowClick()) setLightboxIndex(i % LANDSCAPE_IMAGES.length); }}
               >
                 <img
                   src={cloudUrl(img, 640)}
@@ -337,8 +387,8 @@ export default function LandingPage() {
             {[...PORTRAIT_IMAGES, ...PORTRAIT_IMAGES, ...PORTRAIT_IMAGES].map((img, i) => (
               <div
                 key={`port-${i}`}
-                data-index={i}
                 className="flex-shrink-0 w-36 h-48 rounded-2xl overflow-hidden group cursor-pointer"
+                onClick={() => { if (portraitScroll.allowClick()) setLightboxIndex(LANDSCAPE_IMAGES.length + (i % PORTRAIT_IMAGES.length)); }}
               >
                 <img
                   src={cloudUrl(img, 400)}

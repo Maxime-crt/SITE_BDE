@@ -2,11 +2,11 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { eventsApi, eventRatingsApi } from '../services/api';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
-import { Button } from '../components/ui/button';
-import { ArrowLeft, Star } from 'lucide-react';
+import { ArrowLeft, Star, MessageSquare, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { handleApiErrorWithLog } from '../utils/errorHandler';
+import LandingNav from '../components/LandingNav';
+import ConfirmDialog from '../components/ConfirmDialog';
 
 export default function RateEvent() {
   const { eventId } = useParams<{ eventId: string }>();
@@ -15,6 +15,7 @@ export default function RateEvent() {
   const [hoverRating, setHoverRating] = useState(0);
   const [comment, setComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
   const { data: event, isLoading } = useQuery({
     queryKey: ['event', eventId],
@@ -61,10 +62,6 @@ export default function RateEvent() {
   };
 
   const handleDelete = async () => {
-    if (!window.confirm('Êtes-vous sûr de vouloir supprimer votre note ?')) {
-      return;
-    }
-
     setSubmitting(true);
     try {
       await eventRatingsApi.delete(eventId!);
@@ -77,24 +74,23 @@ export default function RateEvent() {
     }
   };
 
+  const ratingLabels = ['', 'Très décevant', 'Décevant', 'Correct', 'Bien', 'Excellent'];
+
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-muted-foreground">Chargement...</p>
-        </div>
+      <div className="min-h-screen bg-[#0a1128] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-2 border-blue-400 border-t-transparent" />
       </div>
     );
   }
 
   if (!event) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-[#0a1128] flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">Événement introuvable</h2>
-          <Link to="/" className="text-primary hover:underline">
-            Retour au tableau de bord
+          <h2 className="text-2xl font-syne font-bold text-white mb-4">Événement introuvable</h2>
+          <Link to="/" className="text-blue-400 hover:text-blue-300 transition-colors">
+            Retour à l'accueil
           </Link>
         </div>
       </div>
@@ -102,131 +98,136 @@ export default function RateEvent() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-2xl mx-auto">
-          {/* Header */}
-          <div className="mb-8">
-            <Link
-              to={`/events/${eventId}`}
-              className="inline-flex items-center text-blue-600 hover:text-blue-500 mb-4"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Retour à l'événement
-            </Link>
+    <div className="min-h-screen bg-[#0a1128] font-dm-sans text-white">
+      <LandingNav />
 
-            <div className="text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-primary rounded-2xl mb-6 shadow-lg">
-                <Star className="w-8 h-8 text-primary-foreground" />
+      <div className="pt-28 pb-16 max-w-2xl mx-auto px-6 md:px-10">
+        {/* Back link */}
+        <button
+          onClick={() => navigate(`/events/${eventId}`)}
+          className="flex items-center gap-2 text-white/40 hover:text-blue-400 transition-colors text-sm mb-10"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Retour à l'événement
+        </button>
+
+        {/* Header */}
+        <div className="mb-10 text-center">
+          <div className="w-16 h-16 rounded-2xl bg-yellow-500/10 border border-yellow-400/20 flex items-center justify-center mx-auto mb-6">
+            <Star className="w-8 h-8 text-yellow-400" />
+          </div>
+          <h1 className="font-syne font-bold text-3xl md:text-4xl mb-3">
+            {existingRating ? 'Modifier votre note' : 'Noter l\'événement'}
+          </h1>
+          <p className="text-white/40 text-lg">{event.name}</p>
+        </div>
+
+        {/* Rating form card */}
+        <form onSubmit={handleSubmit}>
+          <div className="rounded-2xl bg-white/[0.03] border border-white/5 p-8">
+            {/* Section title */}
+            <div className="mb-8">
+              <h2 className="font-syne font-bold text-lg mb-1">Votre avis</h2>
+              <p className="text-white/30 text-sm">Aidez-nous à améliorer nos événements en partageant votre expérience</p>
+            </div>
+
+            {/* Star rating */}
+            <div className="mb-8">
+              <label className="text-sm font-medium text-white/60 mb-3 block">Note *</label>
+              <div className="flex items-center justify-center gap-3 py-4">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    type="button"
+                    onClick={() => setRating(star)}
+                    onMouseEnter={() => setHoverRating(star)}
+                    onMouseLeave={() => setHoverRating(0)}
+                    className="transition-all hover:scale-125 focus:outline-none"
+                  >
+                    <Star
+                      className={`w-10 h-10 md:w-12 md:h-12 transition-colors ${
+                        star <= (hoverRating || rating)
+                          ? 'text-yellow-400 fill-yellow-400'
+                          : 'text-white/10'
+                      }`}
+                    />
+                  </button>
+                ))}
               </div>
-              <h1 className="text-3xl font-bold tracking-tight mb-4">
-                {existingRating ? 'Modifier votre note' : 'Noter l\'événement'}
-              </h1>
-              <p className="text-xl text-muted-foreground">
-                {event.name}
+              <p className="text-center text-sm text-white/40 mt-2">
+                {rating === 0
+                  ? 'Cliquez pour noter'
+                  : ratingLabels[rating]}
               </p>
             </div>
+
+            {/* Separator */}
+            <div className="border-t border-white/5 my-8" />
+
+            {/* Comment */}
+            <div className="mb-8">
+              <label htmlFor="comment" className="flex items-center gap-2 text-sm font-medium text-white/60 mb-3">
+                <MessageSquare className="w-4 h-4" />
+                Commentaire (optionnel)
+              </label>
+              <textarea
+                id="comment"
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                placeholder="Partagez votre expérience..."
+                rows={4}
+                className="w-full rounded-xl bg-white/[0.04] border border-white/10 px-4 py-3 text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-blue-400/50 focus:bg-white/[0.06] transition-all resize-none"
+                maxLength={500}
+              />
+              <p className="text-xs text-white/20 text-right mt-2">
+                {comment.length}/500
+              </p>
+            </div>
+
+            {/* Action buttons */}
+            <div className="flex gap-3">
+              {existingRating && (
+                <button
+                  type="button"
+                  onClick={() => setDeleteConfirmOpen(true)}
+                  disabled={submitting}
+                  className="flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 transition-all text-sm font-bold disabled:opacity-50"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Supprimer
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => navigate(`/events/${eventId}`)}
+                disabled={submitting}
+                className="flex-1 px-5 py-3 rounded-xl bg-white/[0.04] border border-white/10 text-white/50 hover:text-white hover:bg-white/[0.08] transition-all text-sm font-bold font-syne disabled:opacity-50"
+              >
+                Annuler
+              </button>
+              <button
+                type="submit"
+                disabled={submitting || rating === 0}
+                className="flex-1 px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-syne font-bold text-sm transition-all disabled:opacity-50 disabled:hover:bg-blue-600"
+              >
+                {submitting ? 'Envoi...' : existingRating ? 'Modifier' : 'Envoyer'}
+              </button>
+            </div>
           </div>
-
-          {/* Formulaire de notation */}
-          <Card className="shadow-2xl">
-            <CardHeader>
-              <CardTitle>Votre avis</CardTitle>
-              <CardDescription>
-                Aidez-nous à améliorer nos événements en partageant votre expérience
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Sélection de la note */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">
-                    Note *
-                  </label>
-                  <div className="flex items-center justify-center gap-2 py-4">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <button
-                        key={star}
-                        type="button"
-                        onClick={() => setRating(star)}
-                        onMouseEnter={() => setHoverRating(star)}
-                        onMouseLeave={() => setHoverRating(0)}
-                        className="transition-transform hover:scale-110 focus:outline-none"
-                      >
-                        <Star
-                          className={`w-12 h-12 ${
-                            star <= (hoverRating || rating)
-                              ? 'text-yellow-500 fill-yellow-500'
-                              : 'text-gray-300'
-                          }`}
-                        />
-                      </button>
-                    ))}
-                  </div>
-                  <p className="text-center text-sm text-muted-foreground">
-                    {rating === 0 && 'Cliquez pour noter'}
-                    {rating === 1 && 'Très décevant'}
-                    {rating === 2 && 'Décevant'}
-                    {rating === 3 && 'Correct'}
-                    {rating === 4 && 'Bien'}
-                    {rating === 5 && 'Excellent'}
-                  </p>
-                </div>
-
-                {/* Commentaire */}
-                <div className="space-y-2">
-                  <label htmlFor="comment" className="text-sm font-medium">
-                    Commentaire (optionnel)
-                  </label>
-                  <textarea
-                    id="comment"
-                    value={comment}
-                    onChange={(e) => setComment(e.target.value)}
-                    placeholder="Partagez votre expérience..."
-                    rows={5}
-                    className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    maxLength={500}
-                  />
-                  <p className="text-xs text-muted-foreground text-right">
-                    {comment.length}/500
-                  </p>
-                </div>
-
-                {/* Boutons */}
-                <div className="flex gap-3">
-                  {existingRating && (
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      onClick={handleDelete}
-                      disabled={submitting}
-                      className="flex-1"
-                    >
-                      Supprimer ma note
-                    </Button>
-                  )}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => navigate(`/events/${eventId}`)}
-                    disabled={submitting}
-                    className="flex-1"
-                  >
-                    Annuler
-                  </Button>
-                  <Button
-                    type="submit"
-                    disabled={submitting || rating === 0}
-                    className="flex-1"
-                  >
-                    {submitting ? 'Envoi...' : existingRating ? 'Modifier' : 'Envoyer'}
-                  </Button>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
+        </form>
       </div>
+
+      {/* Delete confirmation */}
+      <ConfirmDialog
+        isOpen={deleteConfirmOpen}
+        onCancel={() => setDeleteConfirmOpen(false)}
+        onConfirm={handleDelete}
+        title="Supprimer votre note"
+        message="Êtes-vous sûr de vouloir supprimer votre note ?"
+        confirmText="Supprimer"
+        cancelText="Annuler"
+        type="danger"
+      />
     </div>
   );
 }

@@ -435,11 +435,11 @@ export default function EventDetail({ user }: EventDetailProps) {
                 <div className="space-y-3">
                   {ratings.map((rating: EventRating) => (
                     <div key={rating.id} className="rounded-2xl bg-white/[0.03] border border-white/10 p-5">
-                      <div className="flex items-center justify-between mb-2">
+                      <div className="mb-3">
+                        <span className="font-syne font-bold text-white block mb-2">
+                          {rating.user?.firstName} {rating.user?.lastName}
+                        </span>
                         <div className="flex items-center gap-3">
-                          <span className="font-syne font-bold text-white">
-                            {rating.user?.firstName} {rating.user?.lastName}
-                          </span>
                           <div className="flex">
                             {[1, 2, 3, 4, 5].map((star) => (
                               <Star
@@ -452,13 +452,13 @@ export default function EventDetail({ user }: EventDetailProps) {
                               />
                             ))}
                           </div>
+                          <span className="text-white/20 text-xs">
+                            {new Date(rating.createdAt).toLocaleDateString('fr-FR')}
+                          </span>
                         </div>
-                        <span className="text-white/30 text-sm">
-                          {new Date(rating.createdAt).toLocaleDateString('fr-FR')}
-                        </span>
                       </div>
                       {rating.comment && (
-                        <p className="text-white/50 text-sm leading-relaxed">{rating.comment}</p>
+                        <p className="text-white/50 text-sm leading-relaxed break-words">{rating.comment}</p>
                       )}
                     </div>
                   ))}
