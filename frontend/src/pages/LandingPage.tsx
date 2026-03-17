@@ -821,7 +821,7 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
             <div>
               <p className="font-syne text-blue-400 font-bold text-sm tracking-[0.3em] uppercase mb-4">
-                Retour partage
+                Retour partagé
               </p>
               <h2 className="font-syne font-extrabold text-3xl sm:text-5xl md:text-6xl tracking-tight text-white mb-6">
                 Rentre
