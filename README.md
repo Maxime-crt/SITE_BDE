@@ -104,6 +104,20 @@ cd backend && npx prisma migrate deploy
 npx prisma studio
 ```
 
+## Tests
+
+```bash
+# Tests backend (Jest)
+cd backend ; npm test
+
+# Tests frontend (Vitest)
+cd frontend ; npx vitest --run
+```
+
+## CI
+
+Une pipeline GitHub Actions (`ci.yml`) s'execute sur chaque push et PR : lint, build et tests (backend + frontend).
+
 ## Deploiement (prod)
 
 Deploye sur **Railway** avec 3 services :
