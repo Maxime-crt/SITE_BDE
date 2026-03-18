@@ -92,8 +92,8 @@ model EventRating {
   comment   String?
   createdAt DateTime @default(now())
 
-  event Event @relation(fields: [eventId], references: [id])
-  user  User  @relation(fields: [userId], references: [id])
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([eventId, userId])
   @@map("event_ratings")
@@ -112,7 +112,7 @@ model SupportMessage {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user    User             @relation(fields: [userId], references: [id])
+  user    User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   replyTo SupportMessage?  @relation("MessageReply", fields: [replyToId], references: [id])
   replies SupportMessage[] @relation("MessageReply")
 
@@ -195,7 +195,7 @@ model UberRideMessage {
   createdAt DateTime @default(now())
 
   ride UberRide @relation(fields: [rideId], references: [id], onDelete: Cascade)
-  user User     @relation(fields: [userId], references: [id])
+  user User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("uber_ride_messages")
 }
