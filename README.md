@@ -118,6 +118,51 @@ cd frontend ; npx vitest --run
 
 Une pipeline GitHub Actions (`ci.yml`) s'execute sur chaque push et PR : lint, build et tests (backend + frontend).
 
+## Workflow Git
+
+```
+ Developpement                    Preprod                          Production
+ ─────────────                    ───────                          ──────────
+
+  code + commit
+       │
+       ▼
+   push sur dev  ──────►  CI (lint, build, tests)
+                                  │
+                          ┌───────┴───────┐
+                          │  ❌ Echec     │  ✅ Succes
+                          │  corriger     │       │
+                          │  et re-push   │       ▼
+                          └───────────────┘  Deploy preprod
+                                             (Railway auto)
+                                                  │
+                                            tester sur
+                                          preprod.fuelers.fr
+                                                  │
+                                                  ▼
+                                          Creer PR dev → main
+                                                  │
+                                              CI re-tourne
+                                                  │
+                                                  ▼
+                                            Merge la PR ──────►  Deploy prod
+                                                                 (Railway auto)
+```
+
+### Branches
+
+| Branche | Environnement | URL |
+|---------|--------------|-----|
+| `dev` | Preprod | `preprod.fuelers.fr` |
+| `main` | Production | `fuelers.fr` |
+
+### Regles
+
+- Ne jamais push directement sur `main`
+- Toujours passer par `dev` + PR
+- Attendre la CI verte avant de merge
+- Tester sur preprod avant de passer en prod
+
 ## Deploiement (prod)
 
 Deploye sur **Railway** avec 3 services :
