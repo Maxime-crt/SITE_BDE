@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
-import { Button } from '../components/ui/button';
 import { Mail, Loader2, CheckCircle } from 'lucide-react';
 import { authApi } from '../services/api';
 import toast from 'react-hot-toast';
+import logoFLR from '../assets/Logo_FLR.png';
 
 export default function VerifyEmail() {
   const navigate = useNavigate();
@@ -13,7 +12,6 @@ export default function VerifyEmail() {
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
 
-  // Récupérer l'email depuis le state de navigation OU depuis localStorage
   const email = location.state?.email || localStorage.getItem('pendingVerificationEmail') || '';
 
   useEffect(() => {
@@ -24,7 +22,6 @@ export default function VerifyEmail() {
   }, [email, navigate]);
 
   const handleCodeChange = (index: number, value: string) => {
-    // Ne garder que les chiffres
     const numericValue = value.replace(/[^0-9]/g, '');
 
     if (numericValue.length <= 1) {
@@ -32,7 +29,6 @@ export default function VerifyEmail() {
       newCode[index] = numericValue;
       setCode(newCode);
 
-      // Passer au champ suivant si un chiffre a été entré
       if (numericValue && index < 5) {
         const nextInput = document.getElementById(`code-${index + 1}`);
         nextInput?.focus();
@@ -41,7 +37,6 @@ export default function VerifyEmail() {
   };
 
   const handleKeyDown = (index: number, e: React.KeyboardEvent) => {
-    // Retour arrière: revenir au champ précédent si vide
     if (e.key === 'Backspace' && !code[index] && index > 0) {
       const prevInput = document.getElementById(`code-${index - 1}`);
       prevInput?.focus();
@@ -59,7 +54,6 @@ export default function VerifyEmail() {
 
     setCode(newCode);
 
-    // Focus sur le dernier champ rempli
     const lastFilledIndex = Math.min(pastedData.length, 5);
     const lastInput = document.getElementById(`code-${lastFilledIndex}`);
     lastInput?.focus();
@@ -79,23 +73,19 @@ export default function VerifyEmail() {
     try {
       const response = await authApi.verifyEmail(email, verificationCode);
 
-      // Sauvegarder le token et les données utilisateur
       localStorage.setItem('token', response.token);
       localStorage.setItem('user', JSON.stringify(response.user));
-
-      // Supprimer l'email en attente de vérification
       localStorage.removeItem('pendingVerificationEmail');
 
-      toast.success('Email vérifié avec succès !');
+      toast.success('Email verifie avec succes !');
 
-      // Rediriger vers l'acceptation de la charte (ou dashboard si déjà acceptée)
       if (response.user.charterAcceptedAt) {
         window.location.href = '/';
       } else {
         window.location.href = '/accept-charter';
       }
     } catch (error: any) {
-      const errorMessage = error.response?.data?.error || 'Code invalide ou expiré';
+      const errorMessage = error.response?.data?.error || 'Code invalide ou expire';
       toast.error(errorMessage, { duration: 2000 });
       setLoading(false);
     }
@@ -106,7 +96,7 @@ export default function VerifyEmail() {
 
     try {
       await authApi.resendVerificationCode(email);
-      toast.success('Code renvoyé avec succès');
+      toast.success('Code renvoye avec succes');
       setCode(['', '', '', '', '', '']);
       document.getElementById('code-0')?.focus();
     } catch (error: any) {
@@ -118,95 +108,110 @@ export default function VerifyEmail() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <Card className="w-full max-w-md shadow-2xl">
-        <CardHeader className="text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary rounded-2xl mx-auto mb-6 shadow-lg">
-            <Mail className="w-8 h-8 text-primary-foreground" />
+    <div className="min-h-screen bg-[#0a1128] flex items-center justify-center px-6 py-12 font-dm-sans">
+      {/* Background effects */}
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-600/8 rounded-full blur-[120px]" />
+        <div className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-indigo-500/6 rounded-full blur-[100px]" />
+      </div>
+
+      <div className="relative w-full max-w-md space-y-8">
+        {/* Logo + titre */}
+        <div className="text-center space-y-4">
+          <img
+            src={logoFLR}
+            alt="Fuelers"
+            className="w-20 h-20 rounded-full mx-auto shadow-2xl shadow-blue-500/20 ring-4 ring-blue-400/20"
+          />
+          <div>
+            <h1 className="font-syne font-extrabold text-3xl text-white">Verifiez votre email</h1>
+            <p className="text-white/40 mt-2">
+              Nous avons envoye un code de verification a<br />
+              <span className="text-white/70 font-medium">{email}</span>
+            </p>
           </div>
-          <CardTitle className="text-3xl mb-2">Vérifiez votre email</CardTitle>
-          <CardDescription className="text-base">
-            Nous avons envoyé un code de vérification à<br />
-            <strong className="text-foreground">{email}</strong>
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+        </div>
+
+        {/* Card */}
+        <div className="rounded-2xl bg-white/[0.04] border border-white/10 p-8">
+          <div className="text-center mb-6">
+            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-blue-500/10 border border-blue-400/20 mb-4">
+              <Mail className="w-7 h-7 text-blue-400" />
+            </div>
+            <h2 className="font-syne font-bold text-xl text-white">Code de verification</h2>
+            <p className="text-white/30 text-sm mt-1">Entrez le code a 6 chiffres</p>
+          </div>
+
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Champs de code */}
-            <div>
-              <label className="block text-sm font-medium mb-3 text-center">
-                Entrez le code à 6 chiffres
-              </label>
-              <div className="flex justify-center gap-2">
-                {code.map((digit, index) => (
-                  <input
-                    key={index}
-                    id={`code-${index}`}
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={1}
-                    value={digit}
-                    onChange={(e) => handleCodeChange(index, e.target.value)}
-                    onKeyDown={(e) => handleKeyDown(index, e)}
-                    onPaste={index === 0 ? handlePaste : undefined}
-                    className="w-12 h-14 text-center text-2xl font-bold border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary outline-none transition-all"
-                    disabled={loading}
-                  />
-                ))}
-              </div>
+            <div className="flex justify-center gap-2 sm:gap-3">
+              {code.map((digit, index) => (
+                <input
+                  key={index}
+                  id={`code-${index}`}
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={1}
+                  value={digit}
+                  onChange={(e) => handleCodeChange(index, e.target.value)}
+                  onKeyDown={(e) => handleKeyDown(index, e)}
+                  onPaste={index === 0 ? handlePaste : undefined}
+                  className="w-12 h-14 text-center text-2xl font-bold rounded-xl bg-white/[0.06] border border-white/10 text-white focus:outline-none focus:border-blue-400/40 focus:ring-1 focus:ring-blue-400/20 transition-all disabled:opacity-30"
+                  disabled={loading}
+                />
+              ))}
             </div>
 
             {/* Bouton de soumission */}
-            <Button
+            <button
               type="submit"
               disabled={loading || code.join('').length !== 6}
-              className="w-full h-12 text-base"
+              className="w-full h-11 bg-blue-600 hover:bg-blue-500 text-white font-syne font-bold text-sm rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {loading ? (
                 <>
-                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                  Vérification...
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Verification...
                 </>
               ) : (
                 <>
-                  <CheckCircle className="w-5 h-5 mr-2" />
-                  Vérifier l'email
+                  <CheckCircle className="w-4 h-4" />
+                  Verifier l'email
                 </>
               )}
-            </Button>
+            </button>
 
             {/* Renvoyer le code */}
-            <div className="text-center">
-              <p className="text-sm text-muted-foreground mb-2">
-                Vous n'avez pas reçu le code ?
+            <div className="text-center space-y-3">
+              <p className="text-sm text-white/30">
+                Vous n'avez pas recu le code ?
               </p>
-              <Button
+              <button
                 type="button"
-                variant="outline"
                 onClick={handleResendCode}
                 disabled={resending}
-                className="w-full"
+                className="w-full h-11 rounded-xl bg-white/[0.04] border border-white/10 text-white/60 hover:text-white hover:bg-white/[0.08] text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {resending ? (
                   <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    <Loader2 className="w-4 h-4 animate-spin" />
                     Envoi en cours...
                   </>
                 ) : (
                   'Renvoyer le code'
                 )}
-              </Button>
+              </button>
             </div>
           </form>
 
-          {/* Informations */}
-          <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-            <p className="text-sm text-blue-800 dark:text-blue-300">
-              <strong>💡 Astuce :</strong> Vérifiez vos <strong>spams/courrier indésirable</strong> si vous ne trouvez pas l'email. Le code expire dans 15 minutes.
+          {/* Info box */}
+          <div className="mt-6 p-4 rounded-xl bg-blue-500/5 border border-blue-400/10">
+            <p className="text-sm text-blue-300/60">
+              Verifiez vos <strong className="text-blue-300/80">spams/courrier indesirable</strong> si vous ne trouvez pas l'email. Le code expire dans 15 minutes.
             </p>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }
