@@ -29,12 +29,12 @@
     "react": "^18.3.1",
     "react-big-calendar": "^1.8.5",
     "react-dom": "^18.3.1",
-    "react-hook-form": "^7.48.2",
+    "react-hook-form": "^7.71.2",
     "react-hot-toast": "^2.4.1",
     "react-leaflet": "^4.2.1",
-    "react-router-dom": "^6.28.0",
+    "react-router-dom": "^7.13.1",
     "socket.io-client": "^4.8.1",
-    "tailwind-merge": "^3.3.1",
+    "tailwind-merge": "^3.5.0",
     "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
