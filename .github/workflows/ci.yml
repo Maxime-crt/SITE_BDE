@@ -49,3 +49,7 @@ jobs:
 
       - name: Test frontend
         run: cd frontend && npm test -- --run
+
+      - name: Security audit
+        run: npm audit --audit-level=high
+        continue-on-error: true

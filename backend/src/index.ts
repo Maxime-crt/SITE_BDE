@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 import path from 'path';
 import { createServer } from 'http';
@@ -56,6 +57,26 @@ app.use(cors({
   credentials: true
 }));
 app.use(express.json());
+
+// Rate limiting global : 100 requetes par minute par IP
+const globalLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Trop de requetes, veuillez reessayer dans une minute.' },
+});
+app.use('/api', globalLimiter);
+
+// Rate limiting auth : 10 requetes par minute par IP (protection brute-force)
+const authLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Trop de tentatives, veuillez reessayer dans une minute.' },
+});
+app.use('/api/auth', authLimiter);
 
 // Routes API
 app.use('/api/auth', authRoutes);
