@@ -116,7 +116,13 @@ cd frontend ; npx vitest --run
 
 ## CI
 
-Une pipeline GitHub Actions (`ci.yml`) s'execute sur chaque push et PR : lint, build et tests (backend + frontend).
+Une pipeline GitHub Actions (`.github/workflows/ci.yml`) s'execute sur chaque push et PR :
+
+1. **Install** des dependances (npm ci)
+2. **Prisma generate** (generation du client)
+3. **Lint** backend + frontend (ESLint)
+4. **Build** backend (`tsc`) + frontend (`vite build`)
+5. **Tests** backend (Jest) + frontend (Vitest)
 
 ## Workflow Git
 
