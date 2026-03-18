@@ -330,7 +330,7 @@ export default function CreateEvent() {
               {(imagePreview || existingImageUrl) ? (
                 <div className="relative rounded-xl overflow-hidden border border-white/10">
                   <img
-                    src={imagePreview || existingImageUrl || ''}
+                    src={imagePreview || (existingImageUrl?.startsWith('http') ? existingImageUrl : '')}
                     alt="Aperçu"
                     className="w-full h-48 object-cover"
                   />
