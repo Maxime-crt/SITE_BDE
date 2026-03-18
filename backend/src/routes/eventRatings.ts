@@ -133,11 +133,7 @@ router.get('/:eventId/my-rating', authenticateToken, async (req: AuthRequest, re
       }
     });
 
-    if (!rating) {
-      return res.status(404).json({ error: 'Aucune note trouvée' });
-    }
-
-    res.json(rating);
+    res.json(rating || null);
   } catch (error) {
     console.error('Erreur lors de la récupération de la note:', error);
     res.status(500).json({ error: 'Erreur serveur' });

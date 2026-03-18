@@ -252,7 +252,7 @@ describe('Event Ratings Routes', () => {
       expect(response.body.comment).toBe('Excellente soirée !');
     });
 
-    it('should return 404 if user has not rated', async () => {
+    it('should return null if user has not rated', async () => {
       (prisma.user.findUnique as jest.Mock).mockResolvedValue(mockUser);
       (prisma.user.update as jest.Mock).mockResolvedValue(mockUser);
       (prisma.eventRating.findUnique as jest.Mock).mockResolvedValue(null);
@@ -261,7 +261,8 @@ describe('Event Ratings Routes', () => {
         .get('/event-ratings/event-1/my-rating')
         .set('Authorization', `Bearer ${userToken}`);
 
-      expect(response.status).toBe(404);
+      expect(response.status).toBe(200);
+      expect(response.body).toBeNull();
     });
   });
 
