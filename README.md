@@ -98,7 +98,7 @@ Configurees dans `docker-compose.yml` et `.env` :
 
 ```bash
 # Migrations
-cd backend && npx prisma migrate deploy
+cd backend ; npx prisma migrate deploy
 
 # Interface Prisma Studio
 npx prisma studio
