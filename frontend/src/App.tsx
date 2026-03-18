@@ -20,7 +20,7 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import NotFound from './pages/NotFound';
 import LandingPage from './pages/LandingPage';
-import Navbar from './components/Navbar';
+import LandingNav from './components/LandingNav';
 import Footer from './components/Footer';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { authApi } from './services/api';
@@ -151,7 +151,7 @@ function AppContent() {
 
   return (
     <div className={`min-h-screen ${isLandingRoute ? '' : 'bg-background text-foreground'} transition-colors flex flex-col`}>
-      {!isLandingRoute && <Navbar user={user} onLogout={logout} />}
+      {!isLandingRoute && <LandingNav isAdmin={user?.isAdmin} sticky onLogout={logout} />}
 
       <main className="flex-1">
         <Routes>

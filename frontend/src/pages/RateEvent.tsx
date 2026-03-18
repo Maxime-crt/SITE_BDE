@@ -185,7 +185,7 @@ export default function RateEvent() {
             </div>
 
             {/* Action buttons */}
-            <div className="flex gap-3">
+            <div className="flex flex-wrap gap-3">
               {existingRating && (
                 <button
                   type="button"

@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { MapPin, Users, ArrowRight, Car, Clock, ChevronLeft, ChevronRight, Euro, Shield, Plus, X } from 'lucide-react';
 import { eventsApi } from '../services/api';
 import type { Event } from '../types';
@@ -201,6 +201,7 @@ export default function LandingPage() {
   const [calendarDate, setCalendarDate] = useState(new Date());
   const [showCalendar, setShowCalendar] = useState(() => sessionStorage.getItem('showCalendar') === 'true');
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const location = useLocation();
 
   const landscapeScroll = useDragScroll(30, 'left');
   const portraitScroll = useDragScroll(25, 'right');
@@ -208,6 +209,17 @@ export default function LandingPage() {
   useEffect(() => {
     eventsApi.getAll().then((data: Event[]) => setEvents(data)).catch(() => {});
   }, []);
+
+  useEffect(() => {
+    const scrollToEvent = location.state?.scrollToEvent;
+    if (scrollToEvent && events.length > 0) {
+      const el = document.getElementById(`event-${scrollToEvent}`) || document.getElementById(`cal-event-${scrollToEvent}`);
+      if (el) {
+        setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100);
+      }
+      window.history.replaceState({}, '');
+    }
+  }, [location.state, events]);
 
   // Check admin from localStorage
   const isAdmin = useMemo(() => {
@@ -481,7 +493,7 @@ export default function LandingPage() {
               <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8">
                 {/* Featured event card */}
                 {upcomingEvents[0] ? (
-                  <Link to={`/events/${upcomingEvents[0].id}`} className="md:col-span-7 group block">
+                  <Link to={`/events/${upcomingEvents[0].id}`} id={`event-${upcomingEvents[0].id}`} className="md:col-span-7 group block">
                     <div className="relative h-[380px] md:h-[480px] rounded-3xl overflow-hidden bg-gradient-to-br from-blue-600/20 via-indigo-600/10 to-blue-900/30 border border-blue-500/10 hover:border-blue-400/30 transition-all duration-500">
                       {upcomingEvents[0].imageUrl ? (
                         <>
@@ -544,7 +556,7 @@ export default function LandingPage() {
                 {/* Stacked cards */}
                 <div className="md:col-span-5 flex flex-col gap-6 md:gap-8">
                   {upcomingEvents.slice(1, 3).map((event, i) => (
-                    <Link to={`/events/${event.id}`} key={event.id} className="group flex-1 block">
+                    <Link to={`/events/${event.id}`} key={event.id} id={`event-${event.id}`} className="group flex-1 block">
                       <div className={`relative h-full min-h-[200px] rounded-3xl overflow-hidden border border-white/5 hover:border-blue-400/20 transition-all duration-500 ${
                         i === 0
                           ? 'bg-gradient-to-br from-indigo-600/15 to-blue-900/20'
