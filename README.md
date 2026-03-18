@@ -163,15 +163,20 @@ Une pipeline GitHub Actions (`ci.yml`) s'execute sur chaque push et PR : lint, b
 - Attendre la CI verte avant de merge
 - Tester sur preprod avant de passer en prod
 
-## Deploiement (prod)
+## Deploiement
 
-Deploye sur **Railway** avec 3 services :
-- **backend** (`api.fuelers.fr`) - API Express + Prisma
-- **frontend** (`fuelers.fr`) - Build Vite statique
-- **postgres** - Base de donnees PostgreSQL
+Deploye sur **Railway** avec 2 environnements :
 
-Les images sont hebergees sur **Cloudinary** (cloud: `dk93ledz2`).
-Les emails transactionnels sont envoyes via **Resend** (domaine: `fuelers.fr`).
+| | Preprod | Production |
+|---|---------|-----------|
+| **Branche** | `dev` | `main` |
+| **Frontend** | `preprod.fuelers.fr` | `fuelers.fr` |
+| **Backend** | `api-preprod.fuelers.fr` | `api.fuelers.fr` |
+| **PostgreSQL** | Instance dediee | Instance dediee |
+| **Cloudinary** | Dossier `preprod/` | Dossier `prod/` |
+| **Emails (Resend)** | Meme cle API | Meme cle API |
+
+Chaque environnement a sa propre base de donnees et son propre dossier Cloudinary pour isoler les donnees. Les emails passent par le meme domaine `fuelers.fr` via Resend.
 
 ## Auteur
 
