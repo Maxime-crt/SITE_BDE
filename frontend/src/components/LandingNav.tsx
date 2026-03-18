@@ -6,32 +6,41 @@ import logoFLR from '../assets/Logo_FLR.png';
 
 interface LandingNavProps {
   isAdmin?: boolean;
+  sticky?: boolean;
+  onLogout?: () => void;
 }
 
-export default function LandingNav({ isAdmin: isAdminProp }: LandingNavProps) {
+export default function LandingNav({ isAdmin: isAdminProp, sticky, onLogout }: LandingNavProps) {
   const isAdmin = isAdminProp ?? (() => {
     try { return JSON.parse(localStorage.getItem('user') || '{}').isAdmin === true; } catch { return false; }
   })();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   useEffect(() => {
+    if (sticky) return;
     const onScroll = () => setScrolled(window.scrollY > 50);
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
-  }, []);
+  }, [sticky]);
 
   const handleLogout = async () => {
-    try { await authApi.logout(); } catch { /* ignore */ }
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    window.location.href = '/login';
+    if (onLogout) {
+      onLogout();
+    } else {
+      try { await authApi.logout(); } catch { /* ignore */ }
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.href = '/login';
+    }
   };
 
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-      scrolled
-        ? 'bg-[#0a1128]/95 backdrop-blur-xl shadow-lg shadow-black/20'
-        : 'bg-gradient-to-b from-[#0a1128]/80 via-[#0a1128]/40 to-transparent'
+    <nav className={`${sticky ? 'sticky' : 'fixed'} top-0 left-0 right-0 z-50 transition-all duration-500 ${
+      sticky
+        ? 'bg-[#0a1128]/95 backdrop-blur-xl border-b border-white/5'
+        : scrolled
+          ? 'bg-[#0a1128]/95 backdrop-blur-xl shadow-lg shadow-black/20'
+          : 'bg-gradient-to-b from-[#0a1128]/80 via-[#0a1128]/40 to-transparent'
     }`}>
       <div className="max-w-7xl mx-auto px-6 py-2 flex items-center justify-between h-20">
         {/* Logo */}

@@ -27,25 +27,25 @@
   }
 
   .dark {
-    /* Discord-like grays */
-    --background: 220 13% 18%;        /* #2f3349 - Gris principal Discord */
-    --foreground: 220 15% 92%;        /* #eaeaeb - Texte principal */
-    --card: 220 13% 21%;              /* #36393f - Cards/conteneurs */
-    --card-foreground: 220 15% 92%;   /* #eaeaeb - Texte des cards */
-    --popover: 220 13% 16%;           /* #2c2f33 - Popover plus sombre */
-    --popover-foreground: 220 15% 92%; /* #eaeaeb - Texte popover */
-    --primary: 217.2 91.2% 59.8%;     /* Bleu principal inchangé */
-    --primary-foreground: 220 15% 92%; /* Texte sur bleu */
-    --secondary: 220 13% 25%;         /* #40444b - Secondaire */
-    --secondary-foreground: 220 15% 85%; /* #d4d4d5 - Texte secondaire */
-    --muted: 220 13% 25%;             /* #40444b - Éléments discrets */
-    --muted-foreground: 220 9% 64%;   /* #8e9297 - Texte discret */
-    --accent: 220 13% 28%;            /* #484c52 - Accent hover */
-    --accent-foreground: 220 15% 92%; /* #eaeaeb - Texte accent */
-    --destructive: 0 84% 60%;         /* Rouge plus vif */
-    --destructive-foreground: 220 15% 98%; /* Texte sur rouge */
-    --border: 220 13% 30%;            /* #4a4e54 - Bordures */
-    --input: 220 13% 25%;             /* #40444b - Inputs */
+    /* DA Fuelers — bleu très foncé #0a1128 */
+    --background: 224 62% 10%;        /* #0a1128 - Fond principal */
+    --foreground: 0 0% 100%;          /* Blanc - Texte principal */
+    --card: 224 50% 12%;              /* #0d1530 - Cards/conteneurs */
+    --card-foreground: 0 0% 100%;     /* Blanc - Texte des cards */
+    --popover: 224 55% 11%;           /* #0b1329 - Popover */
+    --popover-foreground: 0 0% 100%;  /* Blanc - Texte popover */
+    --primary: 217.2 91.2% 59.8%;     /* Bleu principal */
+    --primary-foreground: 0 0% 100%;  /* Blanc sur bleu */
+    --secondary: 224 40% 16%;         /* Secondaire */
+    --secondary-foreground: 0 0% 85%; /* Texte secondaire */
+    --muted: 224 40% 16%;             /* Éléments discrets */
+    --muted-foreground: 0 0% 50%;     /* Texte discret */
+    --accent: 224 35% 20%;            /* Accent hover */
+    --accent-foreground: 0 0% 100%;   /* Texte accent */
+    --destructive: 0 84% 60%;         /* Rouge */
+    --destructive-foreground: 0 0% 100%; /* Texte sur rouge */
+    --border: 224 30% 18%;            /* Bordures subtiles */
+    --input: 224 40% 14%;             /* Inputs */
     --ring: 217.2 91.2% 59.8%;       /* Ring bleu */
   }
 }

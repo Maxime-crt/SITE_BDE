@@ -59,7 +59,7 @@ export default function UberRequestModal({
 
   useEffect(() => {
     if (isOpen) {
-      const needsGender = !userGender || userGender === 'PREFER_NOT_SAY';
+      const needsGender = !userGender;
       const needsAddress = !userHomeAddress || !userHomeLatitude || !userHomeLongitude;
 
       if (needsGender || needsAddress) {
@@ -138,7 +138,7 @@ export default function UberRequestModal({
   }, [isOpen]);
 
   const handleSaveProfile = async () => {
-    if (!profileGender || profileGender === 'PREFER_NOT_SAY') {
+    if (!profileGender) {
       toast.error('Veuillez sélectionner votre genre');
       return;
     }
