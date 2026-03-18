@@ -495,7 +495,7 @@ export default function CreateEvent() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label htmlFor="startDate" className={labelClass + " flex items-center"}>
                   <Clock className="w-4 h-4 mr-2" />
