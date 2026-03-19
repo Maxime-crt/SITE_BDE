@@ -286,10 +286,10 @@ export default function Support({ user }: SupportProps) {
                                       {msg.isEdited && (
                                         <p className="text-[10px] italic text-white/30">modifié</p>
                                       )}
-                                      {/* Desktop hover buttons */}
+                                      {/* Action buttons — hidden on mobile, long-press instead */}
                                       <button
                                         onClick={() => { setReplyTo(msg); inputRef.current?.focus(); }}
-                                        className="p-1 hover:bg-white/10 rounded-lg transition-colors text-white/40 hover:text-white/80 opacity-0 group-hover:opacity-100 hidden sm:block"
+                                        className="p-1 hover:bg-white/10 rounded-lg transition-colors text-white/30 hover:text-white/80 hidden sm:block"
                                         title="Répondre"
                                       >
                                         <Reply className="w-3 h-3" />
@@ -298,14 +298,14 @@ export default function Support({ user }: SupportProps) {
                                         <>
                                           <button
                                             onClick={() => startEditingMessage(msg)}
-                                            className="p-1 hover:bg-white/10 rounded-lg transition-colors text-white/40 hover:text-white/80 opacity-0 group-hover:opacity-100 hidden sm:block"
+                                            className="p-1 hover:bg-white/10 rounded-lg transition-colors text-white/30 hover:text-white/80 hidden sm:block"
                                             title="Modifier"
                                           >
                                             <Edit2 className="w-3 h-3" />
                                           </button>
                                           <button
                                             onClick={() => handleDeleteMessage(msg.id)}
-                                            className="p-1 hover:bg-red-500/10 rounded-lg transition-colors text-white/40 hover:text-red-400 opacity-0 group-hover:opacity-100 hidden sm:block"
+                                            className="p-1 hover:bg-red-500/10 rounded-lg transition-colors text-white/30 hover:text-red-400 hidden sm:block"
                                             title="Supprimer ce message"
                                           >
                                             <Trash2 className="w-3 h-3" />

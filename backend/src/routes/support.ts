@@ -104,14 +104,13 @@ router.put('/messages/:id', authenticateToken, [
     const isAdmin = req.user!.isAdmin;
     const existingMessage = await prisma.supportMessage.findFirst({
       where: isAdmin
-        ? { id, isFromBDE: true }
+        ? { id, OR: [{ userId }, { isFromBDE: true }] }
         : { id, userId }
     });
 
     if (!existingMessage) {
       return res.status(404).json({ error: 'Message non trouvé' });
     }
-
 
     const updatedMessage = await prisma.supportMessage.update({
       where: { id },
@@ -144,7 +143,7 @@ router.delete('/messages/:id', authenticateToken, async (req: AuthRequest, res: 
     const isAdmin = req.user!.isAdmin;
     const existingMessage = await prisma.supportMessage.findFirst({
       where: isAdmin
-        ? { id, isFromBDE: true }
+        ? { id, OR: [{ userId }, { isFromBDE: true }] }
         : { id, userId }
     });
 
