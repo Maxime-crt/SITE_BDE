@@ -83,6 +83,26 @@ export function startRideStatusCron() {
 
   console.log('🔄 [CRON] Ride status cron job started (runs every minute)');
 
+  // Cron job pour supprimer les utilisateurs non-vérifiés après 15 minutes
+  cron.schedule('*/5 * * * *', async () => {
+    try {
+      const expiryThreshold = new Date(Date.now() - 15 * 60 * 1000);
+      const deleted = await prisma.user.deleteMany({
+        where: {
+          emailVerified: false,
+          createdAt: { lt: expiryThreshold }
+        }
+      });
+      if (deleted.count > 0) {
+        console.log(`🧹 [CRON] Deleted ${deleted.count} unverified user(s)`);
+      }
+    } catch (error) {
+      console.error('🔴 [CRON] Error cleaning unverified users:', error);
+    }
+  });
+
+  console.log('🧹 [CRON] Unverified user cleanup cron job started (runs every 5 minutes)');
+
   // Cron job pour le matching périodique toutes les 5 minutes
   cron.schedule('*/5 * * * *', async () => {
     try {

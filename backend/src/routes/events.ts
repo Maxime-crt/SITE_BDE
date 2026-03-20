@@ -149,6 +149,7 @@ router.get('/:id', async (req: express.Request, res: express.Response) => {
 router.get('/admin/members', authenticateToken, requireAdmin, async (req: AuthRequest, res: express.Response) => {
   try {
     const users = await prisma.user.findMany({
+      where: { emailVerified: true },
       select: {
         id: true,
         firstName: true,

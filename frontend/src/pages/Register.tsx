@@ -232,7 +232,7 @@ export default function Register() {
               <label htmlFor="phone" className={labelClass}>Téléphone</label>
               <input
                 id="phone" name="phone" type="tel" required autoComplete="tel"
-                placeholder="06 12 34 56 78"
+                placeholder="0612345678"
                 value={formData.phone} onChange={handleChange} onBlur={handleBlur}
                 className={`${inputClass} ${errors.phone ? inputErrorClass : ''}`}
               />
